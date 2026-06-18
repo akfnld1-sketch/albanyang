@@ -5,16 +5,18 @@
  * ★ 통합본: cache-v8 기준, 캐시버스팅 쿼리 포함
  */
 
-// ★ Fix #13: 버전 쿼리 파라미터 변경에 맞게 캐시명 업데이트
-const CACHE_NAME = 'moneynyang-v1-cache-v10';
+// ★ Fix #14: 야간수당/휴일수당 계산 수정(2026-06-18) 반영 위해 캐시명 업데이트
+//    + 아래 LOCAL_RESOURCES 쿼리스트링을 index.html의 실제 <script> 태그와 동기화
+const CACHE_NAME = 'moneynyang-v1-cache-v11';
 
 // ── 로컬 파일 (분리된 CSS/JS 전체) ──
+// ★ index.html의 <script>/<link> 태그와 쿼리스트링이 항상 일치해야 함 (불일치 시 사전 캐시 무의미)
 const LOCAL_RESOURCES = [
   './',
   './index.html',
   './manifest.json',
   './css/main.css',
-  './css/mobile.css',
+  './css/mobile.css?v=20260611-fix4',
   './img/icons/app-icon-192.png',
   './img/icons/app-icon-512.png',
   './js/sw-init.js',
@@ -22,15 +24,17 @@ const LOCAL_RESOURCES = [
   './js/leave.js',
   './js/ui.js?v=20260611-fix3',
   './js/salary.js',
-  './js/budget.js?v=20260611-fix5',
+  './js/budget.js?v=20260617',
   './js/data-utils.js',
+  './js/nyang-emoji.js',
   './js/assistant.js',
   './js/freelance.js',
   './js/render-salary.js',
-  './js/jobtype.js?v=20260614-fix2',
+  './js/jobtype.js?v=20260617',
   './js/calendar-modes.js?v=20260614-fix2',
-  './js/notifications.js?v=20260614-fix1',
+  './js/notifications.js?v=20260617',
   './js/init.js',
+  './js/tutorial.js',
 ];
 
 // ── 외부 리소스 (폰트, Chart.js) ──
