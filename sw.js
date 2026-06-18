@@ -5,8 +5,8 @@
  * ★ 통합본: cache-v8 기준, 캐시버스팅 쿼리 포함
  */
 
-// ★ Fix #16: 회사알바 입력폼 자동펼침 + 근무형태 배지 즉시갱신(2026-06-18) 반영 위해 캐시명 업데이트
-const CACHE_NAME = 'moneynyang-v1-cache-v13';
+// ★ Fix #17: 날짜 팝업 상단 근무형태·직종 상태 표시 추가(2026-06-19) 반영 위해 캐시명 업데이트
+const CACHE_NAME = 'moneynyang-v1-cache-v14';
 
 // ── 로컬 파일 (분리된 CSS/JS 전체) ──
 // ★ index.html의 <script>/<link> 태그와 쿼리스트링이 항상 일치해야 함 (불일치 시 사전 캐시 무의미)

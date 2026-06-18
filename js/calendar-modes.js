@@ -1101,6 +1101,50 @@ function initDayJobTabs(key){
   if((data.etc||[]).length > 0) autoOpenNjobSec('etc');
 
   // 직장 기록 있으면 직장 섹션도 자동 펼침 (기존 팝업 로직이 처리)
+
+  // ★ 표시 전용 — 입력폼/저장/급여계산 로직에는 영향 없음
+  renderPopupStatusBadge();
+}
+
+// 날짜 팝업 상단에 현재 선택된 근무형태·직종을 표시(표시 전용, 저장/계산 로직 비변경)
+function renderPopupStatusBadge(){
+  const el = document.getElementById('p-status-badge');
+  if(!el) return;
+
+  let wtId = '', subId = '', albaSub = '';
+  try{
+    wtId    = localStorage.getItem('atm2_workType') || '';
+    subId   = localStorage.getItem('atm2_workSubType') || '';
+    albaSub = localStorage.getItem('atm2_albaSubtype') || '';
+  }catch(e){}
+
+  const wtLabelMap = {
+    day:   '☀️ 주간고정',
+    night: '🌙 야간고정',
+    '2shift': subId==='day' ? '🔄 2교대 주간조' : subId==='night' ? '🔄 2교대 야간조'
+              : subId==='day_fixed' ? '🔄 2교대 통상조' : '🔄 2교대',
+    '3shift': (subId==='A'||subId==='B'||subId==='C') ? `⚡ 3교대 ${subId}조`
+              : subId==='day_fixed' ? '⚡ 3교대 통상조' : '⚡ 3교대',
+  };
+  const albaSubLabelMap = {
+    company:'🏢 회사알바', cvs:'🏪 편의점', cafe:'☕ 카페', coupang:'📦 쿠팡', other:'➕ 기타알바'
+  };
+
+  const wtLabel   = wtLabelMap[wtId] || '';
+  const albaLabel = albaSubLabelMap[albaSub] || '';
+
+  if(!wtLabel && !albaLabel){ el.style.display='none'; el.innerHTML=''; return; }
+
+  el.innerHTML = `
+    <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;">
+      ${wtLabel ? `<span style="display:inline-block;padding:4px 10px;border-radius:20px;
+            background:rgba(79,124,255,.1);border:1px solid rgba(79,124,255,.25);
+            color:var(--accent);font-size:12px;font-weight:700;white-space:nowrap;">${wtLabel}</span>` : ''}
+      ${albaLabel ? `<span style="display:inline-block;padding:4px 10px;border-radius:20px;
+            background:rgba(61,214,140,.1);border:1px solid rgba(61,214,140,.25);
+            color:var(--green);font-size:12px;font-weight:700;white-space:nowrap;">${albaLabel}</span>` : ''}
+    </div>`;
+  el.style.display = 'block';
 }
 
 function autoOpenNjobSec(type){

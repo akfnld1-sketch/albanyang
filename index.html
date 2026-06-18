@@ -1425,6 +1425,7 @@ const _origShowPage = typeof showPage === 'function' ? showPage : null;
 <div class="overlay" id="popup" style="display:none" onclick="if(event.target===this)closePopup()">
 <div class="popup" style="width:380px;padding:20px 18px;max-height:92vh;overflow-y:auto;">
   <h3 id="p-title" style="font-size:16px;margin-bottom:10px;text-align:center;">📅 날짜 설정</h3>
+  <div id="p-status-badge" style="display:none;text-align:center;margin-bottom:10px;"></div>
 
   <!-- 직장 아코디언 헤더 -->
   <div onclick="toggleEmployeeSec()"
