@@ -598,7 +598,7 @@ function updatePrev(){
   }
   const oMult = 1.5;   // 연장: ×1.5 전액
   const hMult = 2.0;   // 휴일: ×2.0 전액
-  const nMult = 1.5;   // 야간: ×1.5 전액 (salary.js 야간수당 계산과 동일 배율)
+  const nMult = 0.5;   // 야간: ×0.5 가산분만 (기본 1배는 normalH/OT에 포함됨, getPayData와 동일 배율)
 
   if(s===e){pv.style.display='block';pv.innerHTML='⚠️ 시작·종료 시간이 같습니다. 근무시간이 0으로 처리됩니다.';return;}
 

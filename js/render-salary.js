@@ -545,9 +545,9 @@ function renderSalary(){
     <div class="allow-grid">
       ${aC('연장수당(OT)','×1.5',`OT ${d.totOT}h × ${d._companyRate.toLocaleString()} × 1.5 (10원 단위 반올림)`,d.aOT,'var(--yellow)')}
       ${aC('야간수당','×0.5 할증',`야간 ${d.nightH}h × ${d._companyRate.toLocaleString()} × 0.5`,d.aNight,'var(--cyan)')}
-      ${aC('휴일수당','×2.0',`휴일 ${d.holidayH}h × ${d._companyRate.toLocaleString()} × 2.0`,d.aHoliday,'var(--accent2)')}
+      ${aC('휴일수당','8h↑×2.0',`휴일 ${d.holidayH}h (8h 이내 × 1.5, 초과분 × 2.0)`,d.aHoliday,'var(--accent2)')}
       ${aC('🔵 토요특근수당','자동',`${d.satH}h × ${d._companyRate.toLocaleString()} × 1.5`,d.aSat,'var(--sat)')}
-      ${aC('🔴 일요특근수당','자동',`${d.sunH}h × ${d._companyRate.toLocaleString()} × 2.0`,d.aSun,'var(--sun)')}
+      ${aC('🔴 일요특근수당','8h↑×2.0',`${d.sunH}h (8h 이내 × 1.5, 초과분 × 2.0)`,d.aSun,'var(--sun)')}
       ${eC('tenure','근속수당','직접 입력')}
       <div class="allow-card" style="grid-column:1/-1;background:${weeklyOn?'rgba(127,255,212,.08)':'rgba(255,255,255,.03)'};border:1px solid ${weeklyOn?'rgba(127,255,212,.3)':'var(--border)'};transition:all .25s;">
         <div style="flex:1;">

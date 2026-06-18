@@ -124,6 +124,8 @@ function getPayData(){
   let nightH=0;    // 야간시간 (22~06시, 기본/연장 포함)
   let holidayH=0, satH=0, sunH=0;
   let earlyDeduct=0;
+  // 휴일수당(holiday/sun_work) 8h 계단식 금액 누적 — 일별 net 기준 8h 이내 1.5배 / 초과분 2.0배 (근로기준법 제56조②)
+  let aHolidayAccum=0, aSunAccum=0;
 
   let lateDeduct = 0;   // 지각 공제 (30분 단위)
   let lateCount  = 0;   // 지각 횟수
@@ -165,9 +167,16 @@ function getPayData(){
       nightH += calcNight(data.start, data.end);
     }
 
-    if(s==='holiday') holidayH += net;
+    if(s==='holiday'){
+      holidayH += net;
+      // 8h 이내 1.5배 + 8h 초과분 2.0배 (일별 계단식, 근로기준법 제56조②)
+      aHolidayAccum += Math.min(net,8)*companyRate*1.5 + Math.max(0,net-8)*companyRate*2.0;
+    }
     if(s==='sat_work') satH += net;
-    if(s==='sun_work') sunH += net;
+    if(s==='sun_work'){
+      sunH += net;
+      aSunAccum += Math.min(net,8)*companyRate*1.5 + Math.max(0,net-8)*companyRate*2.0;
+    }
 
     // ── 조퇴 공제: 8h 미달 시간 × 시급 ──
     if(s==='early'){
@@ -215,9 +224,9 @@ function getPayData(){
   const r10 = function(n){ return Math.round(n/10)*10; };
   const aOT      = r10(totOT    * companyRate * 1.5);
   const aNight   = r10(nightH   * companyRate * 0.5);
-  const aHoliday = r10(holidayH * companyRate * 2.0);
+  const aHoliday = r10(aHolidayAccum);  // 8h 이내 1.5배 + 초과분 2.0배 (일별 계단식 누적값)
   const aSat     = r10(satH     * companyRate * 1.5);
-  const aSun     = r10(sunH     * companyRate * 2.0);
+  const aSun     = r10(aSunAccum);      // 8h 이내 1.5배 + 초과분 2.0배 (일별 계단식 누적값)
 
   const isPerfect = wDays>=twd;
   // 만근수당: 사용자가 직접 "만근으로 처리" 체크(perfectOn)하면
@@ -417,6 +426,8 @@ function getPayDataForMonth(y, m){
   const twd = countWD(y,m);
   let wDays=0,lDays=0,halfDays=0,absDays=0;
   let normalH=0,totOT=0,nightH=0,holidayH=0,satH=0,sunH=0,earlyDeduct=0;
+  // 휴일수당(holiday/public/sun_work) 8h 계단식 금액 누적 — getPayData와 동일 기준 (근로기준법 제56조②)
+  let aHolidayAccum=0, aSunAccum=0;
 
   for(let d=1;d<=dim;d++){
     const key=`${y}-${pad2(m+1)}-${pad2(d)}`;
@@ -434,9 +445,15 @@ function getPayDataForMonth(y, m){
     }
     if(s==='half') normalH+=4;
     if(['work','early','sat_work','sun_work','holiday','public'].includes(s)) nightH+=calcNight(data.start,data.end);
-    if(s==='holiday'||s==='public') holidayH+=net;
+    if(s==='holiday'||s==='public'){
+      holidayH+=net;
+      aHolidayAccum += Math.min(net,8)*companyRate*1.5 + Math.max(0,net-8)*companyRate*2.0;
+    }
     if(s==='sat_work') satH+=net;
-    if(s==='sun_work') sunH+=net;
+    if(s==='sun_work'){
+      sunH+=net;
+      aSunAccum += Math.min(net,8)*companyRate*1.5 + Math.max(0,net-8)*companyRate*2.0;
+    }
     if(s==='early'){ const shortage=Math.max(0,8-net); earlyDeduct+=shortage*hourlyRate; }
   }
 
@@ -447,9 +464,9 @@ function getPayDataForMonth(y, m){
   const totDeduct = dLeave+dHalf+dAbsent+earlyDeduct;
   const aOT       = totOT    * companyRate * 1.5;
   const aNight    = nightH   * companyRate * 0.5;
-  const aHoliday  = holidayH * companyRate * 2.0;
+  const aHoliday  = aHolidayAccum;  // 8h 이내 1.5배 + 초과분 2.0배 (일별 계단식 누적값)
   const aSat      = satH     * companyRate * 1.5;
-  const aSun      = sunH     * companyRate * 2.0;
+  const aSun      = aSunAccum;      // 8h 이내 1.5배 + 초과분 2.0배 (일별 계단식 누적값)
   const isPerfect = wDays>=twd;
   const perfAmt   = isPerfect?(allowances.perfect||0):0;
   const totAllow  = aNight+aOT+aHoliday+aSat+aSun+(allowances.tenure||0)+(allowances.weekly||0)+perfAmt+(allowances.other||0);
