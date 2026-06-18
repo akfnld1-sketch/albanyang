@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__Claude_Preview__preview_start",
+      "Bash(node --check js/ui.js)",
+      "Bash(node --check js/budget.js)",
+      "Bash(awk -F'\\\\t' '{print $2}')",
+      "Bash(awk '$1>1')",
+      "Bash(python3 -)",
+      "Bash(node --check js/init.js)",
+      "Bash(node --check js/storage.js)",
+      "Bash(node --check js/leave.js)",
+      "Bash(node --check js/salary.js)",
+      "Bash(node --check js/data-utils.js)",
+      "Bash(node --check js/nyang-emoji.js)",
+      "Bash(certutil -hashfile js/ui.js MD5)",
+      "Bash(mkdir -p ../_backups)",
+      "Bash(powershell -Command \"Compress-Archive -Path 'D:\\\\c다운로드\\\\albanyang\\\\*' -DestinationPath 'D:\\\\c다운로드\\\\albanyang_backup_20260618_203906.zip' -Force\")",
+      "Read(//d/c다운로드/**)",
+      "Bash(dir \"D:\\\\c다운로드\\\\albanyang_backup_20260618_203906.zip\")",
+      "Bash(powershell -Command ' *)",
+      "Bash(python3 -c ' *)",
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(git commit -q -m ' *)"
+    ]
+  }
+}
