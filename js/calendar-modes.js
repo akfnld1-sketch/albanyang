@@ -507,15 +507,69 @@ function renderAlbaCalendar(){
     el.innerHTML=html;
     grid.appendChild(el);
   }
-  // stats-row: 알바용
+  // stats-row: 알바용 (기존 "이번달 수입"/"3.3% 공제후" 카드는 그대로 유지, 새 카드만 추가)
+  let albaPaySummaryHtml = '';
+  try{
+    const s = (typeof getAlbaPaySummary === 'function') ? getAlbaPaySummary(curY, curM) : null;
+    if(s){
+      const fp = s.finalPay;
+      albaPaySummaryHtml = `
+    <div class="stat-card" onclick="showAlbaPayDetail()" style="cursor:pointer;">
+      <div class="lbl">💰 예상 실수령액</div><div class="val" style="color:#7fffd4;font-size:20px;">${fp>=10000?Math.round(fp/10000)+'만':fp.toLocaleString()}원</div>
+    </div>`;
+    }
+  }catch(e){ albaPaySummaryHtml = ''; }
+
   document.getElementById('stats-row').innerHTML=`
     <div class="stat-card"><div class="lbl">알바 일수</div><div class="val" style="color:var(--accent)">${workDays}일</div></div>
     <div class="stat-card"><div class="lbl">총 근무시간</div><div class="val" style="color:var(--yellow)">${totalHrs}h</div></div>
     <div class="stat-card"><div class="lbl">이번달 수입</div><div class="val" style="color:var(--green);font-size:20px;">${totalPay>=10000?Math.round(totalPay/10000)+'만':totalPay.toLocaleString()}원</div></div>
     <div class="stat-card"><div class="lbl">3.3% 공제후</div><div class="val" style="color:var(--accent);font-size:20px;">${(()=>{const a=Math.round(totalPay*0.967);return a>=10000?Math.round(a/10000)+'만':a.toLocaleString()})()}원</div></div>
+    ${albaPaySummaryHtml}
     <div class="stat-card" onclick="showAlarmManager()" style="cursor:pointer;">
       <div class="lbl">🔔 알람 관리</div><div class="val" style="font-size:18px;">보기</div>
     </div>`;
+}
+
+// ── 예상 실수령액 상세 팝업 (총급여→연장→야간→4대보험→세금→실수령액 단계별 표시) ──
+function showAlbaPayDetail(){
+  if(typeof getAlbaPaySummary !== 'function') return;
+  const s = getAlbaPaySummary(curY, curM);
+  let overlay = document.getElementById('alba-pay-detail-popup');
+  if(!overlay){
+    overlay = document.createElement('div');
+    overlay.id = 'alba-pay-detail-popup';
+    overlay.className = 'overlay';
+    overlay.style.display = 'none';
+    overlay.onclick = e=>{ if(e.target===overlay) overlay.style.display='none'; };
+    document.body.appendChild(overlay);
+  }
+  const regPay = Math.max(0, s.grossPay - s.otPay - s.nightPay);
+  overlay.innerHTML = `
+    <div class="popup" style="width:380px;padding:22px 20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <h3 style="font-size:20px;margin:0;">💰 예상 실수령액 상세</h3>
+        <button onclick="document.getElementById('alba-pay-detail-popup').style.display='none'"
+          style="background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer;">✕</button>
+      </div>
+      <div style="font-size:15px;line-height:2.0;color:var(--text2);">
+        <div>기본급(연장·야간 제외) &nbsp; ${fmt(regPay)}</div>
+        <div>+ 연장수당(8h 초과분 ×0.5 가산) &nbsp; ${fmt(s.otPay)}</div>
+        <div>+ 야간수당(22~06시 ×0.5 가산) &nbsp; ${fmt(s.nightPay)}</div>
+        <div style="border-top:1px solid var(--border);margin:6px 0;padding-top:6px;font-weight:700;color:var(--text);">= 총급여 &nbsp; ${fmt(s.grossPay)}</div>
+        <div>- 4대보험(국민연금·건강·장기요양·고용) &nbsp; ${fmt(s.ins.total)}</div>
+        <div>- 세금(소득세+지방소득세) &nbsp; ${fmt(s.tax.total)}</div>
+        <div style="border-top:1px solid var(--border);margin:6px 0;padding-top:6px;font-weight:800;color:#7fffd4;font-size:18px;">= 최종 실수령액 &nbsp; ${fmt(s.finalPay)}</div>
+      </div>
+      <div style="font-size:12px;color:var(--text3);margin-top:14px;line-height:1.6;">
+        ⚠️ 4대보험은 알바(직장)별 월 60시간 이상 근무 시 국민연금·건강보험·장기요양보험을 적용한 참고값이며,
+        고용보험은 근무 실적이 있으면 별도 기준으로 계산됩니다. 실제 가입 여부·공제액은 사업장 정책에 따라 다를 수 있습니다.
+      </div>
+      <button onclick="document.getElementById('alba-pay-detail-popup').style.display='none'"
+        style="width:100%;margin-top:14px;padding:12px;border-radius:10px;border:1px solid var(--border);
+               background:var(--surface2);color:var(--text2);font-size:16px;cursor:pointer;font-family:'Noto Sans KR';">닫기</button>
+    </div>`;
+  overlay.style.display = 'flex';
 }
 
 // ══════════════════════════════════════════
@@ -1099,17 +1153,19 @@ function saveNjobAll(){
     const extraMeal  = parseInt(document.getElementById('njob-alba-extra-meal')?.value)||0;
     const extraTotal = extraNight + extraOver + extraOther + extraMeal;
 
-    const basePay = Math.round(dayHours*albaWage) + Math.round(nightHours*albaWage*1.5);
+    // 연장근로(1일 8h 초과) 가산 — addNjobAlba()와 동일한 방식(야간 가산과 동일 구조로 0.5배 추가)
+    const otHours = Math.round(Math.max(0, totalHours - 8) * 10) / 10;
+    const basePay = Math.round(totalHours*albaWage) + Math.round(nightHours*albaWage*0.5) + Math.round(otHours*albaWage*0.5);
     const amount  = basePay + extraTotal;
-    let detail = nightHours > 0
-      ? `주간 ${dayHours}h + 야간 ${nightHours}h(×1.5)`
-      : `${totalHours}시간`;
+    let detail = `${totalHours}시간`;
+    if(nightHours > 0) detail += ` (야간 ${nightHours}h×1.5)`;
+    if(otHours > 0) detail += ` (연장 ${otHours}h×1.5)`;
     if(extraTotal > 0) detail += ` + 추가수당 ${extraTotal.toLocaleString()}원`;
 
     data.alba.push({
       id:now+1, name:albaName, wage:albaWage, hours:totalHours,
       startTime:startStr, endTime:endStr,
-      dayHours, nightHours, amount, detail,
+      dayHours, nightHours, otHours, amount, detail,
       extraNight, extraOver, extraOther, extraMeal
     });
     saved = true;
@@ -1362,19 +1418,23 @@ function addNjobAlba(){
   const extraMeal  = parseInt(document.getElementById('njob-alba-extra-meal')?.value)||0;
   const extraTotal = extraNight + extraOver + extraOther + extraMeal;
 
-  const basePay = Math.round(dayHours*wage) + Math.round(nightHours*wage*1.5);
+  // 연장근로(1일 8h 초과) 가산 — 기존 1배 베이스에 0.5배를 "추가 가산"하는 방식으로 계산해
+  // 야간수당(0.5배 가산)과 동일한 구조로 처리, 야간·연장이 겹쳐도 중복 없이 각각 0.5배씩만 추가됨
+  // (기존 식 dayHours*wage + nightHours*wage*1.5 는 otHours=0일 때와 결과가 100% 동일함)
+  const otHours = Math.round(Math.max(0, totalHours - 8) * 10) / 10;
+  const basePay = Math.round(totalHours*wage) + Math.round(nightHours*wage*0.5) + Math.round(otHours*wage*0.5);
   const amount  = basePay + extraTotal;
 
-  let detail = nightHours > 0
-    ? `주간 ${dayHours}h + 야간 ${nightHours}h(×1.5)`
-    : `${totalHours}시간`;
+  let detail = `${totalHours}시간`;
+  if(nightHours > 0) detail += ` (야간 ${nightHours}h×1.5)`;
+  if(otHours > 0) detail += ` (연장 ${otHours}h×1.5)`;
   if(extraTotal > 0) detail += ` + 추가수당 ${extraTotal.toLocaleString()}원`;
 
   const data = njobLoad(key);
   data.alba.push({
     id:Date.now(), name, wage, hours:totalHours,
     startTime:startStr, endTime:endStr,
-    dayHours, nightHours, amount, detail,
+    dayHours, nightHours, otHours, amount, detail,
     extraNight, extraOver, extraOther, extraMeal
   });
   njobSave(key, data);

@@ -26,7 +26,10 @@
       "Bash(node --check js/render-salary.js)",
       "Bash(netstat -ano)",
       "Bash(tasklist)",
-      "Bash(curl -s http://localhost:8923/js/salary.js)"
+      "Bash(curl -s http://localhost:8923/js/salary.js)",
+      "Bash(node --check sw.js)",
+      "Bash(node --check js/sw-init.js)",
+      "Bash(curl -s http://localhost:8923/js/calendar-modes.js)"
     ]
   }
 }

@@ -5,9 +5,8 @@
  * ★ 통합본: cache-v8 기준, 캐시버스팅 쿼리 포함
  */
 
-// ★ Fix #14: 야간수당/휴일수당 계산 수정(2026-06-18) 반영 위해 캐시명 업데이트
-//    + 아래 LOCAL_RESOURCES 쿼리스트링을 index.html의 실제 <script> 태그와 동기화
-const CACHE_NAME = 'moneynyang-v1-cache-v11';
+// ★ Fix #15: 알바/N잡 실수령액(연장수당·4대보험) 기능 추가(2026-06-18) 반영 위해 캐시명 업데이트
+const CACHE_NAME = 'moneynyang-v1-cache-v12';
 
 // ── 로컬 파일 (분리된 CSS/JS 전체) ──
 // ★ index.html의 <script>/<link> 태그와 쿼리스트링이 항상 일치해야 함 (불일치 시 사전 캐시 무의미)

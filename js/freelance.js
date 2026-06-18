@@ -140,6 +140,98 @@ function calcWeeklyHolidayPay(weeklyHours, hourlyWage){
   return Math.round(hourlyWage * 8);
 }
 
+// ══════════════════════════════════════════
+// 알바 실수령액 (4대보험·연장·야간 반영)
+// ── 직장인(salary.js)과 같은 계산기를 재사용하므로 이 섹션에는
+//    새 4대보험/세금 "계산기"를 만들지 않고, 알바 데이터 집계 + 적격성 판단만 담당함
+// ══════════════════════════════════════════
+
+// 레거시(albaData) + N잡(njobLoad) 알바 항목을 한 달치로 합산
+// byJob: 4대보험 60h 판정을 "알바명" 단위로 하기 위한 집계(고용주별 판정 근사)
+function getAlbaMonthlyAggregate(y, m){
+  const dim = new Date(y, m+1, 0).getDate();
+  let legacyGross = 0, legacyHours = 0;
+  let njobGross = 0, njobHours = 0, otPay = 0, nightPay = 0;
+  const byJob = {};
+
+  const addJob = (name, hours, gross) => {
+    const k = name || '알바';
+    if(!byJob[k]) byJob[k] = {hours:0, gross:0};
+    byJob[k].hours += hours;
+    byJob[k].gross += gross;
+  };
+
+  for(let d=1; d<=dim; d++){
+    const key = (typeof dk==='function') ? dk(y,m,d) : `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+
+    // 레거시 단독알바(albaData) — 야간/연장 분리 없는 단순 시급 계산
+    if(typeof albaData !== 'undefined'){
+      (albaData[key]||[]).forEach(it=>{
+        let h = it.endH - it.startH; if(h<0) h += 24;
+        const amt = Math.round(h * (it.wage||0));
+        legacyGross += amt; legacyHours += h;
+        addJob(it.name, h, amt);
+      });
+    }
+
+    // N잡 알바(njobLoad) — otHours/nightHours 필드가 있으면 반영(과거 데이터는 0으로 처리)
+    if(typeof njobLoad === 'function'){
+      const nd = njobLoad(key);
+      (nd.alba||[]).forEach(it=>{
+        const wage = it.wage || 0;
+        const hours = it.hours || 0;
+        const amt = (it.amount != null) ? it.amount : Math.round(wage*hours);
+        const oh = it.otHours || 0;
+        const nh = it.nightHours || 0;
+        njobGross += amt; njobHours += hours;
+        otPay    += Math.round(oh*wage*0.5);
+        nightPay += Math.round(nh*wage*0.5);
+        addJob(it.name, hours, amt);
+      });
+    }
+  }
+
+  return {
+    totalGross: legacyGross + njobGross,
+    totalHours: legacyHours + njobHours,
+    otPay, nightPay, byJob
+  };
+}
+
+// 4대보험 — calc4Insurance()(salary.js)를 그대로 재사용, 여기서는 "적격성"만 판단
+// 국민연금/건강보험(+장기요양): 알바명 단위 월 60시간 이상일 때만 적용
+// 고용보험: 시간 기준과 무관하게 해당 알바에 근무 실적이 있으면 별도로 적용
+function getAlbaInsuranceSummary(byJob){
+  let np=0, hi=0, ltc=0, ei=0;
+  Object.keys(byJob||{}).forEach(name=>{
+    const job = byJob[name];
+    const npHiEligible = job.hours >= 60;
+    const eiEligible = job.hours > 0;
+    const raw = (typeof calc4Insurance === 'function') ? calc4Insurance(job.gross) : {np:0,hi:0,ltc:0,ei:0};
+    if(npHiEligible){ np += raw.np; hi += raw.hi; ltc += raw.ltc; }
+    if(eiEligible){ ei += raw.ei; }
+  });
+  return { np, hi, ltc, ei, total: np+hi+ltc+ei };
+}
+
+// 알바 월 실수령액 종합 — gross → 연장/야간 → 4대보험 → 세금 → 최종 실수령액
+function getAlbaPaySummary(y, m){
+  const agg = getAlbaMonthlyAggregate(y, m);
+  const ins = getAlbaInsuranceSummary(agg.byJob);
+  // 세금: 근로소득 가정 시 직장인과 동일한 calcIncomeTax()를 재사용(참고용 근사치)
+  const taxRaw = (typeof calcIncomeTax === 'function') ? calcIncomeTax(agg.totalGross) : {income:0, local:0, total:0};
+  const tax = agg.totalGross > 0 ? taxRaw : {income:0, local:0, total:0};
+  const finalPay = Math.max(0, agg.totalGross - ins.total - tax.total);
+  return {
+    grossPay: agg.totalGross,
+    totalHours: agg.totalHours,
+    otPay: agg.otPay,
+    nightPay: agg.nightPay,
+    ins, tax, finalPay,
+    byJob: agg.byJob
+  };
+}
+
 // ── 메인 렌더 ──────────────────────────
 function renderIncomeCalc(){
   const page = document.getElementById('salary-page');
