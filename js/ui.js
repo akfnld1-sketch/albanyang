@@ -1509,6 +1509,8 @@ function isMobileViewport(){
 function hidePwaInstallNudge(){
   const el = document.getElementById('pwa-install-nudge');
   if(el) el.remove();
+  // 배너 표시로 확보했던 하단 여백도 함께 해제
+  document.body.classList.remove('has-pwa-nudge');
 }
 
 function showPwaInstallNudge(){
@@ -1531,6 +1533,9 @@ function showPwaInstallNudge(){
     (!isIOS ? '<button onclick="installPWA()" style="padding:8px 10px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:800;font-family:\'Noto Sans KR\';cursor:pointer;">설치</button>' : '') +
     '<button onclick="hidePwaInstallNudge()" aria-label="닫기" style="width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:14px;cursor:pointer;">×</button>';
   document.body.appendChild(nudge);
+  // ★ 배너가 화면 하단에 고정(position:fixed)되어 페이지 하단의 저장 버튼 등과 겹치는 문제 방지:
+  //   배너 높이만큼 본문 하단 여백을 확보해, 스크롤해도 버튼이 배너 아래로 가려지지 않도록 함
+  document.body.classList.add('has-pwa-nudge');
 }
 
 window.addEventListener('load', ()=>{

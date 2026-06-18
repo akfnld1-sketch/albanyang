@@ -19,6 +19,10 @@
 body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100vh;
      transition:background 0.6s ease, color 0.4s ease;font-size:15px;}
 
+/* PWA 설치 배너(#pwa-install-nudge)가 화면 하단에 고정되어 저장 버튼 등 콘텐츠를 가리지 않도록
+   배너가 떠 있는 동안 본문 하단에 여백을 확보 (js/ui.js showPwaInstallNudge/hidePwaInstallNudge) */
+body.has-pwa-nudge{padding-bottom:104px;transition:padding-bottom .2s ease;}
+
 /* ══════════════════════════════════════════
    온보딩 튜토리얼 모달
 ══════════════════════════════════════════ */

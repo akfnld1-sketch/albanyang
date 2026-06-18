@@ -507,15 +507,19 @@ function renderAlbaCalendar(){
     el.innerHTML=html;
     grid.appendChild(el);
   }
-  // stats-row: 알바용 (기존 "이번달 수입"/"3.3% 공제후" 카드는 그대로 유지, 새 카드만 추가)
+  // stats-row: 알바용 (기존 "이번달 수입" 카드는 그대로 유지)
+  // ★ "예상 실수령액"(근로소득 기준, 연장·야간·4대보험·세금 반영)을 기준값으로 명확히 표시하고,
+  //   "3.3% 공제후"(사업소득 가정 시 참고용)는 보조 정보로 구분해 두 숫자가 혼동되지 않도록 함
   let albaPaySummaryHtml = '';
   try{
     const s = (typeof getAlbaPaySummary === 'function') ? getAlbaPaySummary(curY, curM) : null;
     if(s){
       const fp = s.finalPay;
       albaPaySummaryHtml = `
-    <div class="stat-card" onclick="showAlbaPayDetail()" style="cursor:pointer;">
-      <div class="lbl">💰 예상 실수령액</div><div class="val" style="color:#7fffd4;font-size:20px;">${fp>=10000?Math.round(fp/10000)+'만':fp.toLocaleString()}원</div>
+    <div class="stat-card" onclick="showAlbaPayDetail()" style="cursor:pointer;border:1.5px solid var(--green);position:relative;">
+      <div style="position:absolute;top:-8px;right:8px;font-size:10px;font-weight:800;background:var(--green);color:#06281c;padding:2px 6px;border-radius:8px;">★ 기준</div>
+      <div class="lbl">💰 예상 실수령액 <span style="font-size:10px;color:var(--text3);">(근로소득)</span></div>
+      <div class="val" style="color:var(--green);font-size:20px;">${fp>=10000?Math.round(fp/10000)+'만':fp.toLocaleString()}원</div>
     </div>`;
     }
   }catch(e){ albaPaySummaryHtml = ''; }
@@ -523,9 +527,12 @@ function renderAlbaCalendar(){
   document.getElementById('stats-row').innerHTML=`
     <div class="stat-card"><div class="lbl">알바 일수</div><div class="val" style="color:var(--accent)">${workDays}일</div></div>
     <div class="stat-card"><div class="lbl">총 근무시간</div><div class="val" style="color:var(--yellow)">${totalHrs}h</div></div>
-    <div class="stat-card"><div class="lbl">이번달 수입</div><div class="val" style="color:var(--green);font-size:20px;">${totalPay>=10000?Math.round(totalPay/10000)+'만':totalPay.toLocaleString()}원</div></div>
-    <div class="stat-card"><div class="lbl">3.3% 공제후</div><div class="val" style="color:var(--accent);font-size:20px;">${(()=>{const a=Math.round(totalPay*0.967);return a>=10000?Math.round(a/10000)+'만':a.toLocaleString()})()}원</div></div>
+    <div class="stat-card"><div class="lbl">이번달 수입(총액)</div><div class="val" style="color:var(--text);font-size:20px;">${totalPay>=10000?Math.round(totalPay/10000)+'만':totalPay.toLocaleString()}원</div></div>
     ${albaPaySummaryHtml}
+    <div class="stat-card" style="opacity:.75;">
+      <div class="lbl">💼 사업소득 가정 시 <span style="font-size:10px;color:var(--text3);">(참고, 3.3% 공제)</span></div>
+      <div class="val" style="color:var(--text2);font-size:16px;">${(()=>{const a=Math.round(totalPay*0.967);return a>=10000?Math.round(a/10000)+'만':a.toLocaleString()})()}원</div>
+    </div>
     <div class="stat-card" onclick="showAlarmManager()" style="cursor:pointer;">
       <div class="lbl">🔔 알람 관리</div><div class="val" style="font-size:18px;">보기</div>
     </div>`;
@@ -1111,6 +1118,13 @@ function renderPopupStatusBadge(){
   const el = document.getElementById('p-status-badge');
   if(!el) return;
 
+  // ★ 직업변경 후 이전 알바 배지가 남는 문제 수정: selectedJobs(현재 선택된 직종) 기준으로
+  //   알바 직종이 실제로 선택되어 있을 때만 회사알바/편의점 등 배지를 표시.
+  //   직장인 모드(selectedJobs에 'employee' 포함)에서는 albaSubtype 값이 남아있어도 절대 표시하지 않음.
+  const selectedJobs = (typeof loadSelectedJobs==='function') ? loadSelectedJobs() : [];
+  const isEmployeeMode = selectedJobs.includes('employee');
+  const isAlbaJobSelected = selectedJobs.some(j=>['convenience','shortAlba'].includes(j));
+
   let wtId = '', subId = '', albaSub = '';
   try{
     wtId    = localStorage.getItem('atm2_workType') || '';
@@ -1131,7 +1145,7 @@ function renderPopupStatusBadge(){
   };
 
   const wtLabel   = wtLabelMap[wtId] || '';
-  const albaLabel = albaSubLabelMap[albaSub] || '';
+  const albaLabel = (!isEmployeeMode && isAlbaJobSelected) ? (albaSubLabelMap[albaSub] || '') : '';
 
   if(!wtLabel && !albaLabel){ el.style.display='none'; el.innerHTML=''; return; }
 
