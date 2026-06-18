@@ -752,3 +752,309 @@ function updateManifest(iconBase64){
   link.href = url;
   link._prevUrl = url;
 }
+
+// ══════════════════════════════════════════
+// 🛡️ 생존관리(가계부) — budgetState / 1~4단계
+// ── leave.js/freelance.js/notifications.js가 이미 참조하던
+//    budgetState/budgetLoad/calcZeroBalanceDate를 여기서 신규 정의함
+// ══════════════════════════════════════════
+
+let budgetState = {
+  _loaded: false,
+  fixedExpenses: { loan:0, telecom:0, insurance:0, rent:0, maintenance:0, transport:0, living:0, other:0 },
+  variableExpenses: [],   // [{id, cat, amount, date:'YYYY-MM-DD', memo}]
+  savingsGoal: 0,
+  emergencyFund: 0,       // "현재잔고" — notifications.js가 이미 참조하는 필드명 그대로 재사용
+  bankSavings: 0,
+  customIncome: 0,        // 생존관리 화면에서 직접 입력하는 기타수입
+  paydayDay: 0,
+  warningPct: 80,
+};
+
+function budgetLoad(){
+  try{
+    const raw = localStorage.getItem('atm2_budgetState');
+    if(raw){
+      const saved = JSON.parse(raw);
+      Object.assign(budgetState, saved);
+    }
+  }catch(e){}
+  // 누락 필드 기본값 보강(과거 저장본/하위호환)
+  if(!budgetState.fixedExpenses) budgetState.fixedExpenses = { loan:0, telecom:0, insurance:0, rent:0, maintenance:0, transport:0, living:0, other:0 };
+  if(!budgetState.variableExpenses) budgetState.variableExpenses = [];
+  budgetState._loaded = true;
+  return budgetState;
+}
+
+function budgetSave(){
+  try{ localStorage.setItem('atm2_budgetState', JSON.stringify(budgetState)); }catch(e){}
+}
+
+// ── 수입 집계: 직장인/알바는 기존 계산기를 그대로 재사용, 프리랜서/기타는 기존 저장소(njobLoad·atm2_income_)를 병합 ──
+function getBudgetIncomeBreakdown(y, m){
+  let employee=0, alba=0, freelancer=0, etc=0;
+
+  try{
+    const selectedJobs = (typeof loadSelectedJobs==='function') ? loadSelectedJobs() : [];
+    if(selectedJobs.includes('employee') && typeof getPayData==='function'){
+      employee = getPayData().finalPay || 0;
+    }
+  }catch(e){}
+
+  try{
+    if(typeof getAlbaPaySummary==='function'){
+      alba = getAlbaPaySummary(y, m).finalPay || 0;
+    }
+  }catch(e){}
+
+  try{
+    const dim = new Date(y, m+1, 0).getDate();
+    for(let d=1; d<=dim; d++){
+      const key = (typeof dk==='function') ? dk(y,m,d) : `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      if(typeof njobLoad !== 'function') break;
+      const nd = njobLoad(key);
+      (nd.free||[]).forEach(it=>{
+        const gross = (typeof freeItemAmount==='function') ? freeItemAmount(it) : ((it.count||0)*(it.price||0));
+        freelancer += Math.round(gross * 0.967); // 3.3% 원천징수(사업소득)
+      });
+      (nd.delivery||[]).forEach(it=>{ etc += (it.count||0)*(it.price||0); });
+      (nd.etc||[]).forEach(it=>{ etc += it.amount||0; });
+    }
+  }catch(e){}
+
+  try{
+    const incKey = `atm2_income_${y}_${String(m+1).padStart(2,'0')}`;
+    const raw = localStorage.getItem(incKey);
+    if(raw){
+      const items = JSON.parse(raw);
+      items.forEach(it=>{
+        const amt = parseInt(it.amount)||0;
+        const net = (it.platformNet!=null) ? parseInt(it.platformNet) : Math.round(amt*0.967);
+        if(it.jobType === 'freelancer') freelancer += net;
+        else if(it.jobType && it.jobType !== 'employee') etc += net;
+      });
+    }
+  }catch(e){}
+
+  etc += (budgetState.customIncome || 0);
+
+  return { employee, alba, freelancer, etc, total: employee+alba+freelancer+etc };
+}
+
+// ── 잔고 소진일 예측 (4단계) ──
+function calcZeroBalanceDate(){
+  if(!budgetState._loaded) budgetLoad();
+  const today = new Date();
+  const y=today.getFullYear(), m=today.getMonth(), d=today.getDate();
+
+  const income = getBudgetIncomeBreakdown(y, m);
+  const fixedTotal = Object.values(budgetState.fixedExpenses||{}).reduce((s,v)=>s+(parseInt(v)||0),0);
+  const ymPrefix = `${y}-${String(m+1).padStart(2,'0')}`;
+  const monthVar = (budgetState.variableExpenses||[]).filter(e=>e.date && e.date.startsWith(ymPrefix));
+  const varTotal = monthVar.reduce((s,e)=>s+(parseInt(e.amount)||0),0);
+
+  const availableBudget = income.total - fixedTotal - (budgetState.savingsGoal||0);
+  const avgDailySpend = d>0 ? varTotal/d : 0;
+  const currentBalance = budgetState.emergencyFund || 0;
+
+  let dateStr, daysLeft;
+  if(avgDailySpend <= 0){
+    dateStr = '데이터 부족'; daysLeft = null;
+  } else {
+    daysLeft = Math.floor(currentBalance / avgDailySpend);
+    if(daysLeft < 0){ dateStr = '이미 위험'; }
+    else{
+      const zeroDate = new Date(today); zeroDate.setDate(zeroDate.getDate() + daysLeft);
+      dateStr = `${zeroDate.getMonth()+1}월 ${zeroDate.getDate()}일`;
+    }
+  }
+
+  // 위험도(사용설명서 기준): 안전(<80%) / 주의(80%+) / 위험(85%+) / 초위험(100%+)
+  const spentPct = availableBudget>0 ? Math.round((varTotal/availableBudget)*100) : (varTotal>0?100:0);
+  let riskLevel = 'safe', riskLabel = '✅ 안전';
+  if(spentPct>=100){ riskLevel='danger_high'; riskLabel='🚨 초위험'; }
+  else if(spentPct>=85){ riskLevel='danger'; riskLabel='🔥 위험'; }
+  else if(spentPct>=80){ riskLevel='warning'; riskLabel='⚠️ 주의'; }
+
+  return { date:dateStr, daysLeft, avgDailySpend:Math.round(avgDailySpend), currentBalance,
+           availableBudget, varTotal, fixedTotal, spentPct, riskLevel, riskLabel };
+}
+
+// ── 2단계: 고정지출 저장 ──
+function saveBudgetFixedExpenses(){
+  if(!budgetState._loaded) budgetLoad();
+  const ids = ['loan','telecom','insurance','rent','maintenance','transport','living','other'];
+  ids.forEach(id=>{
+    const el = document.getElementById('bdg-fixed-'+id);
+    if(el) budgetState.fixedExpenses[id] = parseInt(el.value)||0;
+  });
+  budgetSave();
+  if(typeof showToast==='function') showToast('✅ 고정지출 저장됨');
+  renderBudgetPage();
+}
+
+// ── 3단계: 변동지출 추가/삭제 ──
+function addBudgetVariableExpense(){
+  if(!budgetState._loaded) budgetLoad();
+  const cat = document.getElementById('bdg-var-cat')?.value || 'etc';
+  const amount = parseInt(document.getElementById('bdg-var-amount')?.value)||0;
+  const date = document.getElementById('bdg-var-date')?.value || new Date().toISOString().slice(0,10);
+  const memo = (document.getElementById('bdg-var-memo')?.value || '').trim();
+  if(amount<=0){ if(typeof showToast==='function') showToast('⚠️ 금액을 입력해주세요'); return; }
+  budgetState.variableExpenses.push({ id:Date.now(), cat, amount, date, memo });
+  budgetSave();
+  if(typeof showToast==='function') showToast('✅ 지출 추가됨');
+  renderBudgetPage();
+}
+
+function deleteBudgetVariableExpense(id){
+  if(!budgetState._loaded) budgetLoad();
+  budgetState.variableExpenses = budgetState.variableExpenses.filter(e=>e.id!==id);
+  budgetSave();
+  renderBudgetPage();
+}
+
+// ── 4단계: 현재잔고/저축목표/기타수입 저장 ──
+function saveBudgetSettings(){
+  if(!budgetState._loaded) budgetLoad();
+  budgetState.emergencyFund = parseInt(document.getElementById('bdg-current-balance')?.value)||0;
+  budgetState.savingsGoal   = parseInt(document.getElementById('bdg-savings-goal')?.value)||0;
+  budgetState.customIncome  = parseInt(document.getElementById('bdg-custom-income')?.value)||0;
+  budgetSave();
+  if(typeof showToast==='function') showToast('✅ 저장됨');
+  renderBudgetPage();
+}
+
+// ── 1단계: 생존관리 메인 렌더 ──
+const BDG_FIXED_LABELS = { loan:'대출', telecom:'통신비', insurance:'보험', rent:'월세', maintenance:'관리비', transport:'교통비', living:'생활비', other:'기타' };
+const BDG_VAR_CATS = { food:'🍚 식비', cafe:'☕ 카페', shopping:'🛍️ 쇼핑', medical:'🏥 병원', hobby:'🎮 취미', etc:'➕ 기타' };
+
+function renderBudgetPage(){
+  if(!budgetState._loaded) budgetLoad();
+  const page = document.getElementById('budget-page');
+  if(!page) return;
+
+  const today = new Date();
+  const y = today.getFullYear(), m = today.getMonth();
+  const income = getBudgetIncomeBreakdown(y, m);
+  const fixedTotal = Object.values(budgetState.fixedExpenses).reduce((s,v)=>s+(parseInt(v)||0),0);
+  const ymPrefix = `${y}-${String(m+1).padStart(2,'0')}`;
+  const monthVar = (budgetState.variableExpenses||[]).filter(e=>e.date && e.date.startsWith(ymPrefix));
+  const varTotal = monthVar.reduce((s,e)=>s+(parseInt(e.amount)||0),0);
+  const totalExpense = fixedTotal + varTotal;
+  const remain = income.total - totalExpense;
+  const zb = calcZeroBalanceDate();
+
+  const riskBg = { safe:'rgba(61,214,140,.1)', warning:'rgba(255,209,102,.1)', danger:'rgba(255,159,67,.12)', danger_high:'rgba(255,92,122,.12)' }[zb.riskLevel];
+  const riskBorder = { safe:'rgba(61,214,140,.3)', warning:'rgba(255,209,102,.35)', danger:'rgba(255,159,67,.35)', danger_high:'rgba(255,92,122,.35)' }[zb.riskLevel];
+
+  // 카테고리별 변동지출 합계(3단계)
+  const catTotals = {};
+  monthVar.forEach(e=>{ catTotals[e.cat] = (catTotals[e.cat]||0) + (parseInt(e.amount)||0); });
+
+  const varListHtml = monthVar.slice().reverse().map(e=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--border);">
+      <div style="font-size:13px;color:var(--text);">${BDG_VAR_CATS[e.cat]||e.cat} <span style="color:var(--text3);font-size:11px;">${e.date}</span>${e.memo?` · ${e.memo}`:''}</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="font-size:13px;font-weight:700;color:var(--red);">-${e.amount.toLocaleString()}원</div>
+        <button onclick="deleteBudgetVariableExpense(${e.id})" style="background:none;border:none;color:var(--text3);font-size:14px;cursor:pointer;">✕</button>
+      </div>
+    </div>`).join('') || `<div style="padding:14px;text-align:center;color:var(--text3);font-size:13px;">이번 달 변동지출 기록 없음</div>`;
+
+  const catBarHtml = Object.keys(BDG_VAR_CATS).map(cat=>{
+    const amt = catTotals[cat]||0;
+    const pct = varTotal>0 ? Math.round(amt/varTotal*100) : 0;
+    if(amt<=0) return '';
+    return `<div style="margin-bottom:6px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:2px;">
+        <span>${BDG_VAR_CATS[cat]}</span><span>${amt.toLocaleString()}원 (${pct}%)</span>
+      </div>
+      <div style="height:6px;background:var(--surface2);border-radius:4px;overflow:hidden;">
+        <div style="height:100%;width:${pct}%;background:var(--accent);"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  page.innerHTML = `
+    <div style="padding:14px;max-width:520px;margin:0 auto;">
+
+      <!-- 경고 배너(4단계) -->
+      <div style="background:${riskBg};border:1px solid ${riskBorder};border-radius:12px;padding:14px;margin-bottom:14px;">
+        <div style="font-size:15px;font-weight:800;margin-bottom:8px;">${zb.riskLabel} (이번달 가용예산의 ${zb.spentPct}% 사용)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;color:var(--text2);">
+          <div>💰 현재잔고<br><b style="font-size:15px;color:var(--text);">${zb.currentBalance.toLocaleString()}원</b></div>
+          <div>📉 일평균지출<br><b style="font-size:15px;color:var(--text);">${zb.avgDailySpend.toLocaleString()}원</b></div>
+          <div>🚨 예상소진일<br><b style="font-size:15px;color:var(--red);">${zb.date}</b></div>
+          <div>⏳ 남은 일수<br><b style="font-size:15px;color:var(--text);">${zb.daysLeft!=null?zb.daysLeft+'일':'-'}</b></div>
+        </div>
+      </div>
+
+      <!-- 1단계: 수입/지출/남은금액 -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">📊 이번달 수입·지출</div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:4px;"><span>🏢 직장인수입</span><b style="color:var(--text);">${income.employee.toLocaleString()}원</b></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:4px;"><span>💪 알바수입</span><b style="color:var(--text);">${income.alba.toLocaleString()}원</b></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:4px;"><span>💻 프리랜서수입</span><b style="color:var(--text);">${income.freelancer.toLocaleString()}원</b></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:8px;"><span>➕ 기타수입</span><b style="color:var(--text);">${income.etc.toLocaleString()}원</b></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;border-top:1px solid var(--border);padding-top:8px;margin-bottom:6px;"><span>총수입</span><span style="color:var(--green);">${income.total.toLocaleString()}원</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;margin-bottom:6px;"><span>총지출</span><span style="color:var(--red);">${totalExpense.toLocaleString()}원</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:17px;font-weight:800;border-top:1px solid var(--border);padding-top:8px;"><span>남은금액</span><span style="color:${remain>=0?'var(--accent)':'var(--red)'};">${remain.toLocaleString()}원</span></div>
+      </div>
+
+      <!-- 2단계: 고정지출 -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">⚙️ 고정지출 설정 <span style="font-size:12px;color:var(--text3);">(합계 ${fixedTotal.toLocaleString()}원)</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+          ${Object.keys(BDG_FIXED_LABELS).map(id=>`
+            <div>
+              <div style="font-size:11px;color:var(--text3);margin-bottom:3px;">${BDG_FIXED_LABELS[id]}</div>
+              <input id="bdg-fixed-${id}" type="number" min="0" step="1000" value="${budgetState.fixedExpenses[id]||0}"
+                style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);
+                       border-radius:8px;padding:8px 10px;font-size:13px;font-family:'JetBrains Mono';box-sizing:border-box;">
+            </div>`).join('')}
+        </div>
+        <button onclick="saveBudgetFixedExpenses()" style="width:100%;padding:11px;border-radius:10px;border:none;
+          background:var(--accent);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR';">💾 고정지출 저장</button>
+      </div>
+
+      <!-- 3단계: 변동지출 -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">🧾 변동지출 <span style="font-size:12px;color:var(--text3);">(이번달 ${varTotal.toLocaleString()}원)</span></div>
+        ${catBarHtml}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;">
+          <select id="bdg-var-cat" style="background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px;font-size:13px;">
+            ${Object.keys(BDG_VAR_CATS).map(c=>`<option value="${c}">${BDG_VAR_CATS[c]}</option>`).join('')}
+          </select>
+          <input id="bdg-var-amount" type="number" min="0" placeholder="금액" style="background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px;font-size:13px;font-family:'JetBrains Mono';">
+          <input id="bdg-var-date" type="date" value="${today.toISOString().slice(0,10)}" style="background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px;font-size:13px;">
+          <input id="bdg-var-memo" type="text" placeholder="메모(선택)" style="background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px;font-size:13px;">
+        </div>
+        <button onclick="addBudgetVariableExpense()" style="width:100%;padding:11px;border-radius:10px;border:none;
+          background:var(--green);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR';margin-bottom:8px;">+ 지출 입력</button>
+        <div style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;">${varListHtml}</div>
+      </div>
+
+      <!-- 4단계: 잔고/저축목표/기타수입 설정 -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">🎯 잔고·저축 설정</div>
+        <div style="margin-bottom:8px;">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:3px;">💰 현재 잔고</div>
+          <input id="bdg-current-balance" type="number" min="0" value="${budgetState.emergencyFund||0}"
+            style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 10px;font-size:13px;font-family:'JetBrains Mono';box-sizing:border-box;">
+        </div>
+        <div style="margin-bottom:8px;">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:3px;">🎯 월 저축 목표</div>
+          <input id="bdg-savings-goal" type="number" min="0" value="${budgetState.savingsGoal||0}"
+            style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 10px;font-size:13px;font-family:'JetBrains Mono';box-sizing:border-box;">
+        </div>
+        <div style="margin-bottom:10px;">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:3px;">➕ 기타수입 직접입력</div>
+          <input id="bdg-custom-income" type="number" min="0" value="${budgetState.customIncome||0}"
+            style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 10px;font-size:13px;font-family:'JetBrains Mono';box-sizing:border-box;">
+        </div>
+        <button onclick="saveBudgetSettings()" style="width:100%;padding:11px;border-radius:10px;border:none;
+          background:var(--accent);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR';">💾 저장</button>
+      </div>
+
+    </div>`;
+}

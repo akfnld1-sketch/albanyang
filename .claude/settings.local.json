@@ -31,7 +31,10 @@
       "Bash(node --check js/sw-init.js)",
       "Bash(curl -s http://localhost:8923/js/calendar-modes.js)",
       "Bash(node --check js/calendar-modes.js)",
-      "Bash(node --check js/jobtype.js)"
+      "Bash(node --check js/jobtype.js)",
+      "Bash(curl -s http://localhost:8923/js/budget.js)",
+      "Bash(python -m http.server 8924)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:8924/index.html)"
     ]
   }
 }
