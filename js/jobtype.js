@@ -397,6 +397,7 @@ function applyWorkType(wtId, subId){
   var key = subId ? wtId+'_'+subId : wtId;
   showToast('✅ ' + (labelMap[key]||key) + ' 설정됨');
   if(typeof applyJobTypeUI==='function') applyJobTypeUI();
+  if(typeof updateWorkTypeBadge==='function') updateWorkTypeBadge();
   if(typeof renderCalendar==='function') renderCalendar();
 }
 

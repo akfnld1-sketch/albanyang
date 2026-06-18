@@ -1093,7 +1093,9 @@ function initDayJobTabs(key){
   if(empBody && !showEmpSec) empBody.style.display = 'none';
 
   // 기록 있는 섹션 자동 펼침
-  if(data.alba.length > 0)     autoOpenNjobSec('alba');
+  // ★ 알바는 기록이 없어도 "선택된 직종"이면 항상 자동 펼침 — 회사알바(주간/야간/2교대/3교대)
+  //   선택 후 처음 날짜를 클릭했을 때 알바명·시급·출근·퇴근 입력란이 바로 보이도록 함
+  if(data.alba.length > 0 || vis.alba) autoOpenNjobSec('alba');
   if(data.delivery.length > 0) autoOpenNjobSec('delivery');
   if(data.free.length > 0)     autoOpenNjobSec('free');
   if((data.etc||[]).length > 0) autoOpenNjobSec('etc');

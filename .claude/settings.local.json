@@ -29,7 +29,9 @@
       "Bash(curl -s http://localhost:8923/js/salary.js)",
       "Bash(node --check sw.js)",
       "Bash(node --check js/sw-init.js)",
-      "Bash(curl -s http://localhost:8923/js/calendar-modes.js)"
+      "Bash(curl -s http://localhost:8923/js/calendar-modes.js)",
+      "Bash(node --check js/calendar-modes.js)",
+      "Bash(node --check js/jobtype.js)"
     ]
   }
 }
