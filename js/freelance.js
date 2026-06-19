@@ -290,6 +290,35 @@ function getAlbaMonthlyAggregate(y, m){
     }
   }
 
+  // ── 회사알바 기본수입 집계(dayData 기반) ──
+  // 회사알바는 직장인과 동일하게 dayData[status/start/end]에 저장되므로, 같은 net-hours
+  // 계산(calcNetHours)을 그대로 써서 "근무한 시간 × 시급"을 단순 집계.
+  // ★ byJob(알바명 단위, 60h 4대보험 판정용) 밖의 별도 합계(companyGross/companyHours)로만
+  //   처리 — 회사알바를 byJob에 넣지 않음(정책: 60h 4대보험 판정 대상에 포함하지 않음,
+  //   5단계에서 만든 "회사알바 주휴수당도 byJob 밖" 설계와 일관성 유지).
+  // ★ 연장(OT)/야간수당 가산 없이 단순 시급(net×hourlyRate)만 집계 — 1차 최소 범위.
+  let companyGross = 0, companyHours = 0;
+  {
+    const monthData = (y === curY && m === curM)
+      ? dayData
+      : ((typeof attLoadMonth === 'function' && activeWpId && activeEmpId)
+          ? attLoadMonth(activeWpId, activeEmpId, y, m) : {});
+    const companyWorkStates = ['work','early','half','sat_work','sun_work','holiday'];
+    for(let d=1; d<=dim; d++){
+      const data = monthData[dk(y, m, d)];
+      if(!data || !data.status) continue;
+      if(companyWorkStates.includes(data.status)){
+        const net = calcNetHours(data.start, data.end, data.status, data.shift);
+        companyGross += Math.round(net * hourlyRate);
+        companyHours += net;
+      } else if(data.status === 'leave'){
+        // 연차(유급) — 8h 기준(getWeeklyHolidayData 등 기존 관례와 동일)
+        companyGross += Math.round(8 * hourlyRate);
+        companyHours += 8;
+      }
+    }
+  }
+
   // ── 주휴수당 가산(5단계) ──
   // 확정된 주(isFutureWeek=false 이고 holidayOk=true)만 totalGross에 가산.
   // 진행중 주는 weeklyHolidayDetail에 기록만 하고 금액은 가산하지 않음(holidayOk가 이미 false라 자연히 제외됨).
@@ -331,9 +360,10 @@ function getAlbaMonthlyAggregate(y, m){
   }
 
   return {
-    totalGross: legacyGross + njobGross + weeklyHolidayPay,
-    totalHours: legacyHours + njobHours,
+    totalGross: legacyGross + njobGross + companyGross + weeklyHolidayPay,
+    totalHours: legacyHours + njobHours + companyHours,
     otPay, nightPay, byJob,
+    companyGross, companyHours,
     weeklyHolidayPay,
     weeklyHolidayDetail
   };
@@ -370,6 +400,8 @@ function getAlbaPaySummary(y, m){
     nightPay: agg.nightPay,
     ins, tax, finalPay,
     byJob: agg.byJob,
+    companyGross: agg.companyGross,
+    companyHours: agg.companyHours,
     weeklyHolidayPay: agg.weeklyHolidayPay,
     weeklyHolidayDetail: agg.weeklyHolidayDetail
   };
