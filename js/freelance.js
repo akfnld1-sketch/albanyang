@@ -146,6 +146,64 @@ function calcWeeklyHolidayPay(weeklyHours, hourlyWage){
 //    새 4대보험/세금 "계산기"를 만들지 않고, 알바 데이터 집계 + 적격성 판단만 담당함
 // ══════════════════════════════════════════
 
+/**
+ * getAlbaJobWeeklyHours(y, m): 일반알바(albaData, 레거시) + N잡알바(njobLoad)를
+ * "알바명" 단위(사업장 근사)로 병합해, getWeekRanges()의 주 단위 구간에 시간/금액을 집계.
+ *
+ * ★ 3단계 — 데이터 병합까지만 담당. 주휴수당 발생 판정(15h+개근)과 실제 급여 가산은
+ *   getAlbaMonthlyAggregate()/getAlbaPaySummary()에 연결하는 4~5단계에서 진행.
+ *
+ * 반환: getWeekRanges(y,m)와 동일한 주 구조에 byJob 필드를 추가한 배열
+ *   [{ weekKey, weekLabel, isFutureWeek, byJob:{ [알바명]: {hours, gross} } }, ...]
+ *
+ * 같은 알바명이 레거시(albaData)와 N잡(njobLoad)에 동시에 존재하면 같은 사업장으로 보고
+ * 시간/금액을 합산한다(정책: 알바명 기반 식별 유지, 별도 사업장ID 없음).
+ */
+function getAlbaJobWeeklyHours(y, m){
+  const weekRanges = (typeof getWeekRanges === 'function') ? getWeekRanges(y, m) : [];
+
+  return weekRanges.map(wr => {
+    const byJob = {};
+    const addJob = (name, hours, gross) => {
+      const k = name || '알바';
+      if(!byJob[k]) byJob[k] = {hours:0, gross:0};
+      byJob[k].hours += hours;
+      byJob[k].gross += gross;
+    };
+
+    wr.days.forEach(dayInfo => {
+      const key = dk(dayInfo.y, dayInfo.m, dayInfo.d);
+
+      // 레거시 단독알바(albaData) — 야간/연장 분리 없는 단순 시급 계산
+      if(typeof albaData !== 'undefined'){
+        (albaData[key]||[]).forEach(it=>{
+          let h = it.endH - it.startH; if(h<0) h += 24;
+          const amt = Math.round(h * (it.wage||0));
+          addJob(it.name, h, amt);
+        });
+      }
+
+      // N잡 알바(njobLoad)
+      if(typeof njobLoad === 'function'){
+        const nd = njobLoad(key);
+        (nd.alba||[]).forEach(it=>{
+          const wage = it.wage || 0;
+          const hours = it.hours || 0;
+          const amt = (it.amount != null) ? it.amount : Math.round(wage*hours);
+          addJob(it.name, hours, amt);
+        });
+      }
+    });
+
+    return {
+      weekKey: wr.weekKey,
+      weekLabel: wr.weekLabel,
+      isFutureWeek: wr.isFutureWeek,
+      byJob
+    };
+  });
+}
+
 // 레거시(albaData) + N잡(njobLoad) 알바 항목을 한 달치로 합산
 // byJob: 4대보험 60h 판정을 "알바명" 단위로 하기 위한 집계(고용주별 판정 근사)
 function getAlbaMonthlyAggregate(y, m){
