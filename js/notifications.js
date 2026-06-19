@@ -80,8 +80,8 @@ updateEmpSwitcher();
 openAccForWT(wt);
 // ── 직업유형 UI 적용 ──
 applyJobTypeUI();
-// ── 직장인 모드 고정 (설정창에서 변경 가능) ──
-if(!localStorage.getItem('atm2_jobType')) localStorage.setItem('atm2_jobType','employee');
+// ★ 신규 사용자를 'employee'로 강제 고정하던 코드 제거 — 직업 선택 시 jobtype.js의
+//   saveSelectedJobs()가 atm2_jobType을 정상적으로 채워주므로 여기서 선제 설정할 필요 없음
 // ── 알람 틱 시작 ──
 startAlarmTick();
 requestNotifPermission();

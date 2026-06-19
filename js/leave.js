@@ -61,7 +61,9 @@ const PAY_MODE = 'actual';
 // ══════════════════════════════════════════
 // 직업 유형 (jobType): 'employee'|'freelancer'|'alba'
 // ══════════════════════════════════════════
-let jobType = localStorage.getItem('atm2_jobType') || 'employee';
+// ★ 신규 사용자(atm2_jobType 없음)는 'employee'로 강제 초기화하지 않음 — 빈 값으로 시작해야
+//   loadSelectedJobs()의 fallback이 [] 를 반환하고, showJobTypeSelector()가 "신규" 모드로 정상 동작함
+let jobType = localStorage.getItem('atm2_jobType') || '';
 
 // 프리랜서 스케줄 데이터: { 'YYYY-MM-DD': [{id,type,title,note,alarmTime}] }
 let flData = {};

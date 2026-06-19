@@ -79,7 +79,10 @@ function empCreate(wpId, fields){
     allowances:{tenure:0,weekly:0,perfect:0,other:0},
     insOverride:{np:null,hi:null,ltc:null,ei:null},
     taxOverride:{income:null,local:null},
-    dayStart:9, nightStart:22, jobType:'employee',
+    // ★ 신규 직원 레코드 기본 jobType을 'employee'로 강제하지 않음 — 이 값이 그대로
+    //   전역 jobType에 대입(storage.js의 emp 로드 로직)되어 신규 사용자가 직장인으로
+    //   사전 고정되는 원인이었음. 빈 값으로 두면 leave.js의 '' 초기값이 유지됨.
+    dayStart:9, nightStart:22, jobType:'',
     createdAt: Date.now()
   }, fields);
   list.push(emp);
@@ -217,7 +220,9 @@ function migrateV10toV11(){
     myShift3: oldCfg.myShift3 || null,
     dayStart: oldCfg.dayStart !== undefined ? oldCfg.dayStart : 9,
     nightStart: oldCfg.nightStart !== undefined ? oldCfg.nightStart : 22,
-    jobType: localStorage.getItem('atm2_jobType') || 'employee'
+    // ★ 신규 사용자도 사업장 0개라 이 마이그레이션 본문을 그대로 통과하므로,
+    //   여기서도 'employee' 강제 기본값을 두면 안 됨 (storage.js:82의 empCreate와 동일한 문제)
+    jobType: localStorage.getItem('atm2_jobType') || ''
   });
 
   // 기존 근태 데이터 이관 (atm2_dd_YYYY_MM)
