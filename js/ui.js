@@ -823,7 +823,10 @@ function defTimes(status){
       : (_sh2==='night' ? {s:19, e:7} : {s:7, e:19});
   }
   if(wt==='night')  return {s:nightStart, e:(nightStart+8)%24};
-  return {s:dayStart, e:(dayStart+8)%24};
+  // ★ 주간고정 기본값: 단순히 +8h가 아니라 점심시간(lunchBreak)까지 더한 "정상퇴근시각"으로 맞춤.
+  //   updatePrev()의 normalEndH(=dayStart+8+lunchBreak) 기준과 일치시켜, 신규/빈 날짜를 처음 열었을 때
+  //   사용자가 아무것도 안 바꿔도 "조퇴 공제"가 잘못 표시되던 문제를 근본적으로 해소.
+  return {s:dayStart, e:(dayStart+8+lunchBreak)%24};
 }
 
 function openPopup(key,d){
