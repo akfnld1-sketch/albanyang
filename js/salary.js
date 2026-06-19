@@ -183,6 +183,73 @@ function getWeeklyHolidayData(){
     qualCount: qualifiedWeeks.length
   };
 }
+
+/**
+ * getCompanyAlbaWeeklyHolidayData(y, m): 회사알바(dayData 기반) 주휴수당 발생 판정.
+ *
+ * 직장인의 getWeeklyHolidayData()와 같은 데이터 구조(dayData + 인접월 attLoadMonth)를
+ * 쓰지만, 정책상 회사알바는 "209h에 이미 포함"이 아니라 "별도 가산" 항목이므로
+ * 독립된 판정 함수로 분리함. 결근 판정은 직장인과 동일(결근 있으면 그 주 미발생).
+ *
+ * ★ 4단계 — 판정 결과 생성까지만 담당. getAlbaMonthlyAggregate()/getAlbaPaySummary()
+ *   실제 급여 가산 연결은 5단계에서 진행.
+ *
+ * 반환: getWeekRanges()와 동일한 주 배열에 판정 결과 필드를 추가
+ *   [{ weekKey, weekLabel, isFutureWeek, totalH, hasAbsent, workDayCount,
+ *      cond1, cond2, holidayOk, amount }, ...]
+ */
+function getCompanyAlbaWeeklyHolidayData(y, m){
+  const weekRanges = (typeof getWeekRanges === 'function') ? getWeekRanges(y, m) : [];
+
+  const monthCache = {};
+  function getDayRecord(dy, dm, dd){
+    if(dy === y && dm === m) return dayData[dk(dy, dm, dd)];
+    const cacheKey = `${dy}-${dm}`;
+    if(!monthCache[cacheKey]){
+      monthCache[cacheKey] = (typeof attLoadMonth === 'function' && activeWpId && activeEmpId)
+        ? attLoadMonth(activeWpId, activeEmpId, dy, dm) : {};
+    }
+    return monthCache[cacheKey][dk(dy, dm, dd)];
+  }
+
+  const workStates = ['work','early','half','sat_work','sun_work'];
+  const weeklyAmt = hourlyRate * 8;
+
+  return weekRanges.map(wr => {
+    let totalH = 0, hasAbsent = false, workDayCount = 0;
+
+    wr.days.forEach(dayInfo => {
+      const data = getDayRecord(dayInfo.y, dayInfo.m, dayInfo.d);
+      const s = data ? data.status : 'none';
+
+      if(workStates.includes(s)){
+        totalH += calcNetHours(data.start, data.end, s, data.shift);
+        workDayCount++;
+      } else if(s === 'leave'){
+        totalH += 8;
+        workDayCount++;
+      } else if(s === 'absent'){
+        hasAbsent = true;
+      }
+    });
+
+    const cond1 = totalH >= 15;
+    const cond2 = !hasAbsent;
+    const cond3 = workDayCount > 0;
+    // 진행중 주는 아직 끝나지 않아 확정할 수 없으므로 holidayOk=false(미발생이 아니라 미확정)
+    const holidayOk = !wr.isFutureWeek && cond1 && cond2 && cond3;
+
+    return {
+      weekKey: wr.weekKey,
+      weekLabel: wr.weekLabel,
+      isFutureWeek: wr.isFutureWeek,
+      totalH, hasAbsent, workDayCount,
+      cond1, cond2,
+      holidayOk,
+      amount: holidayOk ? weeklyAmt : 0
+    };
+  });
+}
 // ══════════════════════════════════════════
 // 급여 계산
 // ══════════════════════════════════════════

@@ -204,6 +204,47 @@ function getAlbaJobWeeklyHours(y, m){
   });
 }
 
+/**
+ * getGeneralAlbaWeeklyHolidayData(y, m): 일반알바/N잡알바(getAlbaJobWeeklyHours 기반)
+ * 주휴수당 발생 판정. 알바명 단위(사업장 근사)로 독립 판정.
+ *
+ * 정책(A안 확정): 일반알바/N잡알바는 예정근무 정보가 없어 "결근" 개념을 적용할 데이터가
+ * 없으므로, 해당 주 실근무시간이 15h 이상이면 개근으로 간주해 주휴 발생으로 처리(추정치).
+ * → 화면에는 반드시 "예정근무 정보가 없어 실근무시간 기준으로 추정 계산됩니다" 안내 필요
+ *   (UI 반영은 7단계에서 진행).
+ *
+ * 1회 주휴수당 금액은 해당 주·해당 알바명의 평균 시급(그 주 금액÷시간)×8h로 추정.
+ *
+ * ★ 4단계 — 판정 결과 생성까지만 담당. getAlbaMonthlyAggregate()/getAlbaPaySummary()
+ *   실제 급여 가산 연결은 5단계에서 진행.
+ *
+ * 반환: [{ weekKey, weekLabel, isFutureWeek,
+ *          byJob:{ [알바명]: {hours, gross, cond1, holidayOk, amount} } }, ...]
+ */
+function getGeneralAlbaWeeklyHolidayData(y, m){
+  const weeklyHours = (typeof getAlbaJobWeeklyHours === 'function') ? getAlbaJobWeeklyHours(y, m) : [];
+
+  return weeklyHours.map(week => {
+    const byJob = {};
+    Object.keys(week.byJob).forEach(name => {
+      const job = week.byJob[name];
+      const cond1 = job.hours >= 15;
+      // 진행중 주는 아직 끝나지 않아 확정할 수 없으므로 holidayOk=false(미달이 아니라 미확정)
+      const holidayOk = !week.isFutureWeek && cond1;
+      const avgWage = job.hours > 0 ? job.gross / job.hours : 0;
+      const amount = holidayOk ? Math.round(avgWage * 8) : 0;
+      byJob[name] = { hours: job.hours, gross: job.gross, cond1, holidayOk, amount };
+    });
+
+    return {
+      weekKey: week.weekKey,
+      weekLabel: week.weekLabel,
+      isFutureWeek: week.isFutureWeek,
+      byJob
+    };
+  });
+}
+
 // 레거시(albaData) + N잡(njobLoad) 알바 항목을 한 달치로 합산
 // byJob: 4대보험 60h 판정을 "알바명" 단위로 하기 위한 집계(고용주별 판정 근사)
 function getAlbaMonthlyAggregate(y, m){

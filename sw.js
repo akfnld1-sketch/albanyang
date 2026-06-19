@@ -5,8 +5,8 @@
  * ★ 통합본: cache-v8 기준, 캐시버스팅 쿼리 포함
  */
 
-// ★ Fix #26: 주휴수당 3단계 — getAlbaJobWeeklyHours() 알바명 기준 데이터 병합 헬퍼 추가(2026-06-20)
-const CACHE_NAME = 'moneynyang-v1-cache-v27';
+// ★ Fix #27: 주휴수당 4단계 — getCompanyAlbaWeeklyHolidayData/getGeneralAlbaWeeklyHolidayData 판정 함수 추가(2026-06-20)
+const CACHE_NAME = 'moneynyang-v1-cache-v28';
 
 // ── 로컬 파일 (분리된 CSS/JS 전체) ──
 // ★ index.html의 <script>/<link> 태그와 쿼리스트링이 항상 일치해야 함 (불일치 시 사전 캐시 무의미)
