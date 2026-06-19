@@ -5,8 +5,8 @@
  * ★ 통합본: cache-v8 기준, 캐시버스팅 쿼리 포함
  */
 
-// ★ Fix #23d: migrateV10toV11()의 신규직원 jobType:'employee' 강제 기본값도 제거(2026-06-19)
-const CACHE_NAME = 'moneynyang-v1-cache-v23';
+// ★ Fix #24b: getWeekRanges() weekKey의 toISOString 타임존 버그 수정(2026-06-20)
+const CACHE_NAME = 'moneynyang-v1-cache-v25';
 
 // ── 로컬 파일 (분리된 CSS/JS 전체) ──
 // ★ index.html의 <script>/<link> 태그와 쿼리스트링이 항상 일치해야 함 (불일치 시 사전 캐시 무의미)

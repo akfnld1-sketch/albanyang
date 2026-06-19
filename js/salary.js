@@ -1,6 +1,79 @@
 // 주휴수당 계산 (한국 노동법 기준)
 // ══════════════════════════════════════════
 /**
+ * getWeekRanges(y, m): 해당 월(0-indexed)에 "귀속"되는 모든 ISO주(월~일)를 반환하는 공용 헬퍼.
+ *
+ * 귀속 규칙(★ 중요 — 직장인/회사알바/일반알바/N잡알바 주휴수당 계산이 모두 이 규칙에 의존함)
+ * - 한 주의 귀속월 = 그 주의 월요일이 속한 달. 정확히 1개월에만 귀속되고 중복되지 않음.
+ *   → 이번 달 1일이 속한 주의 월요일이 전월이면, 그 주는 "전월 귀속"이라 이번 달 결과에서 제외.
+ *   → 이번 달 말일이 속한 주는 월요일이 항상 이번 달 안에 있으므로(월요일은 그 주의 어떤 날보다도
+ *     앞서거나 같아 다음 달로 넘어갈 수 없음) 항상 이번 달에 포함되고, 그 주의 화~일이 다음 달로
+ *     넘어가더라도(예: 2026-08-31(월)~09-06(일)) 그 주 전체가 "8월의 한 주"로만 1번 계산됨.
+ * - 이 규칙 덕분에 매월 getWeekRanges(y,m)을 독립적으로 호출해 결과를 단순 합산해도
+ *   (연간요약처럼) 같은 주가 두 달에 걸쳐 중복 계산되는 일이 없음.
+ * - 연/월 경계(예: 2026-12-28~2027-01-03)는 JS Date의 자체 정규화(setDate 오버플로 시 연/월
+ *   자동 보정)를 그대로 활용 — 별도의 m+1/y+1 분기 처리를 직접 작성하지 않아도 안전하게 처리됨.
+ *
+ * 각 주 객체:
+ * - weekKey: 월요일 날짜('YYYY-MM-DD') — 주 식별자
+ * - weekLabel: 'M/D주' 표시용 라벨
+ * - days: 월~일 7일 전체({y,m,d,dateKey,dow}) — 전월/익월로 넘어가는 날도 실제 연/월/일로 포함
+ * - isFutureWeek: 그 주의 일요일이 오늘보다 미래면 true → "진행중 주", 확정 주휴수당 산정 대상 제외
+ */
+function getWeekRanges(y, m){
+  const dim = new Date(y, m+1, 0).getDate();
+  const weeks = [];
+  let lastWeekKey = null;
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  for(let d = 1; d <= dim; d++){
+    const date = new Date(y, m, d);
+    const dow  = date.getDay(); // 0=일 ... 6=토
+
+    // 이 날짜가 속한 주의 월요일 (JS Date가 월/연 경계를 자동 정규화)
+    const monday = new Date(date);
+    monday.setDate(d - (dow === 0 ? 6 : dow - 1));
+    // ★ toISOString()은 UTC로 변환되어 KST 등 양(+)의 타임존에서 날짜가 하루 어긋남(전날로 표시됨) —
+    //   로컬 연/월/일을 그대로 사용해야 함(dk()와 동일한 포맷)
+    const weekKey = dk(monday.getFullYear(), monday.getMonth(), monday.getDate());
+
+    // 같은 주(연속된 날짜)는 한 번만 처리
+    if(weekKey === lastWeekKey) continue;
+    lastWeekKey = weekKey;
+
+    // 이 주의 월요일이 이번 달(y,m)에 속하지 않으면(=전월 귀속 주) 이번 달 결과에서 제외
+    if(monday.getFullYear() !== y || monday.getMonth() !== m) continue;
+
+    // 월~일 7일 전체 생성(전월/익월로 넘어가는 날도 실제 연/월/일로 포함)
+    const days = [];
+    for(let i = 0; i < 7; i++){
+      const dt = new Date(monday);
+      dt.setDate(monday.getDate() + i);
+      days.push({
+        y: dt.getFullYear(), m: dt.getMonth(), d: dt.getDate(),
+        dateKey: dk(dt.getFullYear(), dt.getMonth(), dt.getDate()),
+        dow: dt.getDay()
+      });
+    }
+
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    const isFutureWeek = sunday.getTime() > today.getTime();
+
+    weeks.push({
+      weekKey,
+      weekLabel: `${monday.getMonth()+1}/${monday.getDate()}주`,
+      days,
+      isFutureWeek
+    });
+  }
+
+  return weeks;
+}
+
+/**
  * getWeeklyHolidayData: 월 단위 주휴수당 자동 계산
  *
  * 주휴수당 발생 조건 (근로기준법 제55조)
