@@ -31,6 +31,27 @@ body.sidebar-disabled #sidebar { display: none !important; }
 body.sidebar-disabled #mob-sidebar-btn { display: none !important; }
 
 /* ══════════════════════════════════════════
+   생존관리(가계부) — 반응형 그리드 (js/budget.js renderBudgetPage)
+   ══════════════════════════════════════════ */
+.budget-container { padding: 14px; max-width: 520px; margin: 0 auto; }
+.budget-grid { display: block; }
+.budget-card {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px; margin-bottom: 14px;
+}
+.budget-input {
+  width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--text);
+  border-radius: 8px; padding: 10px 12px; font-size: 16px; font-family: 'JetBrains Mono';
+  box-sizing: border-box; min-height: 46px;
+}
+/* 1025px 이상(노트북/데스크탑)에서는 컨테이너를 넓히고 카드 2단 그리드로 공간 활용 개선 */
+@media (min-width: 1025px) {
+  .budget-container { max-width: 1040px; }
+  .budget-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  .budget-grid .budget-card { margin-bottom: 0; }
+}
+
+/* ══════════════════════════════════════════
    온보딩 튜토리얼 모달
 ══════════════════════════════════════════ */
 #onboarding-overlay{
@@ -949,9 +970,16 @@ body.sidebar-disabled #mob-sidebar-btn { display: none !important; }
   .total-box .amt { font-size: 42px !important; }
 }
 
+/* ── 노트북 (1025~1439px) ── */
+/* ★ 기존에는 이 구간이 어떤 미디어쿼리에도 안 걸려 PC 기본값(900px, #main은 1600px대)을
+   그대로 받아 캘린더·생존관리 등 페이지 콘텐츠 주변에 여백이 과도하게 남던 문제를 보정 */
+@media (min-width: 1025px) and (max-width: 1439px) {
+  #att-page, #salary-page, #dash-page, #budget-page, #settings-page { max-width: 1100px !important; }
+}
+
 /* ── 대형 (1440px+) ── */
 @media (min-width: 1440px) {
-  #att-page, #salary-page, #dash-page, #budget-page, #settings-page { max-width: 1020px !important; }
+  #att-page, #salary-page, #dash-page, #budget-page, #settings-page { max-width: 1320px !important; }
   .cal-day { height: 150px !important; max-height: 150px !important; }
   .dn { font-size: 22px !important; }
   .stat-card .val { font-size: 30px !important; }

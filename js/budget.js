@@ -976,9 +976,9 @@ function renderBudgetPage(){
   }).join('');
 
   page.innerHTML = `
-    <div style="padding:14px;max-width:520px;margin:0 auto;">
+    <div class="budget-container">
 
-      <!-- 경고 배너(4단계) -->
+      <!-- 경고 배너(4단계) — 항상 전체 폭 -->
       <div style="background:${riskBg};border:1px solid ${riskBorder};border-radius:12px;padding:14px;margin-bottom:14px;">
         <div style="font-size:15px;font-weight:800;margin-bottom:8px;">${zb.riskLabel} (이번달 가용예산의 ${zb.spentPct}% 사용)</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;color:var(--text2);">
@@ -989,72 +989,71 @@ function renderBudgetPage(){
         </div>
       </div>
 
-      <!-- 1단계: 수입/지출/남은금액 -->
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;">
-        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">📊 이번달 수입·지출</div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:4px;"><span>🏢 직장인수입</span><b style="color:var(--text);">${income.employee.toLocaleString()}원</b></div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:4px;"><span>💪 알바수입</span><b style="color:var(--text);">${income.alba.toLocaleString()}원</b></div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:4px;"><span>💻 프리랜서수입</span><b style="color:var(--text);">${income.freelancer.toLocaleString()}원</b></div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:8px;"><span>➕ 기타수입</span><b style="color:var(--text);">${income.etc.toLocaleString()}원</b></div>
-        <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;border-top:1px solid var(--border);padding-top:8px;margin-bottom:6px;"><span>총수입</span><span style="color:var(--green);">${income.total.toLocaleString()}원</span></div>
-        <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;margin-bottom:6px;"><span>총지출</span><span style="color:var(--red);">${totalExpense.toLocaleString()}원</span></div>
-        <div style="display:flex;justify-content:space-between;font-size:17px;font-weight:800;border-top:1px solid var(--border);padding-top:8px;"><span>남은금액</span><span style="color:${remain>=0?'var(--accent)':'var(--red)'};">${remain.toLocaleString()}원</span></div>
-      </div>
+      <!-- ★ 노트북/데스크탑(1025px+)에서는 2단 그리드로 배치, 그 이하는 세로 1열(기존과 동일) -->
+      <div class="budget-grid">
 
-      <!-- 2단계: 고정지출 -->
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;">
-        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">⚙️ 고정지출 설정 <span style="font-size:12px;color:var(--text3);">(합계 ${fixedTotal.toLocaleString()}원)</span></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-          ${Object.keys(BDG_FIXED_LABELS).map(id=>`
-            <div>
-              <div style="font-size:11px;color:var(--text3);margin-bottom:3px;">${BDG_FIXED_LABELS[id]}</div>
-              <input id="bdg-fixed-${id}" type="number" min="0" step="1000" value="${budgetState.fixedExpenses[id]||0}"
-                style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);
-                       border-radius:8px;padding:8px 10px;font-size:13px;font-family:'JetBrains Mono';box-sizing:border-box;">
-            </div>`).join('')}
+        <!-- 1단계: 수입/지출/남은금액 -->
+        <div class="budget-card">
+          <div style="font-size:14px;font-weight:700;margin-bottom:10px;">📊 이번달 수입·지출</div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:4px;"><span>🏢 직장인수입</span><b style="color:var(--text);">${income.employee.toLocaleString()}원</b></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:4px;"><span>💪 알바수입</span><b style="color:var(--text);">${income.alba.toLocaleString()}원</b></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:4px;"><span>💻 프리랜서수입</span><b style="color:var(--text);">${income.freelancer.toLocaleString()}원</b></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:8px;"><span>➕ 기타수입</span><b style="color:var(--text);">${income.etc.toLocaleString()}원</b></div>
+          <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;border-top:1px solid var(--border);padding-top:8px;margin-bottom:6px;"><span>총수입</span><span style="color:var(--green);">${income.total.toLocaleString()}원</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;margin-bottom:6px;"><span>총지출</span><span style="color:var(--red);">${totalExpense.toLocaleString()}원</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:17px;font-weight:800;border-top:1px solid var(--border);padding-top:8px;"><span>남은금액</span><span style="color:${remain>=0?'var(--accent)':'var(--red)'};">${remain.toLocaleString()}원</span></div>
         </div>
-        <button onclick="saveBudgetFixedExpenses()" style="width:100%;padding:11px;border-radius:10px;border:none;
-          background:var(--accent);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR';">💾 고정지출 저장</button>
-      </div>
 
-      <!-- 3단계: 변동지출 -->
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;">
-        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">🧾 변동지출 <span style="font-size:12px;color:var(--text3);">(이번달 ${varTotal.toLocaleString()}원)</span></div>
-        ${catBarHtml}
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;">
-          <select id="bdg-var-cat" style="background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px;font-size:13px;">
-            ${Object.keys(BDG_VAR_CATS).map(c=>`<option value="${c}">${BDG_VAR_CATS[c]}</option>`).join('')}
-          </select>
-          <input id="bdg-var-amount" type="number" min="0" placeholder="금액" style="background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px;font-size:13px;font-family:'JetBrains Mono';">
-          <input id="bdg-var-date" type="date" value="${today.toISOString().slice(0,10)}" style="background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px;font-size:13px;">
-          <input id="bdg-var-memo" type="text" placeholder="메모(선택)" style="background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px;font-size:13px;">
+        <!-- 4단계: 잔고/저축목표/기타수입 설정 (1단계와 같은 행에 배치) -->
+        <div class="budget-card">
+          <div style="font-size:14px;font-weight:700;margin-bottom:10px;">🎯 잔고·저축 설정</div>
+          <div style="margin-bottom:8px;">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:3px;">💰 현재 잔고</div>
+            <input id="bdg-current-balance" class="budget-input" type="number" min="0" value="${budgetState.emergencyFund||0}">
+          </div>
+          <div style="margin-bottom:8px;">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:3px;">🎯 월 저축 목표</div>
+            <input id="bdg-savings-goal" class="budget-input" type="number" min="0" value="${budgetState.savingsGoal||0}">
+          </div>
+          <div style="margin-bottom:10px;">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:3px;">➕ 기타수입 직접입력</div>
+            <input id="bdg-custom-income" class="budget-input" type="number" min="0" value="${budgetState.customIncome||0}">
+          </div>
+          <button onclick="saveBudgetSettings()" style="width:100%;padding:11px;border-radius:10px;border:none;
+            background:var(--accent);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR';">💾 저장</button>
         </div>
-        <button onclick="addBudgetVariableExpense()" style="width:100%;padding:11px;border-radius:10px;border:none;
-          background:var(--green);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR';margin-bottom:8px;">+ 지출 입력</button>
-        <div style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;">${varListHtml}</div>
-      </div>
 
-      <!-- 4단계: 잔고/저축목표/기타수입 설정 -->
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;">
-        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">🎯 잔고·저축 설정</div>
-        <div style="margin-bottom:8px;">
-          <div style="font-size:11px;color:var(--text3);margin-bottom:3px;">💰 현재 잔고</div>
-          <input id="bdg-current-balance" type="number" min="0" value="${budgetState.emergencyFund||0}"
-            style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 10px;font-size:13px;font-family:'JetBrains Mono';box-sizing:border-box;">
+        <!-- 2단계: 고정지출 -->
+        <div class="budget-card">
+          <div style="font-size:14px;font-weight:700;margin-bottom:10px;">⚙️ 고정지출 설정 <span style="font-size:12px;color:var(--text3);">(합계 ${fixedTotal.toLocaleString()}원)</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+            ${Object.keys(BDG_FIXED_LABELS).map(id=>`
+              <div>
+                <div style="font-size:11px;color:var(--text3);margin-bottom:3px;">${BDG_FIXED_LABELS[id]}</div>
+                <input id="bdg-fixed-${id}" class="budget-input" type="number" min="0" step="1000" value="${budgetState.fixedExpenses[id]||0}">
+              </div>`).join('')}
+          </div>
+          <button onclick="saveBudgetFixedExpenses()" style="width:100%;padding:11px;border-radius:10px;border:none;
+            background:var(--accent);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR';">💾 고정지출 저장</button>
         </div>
-        <div style="margin-bottom:8px;">
-          <div style="font-size:11px;color:var(--text3);margin-bottom:3px;">🎯 월 저축 목표</div>
-          <input id="bdg-savings-goal" type="number" min="0" value="${budgetState.savingsGoal||0}"
-            style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 10px;font-size:13px;font-family:'JetBrains Mono';box-sizing:border-box;">
-        </div>
-        <div style="margin-bottom:10px;">
-          <div style="font-size:11px;color:var(--text3);margin-bottom:3px;">➕ 기타수입 직접입력</div>
-          <input id="bdg-custom-income" type="number" min="0" value="${budgetState.customIncome||0}"
-            style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 10px;font-size:13px;font-family:'JetBrains Mono';box-sizing:border-box;">
-        </div>
-        <button onclick="saveBudgetSettings()" style="width:100%;padding:11px;border-radius:10px;border:none;
-          background:var(--accent);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR';">💾 저장</button>
-      </div>
 
+        <!-- 3단계: 변동지출 -->
+        <div class="budget-card">
+          <div style="font-size:14px;font-weight:700;margin-bottom:10px;">🧾 변동지출 <span style="font-size:12px;color:var(--text3);">(이번달 ${varTotal.toLocaleString()}원)</span></div>
+          ${catBarHtml}
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;">
+            <select id="bdg-var-cat" class="budget-input">
+              ${Object.keys(BDG_VAR_CATS).map(c=>`<option value="${c}">${BDG_VAR_CATS[c]}</option>`).join('')}
+            </select>
+            <input id="bdg-var-amount" class="budget-input" type="number" min="0" placeholder="금액">
+            <input id="bdg-var-date" class="budget-input" type="date" value="${today.toISOString().slice(0,10)}">
+            <input id="bdg-var-memo" class="budget-input" type="text" placeholder="메모(선택)">
+          </div>
+          <button onclick="addBudgetVariableExpense()" style="width:100%;padding:11px;border-radius:10px;border:none;
+            background:var(--green);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR';margin-bottom:8px;">+ 지출 입력</button>
+          <div style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;">${varListHtml}</div>
+        </div>
+
+      </div>
     </div>`;
 }

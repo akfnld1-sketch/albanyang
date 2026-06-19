@@ -553,7 +553,11 @@ html { -webkit-overflow-scrolling: touch; }
 #sao-handle {
   display: none;
 }
-@media (max-width: 480px) {
+/* ★ 481~768px(태블릿) 사각지대 수정: 기존 max-width:480px이라 481~768px 구간에는
+   이 모바일 전용 스타일이 전혀 적용되지 않고, PC 숨김 규칙(main.css min-width:769px)도
+   적용되지 않아 SAO 메뉴가 레이아웃 깨진 채 그대로 노출되던 문제. 768px까지 모바일과
+   동일한 UX(스와이프 핸들 방식)를 적용해 사각지대를 없앰. */
+@media (max-width: 768px) {
   #sao-handle {
     display: flex;
     position: fixed;

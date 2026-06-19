@@ -41,7 +41,8 @@
       "Bash(python -m http.server 8926)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:8926/index.html)",
       "Bash(python -m http.server 8927)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:8927/index.html)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:8927/index.html)",
+      "Bash(grep -i \"calendar\\\\|stats-row\\\\|^.*max-width.*[0-9]\\\\{3,4\\\\}px\")"
     ]
   }
 }
