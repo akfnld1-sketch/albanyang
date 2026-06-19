@@ -290,10 +290,52 @@ function getAlbaMonthlyAggregate(y, m){
     }
   }
 
+  // ── 주휴수당 가산(5단계) ──
+  // 확정된 주(isFutureWeek=false 이고 holidayOk=true)만 totalGross에 가산.
+  // 진행중 주는 weeklyHolidayDetail에 기록만 하고 금액은 가산하지 않음(holidayOk가 이미 false라 자연히 제외됨).
+  // ★ 일반알바/N잡알바 주휴수당은 byJob[name].gross에도 가산(4대보험 산정 정확성용) —
+  //   60h 판정 기준인 byJob[name].hours는 절대 건드리지 않음(시간 카운트 불변).
+  // ★ 회사알바 주휴수당은 byJob 체계(알바명 단위) 밖이므로 totalGross에만 가산되고
+  //   byJob에는 포함되지 않음 — 회사알바 자체가 이 함수의 byJob/4대보험 판정 대상이 아닌
+  //   기존 구조(회사알바 기본 시급 수입도 이 집계에 포함되지 않음)를 그대로 따름.
+  let weeklyHolidayPay = 0;
+  const weeklyHolidayDetail = [];
+
+  if(typeof getCompanyAlbaWeeklyHolidayData === 'function'){
+    getCompanyAlbaWeeklyHolidayData(y, m).forEach(w => {
+      weeklyHolidayDetail.push({
+        source: 'company', jobName: '회사알바',
+        weekKey: w.weekKey, weekLabel: w.weekLabel,
+        isFutureWeek: w.isFutureWeek, holidayOk: w.holidayOk, amount: w.amount
+      });
+      if(w.holidayOk) weeklyHolidayPay += w.amount;
+    });
+  }
+
+  if(typeof getGeneralAlbaWeeklyHolidayData === 'function'){
+    getGeneralAlbaWeeklyHolidayData(y, m).forEach(w => {
+      Object.keys(w.byJob).forEach(name => {
+        const job = w.byJob[name];
+        weeklyHolidayDetail.push({
+          source: 'general', jobName: name,
+          weekKey: w.weekKey, weekLabel: w.weekLabel,
+          isFutureWeek: w.isFutureWeek, holidayOk: job.holidayOk, amount: job.amount
+        });
+        if(job.holidayOk){
+          weeklyHolidayPay += job.amount;
+          if(byJob[name]) byJob[name].gross += job.amount;
+          else addJob(name, 0, job.amount); // 안전망(이론상 이미 byJob에 존재해야 함)
+        }
+      });
+    });
+  }
+
   return {
-    totalGross: legacyGross + njobGross,
+    totalGross: legacyGross + njobGross + weeklyHolidayPay,
     totalHours: legacyHours + njobHours,
-    otPay, nightPay, byJob
+    otPay, nightPay, byJob,
+    weeklyHolidayPay,
+    weeklyHolidayDetail
   };
 }
 
@@ -327,7 +369,9 @@ function getAlbaPaySummary(y, m){
     otPay: agg.otPay,
     nightPay: agg.nightPay,
     ins, tax, finalPay,
-    byJob: agg.byJob
+    byJob: agg.byJob,
+    weeklyHolidayPay: agg.weeklyHolidayPay,
+    weeklyHolidayDetail: agg.weeklyHolidayDetail
   };
 }
 
