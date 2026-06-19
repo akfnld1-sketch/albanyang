@@ -761,18 +761,21 @@ function renderWeeklyDetail(wd){
   var html = '<div style="display:grid;gap:8px;">';
   activeWeeks.forEach(function(w){
     var ok   = w.holidayOk;
-    var bgC  = ok ? 'rgba(127,255,212,.08)' : 'rgba(255,92,122,.05)';
-    var bdC  = ok ? 'rgba(127,255,212,.25)' : 'rgba(255,92,122,.2)';
-    var icon = ok ? '&#x2705;' : '&#x274C;';
+    var prog = !!w.isFutureWeek; // 아직 끝나지 않은 주 — 미달이 아니라 진행중(미확정)
+    var bgC  = ok ? 'rgba(127,255,212,.08)' : prog ? 'rgba(255,200,80,.06)' : 'rgba(255,92,122,.05)';
+    var bdC  = ok ? 'rgba(127,255,212,.25)' : prog ? 'rgba(255,200,80,.25)' : 'rgba(255,92,122,.2)';
+    var icon = ok ? '&#x2705;' : prog ? '&#x23F3;' : '&#x274C;';
     var badge = ok
       ? '<span style="background:rgba(127,255,212,.2);color:#7fffd4;padding:2px 8px;border-radius:20px;font-size:14px;font-weight:700;">주휴 발생</span>'
+      : prog
+      ? '<span style="background:rgba(255,200,80,.2);color:#ffc850;padding:2px 8px;border-radius:20px;font-size:14px;font-weight:700;">진행중</span>'
       : '<span style="background:rgba(255,92,122,.15);color:var(--red);padding:2px 8px;border-radius:20px;font-size:14px;font-weight:700;">주휴 없음</span>';
     var c1c = w.cond1 ? '#7fffd4' : 'var(--red)';
     var c1m = (w.cond1 ? '&#x2713; 주 ' : '&#x2717; 주 ') + w.totalH.toFixed(1) + 'h (' + (w.cond1 ? '15h 이상' : '15h 미만') + ')';
     var c2c = w.cond2 ? '#7fffd4' : 'var(--red)';
     var c2m = w.cond2 ? '&#x2713; 개근' : '&#x2717; 결근 있음';
-    var amtStr   = ok ? ('+' + fmt(w.amount)) : '&#x2014;';
-    var amtColor = ok ? '#7fffd4' : 'var(--text3)';
+    var amtStr   = ok ? ('+' + fmt(w.amount)) : prog ? '확정전' : '&#x2014;';
+    var amtColor = ok ? '#7fffd4' : prog ? '#ffc850' : 'var(--text3)';
     html += '<div style="background:' + bgC + ';border:1px solid ' + bdC + ';border-radius:10px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">'
       + '<div style="flex:1;min-width:120px;">'
       + '<div style="font-size:17px;font-weight:700;margin-bottom:4px;">' + icon + ' ' + w.weekLabel + ' ' + badge + '</div>'

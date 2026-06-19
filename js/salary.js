@@ -74,82 +74,81 @@ function getWeekRanges(y, m){
 }
 
 /**
- * getWeeklyHolidayData: 월 단위 주휴수당 자동 계산
+ * getWeeklyHolidayData: 월 단위 주휴수당 자동 계산 (표시용 — 직장인 209h 기본급에
+ * 이미 주휴수당이 포함되어 있다는 전제이므로 여기서 산출되는 금액은 실급여(getPayData)에
+ * 가산되지 않음. getPayData()/finalPay는 이 함수와 무관하게 그대로 유지됨)
  *
  * 주휴수당 발생 조건 (근로기준법 제55조)
  * 1. 1주 소정근로시간 합계 >= 15시간
  * 2. 해당 주 소정근로일 결근 없이 개근
  *
  * 처리 기준
- * - 월~일 단위로 주를 구분
+ * - 월~일 단위로 주를 구분(getWeekRanges() 공용 헬퍼 사용 — 전월/익월로 걸친 날짜도
+ *   포함해서 정확히 집계하고, 한 주는 그 주의 월요일이 속한 달에만 1번 귀속됨)
  * - 소정근로일: work/early/half/sat_work/sun_work 상태인 날
  * - 결근(absent)/무단결근(absent) 포함 시 해당 주 주휴 미발생
  * - 연차(leave)는 개근으로 인정 (소정근로일 충족으로 처리)
  * - 법정공휴일(public)은 소정근로일 아님
  * - 주휴수당 = 시급 × 8h
+ * - 아직 끝나지 않은 주(isFutureWeek)는 "진행중"으로 별도 표시, 미달이 아니라 미확정으로 처리
  */
 function getWeeklyHolidayData(){
   const y = curY, m = curM;
-  const dim = new Date(y, m+1, 0).getDate();
+  const weekRanges = getWeekRanges(y, m);
 
-  // 이 달의 모든 날짜를 월~일 기준 주차 그룹으로 묶기
-  // 각 주는 {weekNo, days:[{d, status, net}], totalH, hasAbsent, hasWork}
-  const weeks = [];
-  let weekMap = {}; // weekKey → week index
-
-  for(let d = 1; d <= dim; d++){
-    const date = new Date(y, m, d);
-    const dow  = date.getDay(); // 0=일, 1=월 ... 6=토
-
-    // ISO 주차 번호 (월요일 시작 기준)
-    // 해당 날짜의 월요일 날짜를 key로 사용
-    const monday = new Date(date);
-    monday.setDate(d - (dow === 0 ? 6 : dow - 1));
-    const weekKey = monday.toISOString().slice(0,10);
-
-    if(!weekMap.hasOwnProperty(weekKey)){
-      weekMap[weekKey] = weeks.length;
-      weeks.push({
-        weekKey,
-        weekLabel: `${monday.getMonth()+1}/${monday.getDate()}주`,
-        days: [],
-        totalH: 0,
-        hasAbsent: false,
-        workDayCount: 0,   // 소정근로일(출근 기록 있는 날)
-        plannedDays: 0,    // 해당 주 중 이번 달에 포함된 날 수
-        holidayOk: false,  // 주휴 발생 여부
-        amount: 0
-      });
+  // 전월/익월로 걸친 날짜의 근태 데이터 조회용 캐시(다른 달은 attLoadMonth로 별도 로드)
+  const monthCache = {};
+  function getDayRecord(dy, dm, dd){
+    if(dy === y && dm === m) return dayData[dk(dy, dm, dd)];
+    const cacheKey = `${dy}-${dm}`;
+    if(!monthCache[cacheKey]){
+      monthCache[cacheKey] = (typeof attLoadMonth === 'function' && activeWpId && activeEmpId)
+        ? attLoadMonth(activeWpId, activeEmpId, dy, dm) : {};
     }
-
-    const wi   = weekMap[weekKey];
-    const week = weeks[wi];
-    const key  = dk(y, m, d);
-    const data = dayData[key];
-    const s    = data ? data.status : 'none';
-
-    week.plannedDays++;
-
-    // 근무 시간 계산 대상 상태
-    const workStates = ['work','early','half','sat_work','sun_work'];
-    if(workStates.includes(s)){
-      const net = calcNetHours(data.start, data.end, s, data.shift);
-      week.totalH += net;
-      week.workDayCount++;
-      week.days.push({d, dow, status:s, net});
-    } else if(s === 'leave'){
-      // 연차: 개근 인정, 8h로 계산
-      week.totalH += 8;
-      week.workDayCount++;
-      week.days.push({d, dow, status:s, net:8});
-    } else if(s === 'absent'){
-      // 결근: 개근 실패 → 주휴 미발생
-      week.hasAbsent = true;
-      week.days.push({d, dow, status:s, net:0});
-    } else {
-      week.days.push({d, dow, status:s, net:0});
-    }
+    return monthCache[cacheKey][dk(dy, dm, dd)];
   }
+
+  const workStates = ['work','early','half','sat_work','sun_work'];
+
+  const weeks = weekRanges.map(wr => {
+    const week = {
+      weekKey: wr.weekKey,
+      weekLabel: wr.weekLabel,
+      days: [],
+      totalH: 0,
+      hasAbsent: false,
+      workDayCount: 0,   // 소정근로일(출근 기록 있는 날)
+      plannedDays: wr.days.length,
+      holidayOk: false,  // 주휴 발생 여부(확정)
+      isFutureWeek: wr.isFutureWeek, // 아직 끝나지 않은 주(진행중) — 확정 판정 제외
+      amount: 0
+    };
+
+    wr.days.forEach(dayInfo => {
+      const data = getDayRecord(dayInfo.y, dayInfo.m, dayInfo.d);
+      const s = data ? data.status : 'none';
+
+      if(workStates.includes(s)){
+        const net = calcNetHours(data.start, data.end, s, data.shift);
+        week.totalH += net;
+        week.workDayCount++;
+        week.days.push({y:dayInfo.y, m:dayInfo.m, d:dayInfo.d, dow:dayInfo.dow, status:s, net});
+      } else if(s === 'leave'){
+        // 연차: 개근 인정, 8h로 계산
+        week.totalH += 8;
+        week.workDayCount++;
+        week.days.push({y:dayInfo.y, m:dayInfo.m, d:dayInfo.d, dow:dayInfo.dow, status:s, net:8});
+      } else if(s === 'absent'){
+        // 결근: 개근 실패 → 주휴 미발생
+        week.hasAbsent = true;
+        week.days.push({y:dayInfo.y, m:dayInfo.m, d:dayInfo.d, dow:dayInfo.dow, status:s, net:0});
+      } else {
+        week.days.push({y:dayInfo.y, m:dayInfo.m, d:dayInfo.d, dow:dayInfo.dow, status:s, net:0});
+      }
+    });
+
+    return week;
+  });
 
   // 각 주 주휴 발생 여부 판정
   let totalWeeklyAmt = 0;
@@ -164,7 +163,8 @@ function getWeeklyHolidayData(){
     // 조건 3: 실제 근무 기록이 있는 주 (빈 주 제외)
     const cond3 = week.workDayCount > 0;
 
-    week.holidayOk = cond1 && cond2 && cond3;
+    // 진행중 주는 아직 끝나지 않아 확정할 수 없으므로 holidayOk=false(미발생이 아니라 미확정)
+    week.holidayOk = !week.isFutureWeek && cond1 && cond2 && cond3;
     week.cond1 = cond1;
     week.cond2 = cond2;
     week.amount = week.holidayOk ? weeklyAmt : 0;
