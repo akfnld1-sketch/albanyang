@@ -260,7 +260,13 @@ function applyJobTypeUI(){
   var albaSubtype = '';
   try{ albaSubtype = localStorage.getItem('atm2_albaSubtype')||''; }catch(e){}
   var isAlbaCompany = selectedJobs.indexOf('convenience')>=0 && albaSubtype === 'company';
-  var isEmployee = selectedJobs.indexOf('employee')>=0 || jobType === 'employee' || isAlbaCompany;
+  // ★ "회사알바"는 실제로는 renderIncomeCalc()/renderDash() 등에서 직장인으로 처리되지 않고
+  //   알바용 화면이 그대로 렌더링되므로, 탭 라벨(급여관리/대시보드)·주간토글은 진짜 직장인 기준으로만 판단.
+  //   (이전에는 isAlbaCompany도 포함되어 "회사알바"인데 "급여관리/대시보드"라는 직장인 용어가 노출되는 불일치가 있었음)
+  var isTrueEmployee = selectedJobs.indexOf('employee')>=0 || jobType === 'employee';
+  var isEmployee = isTrueEmployee;
+  // ★ 사이드바(근무형태 설정)는 직장인 + 회사알바 모두 wt(근무형태) 값을 사용하므로 둘 다 필요 — 별도 기준
+  var showSidebar = isTrueEmployee || isAlbaCompany;
 
   var salBtn  = document.getElementById('btn-sal');
   var dashBtn = document.getElementById('btn-dash');
@@ -303,7 +309,6 @@ function applyJobTypeUI(){
     if(dashBtn) { dashBtn.style.display=''; dashBtn.textContent='📊 대시보드'; }
     if(mobSal)  { mobSal.style.display='';  mobSal.querySelector('span:last-child').textContent='급여관리'; }
     if(mobDash) { mobDash.style.display=''; mobDash.querySelector('span:last-child').textContent='대시보드'; }
-    if(sidebar)    sidebar.style.display='';
     if(weekToggle) weekToggle.style.display='';
   } else {
     if(salBtn)  { salBtn.style.display='';  salBtn.textContent='🧮 수입관리'; }
@@ -311,8 +316,12 @@ function applyJobTypeUI(){
     if(mobSal)  { mobSal.style.display='';  mobSal.querySelector('span:last-child').textContent='수입관리'; }
     if(mobDash) { mobDash.style.display=''; mobDash.querySelector('span:last-child').textContent='연간요약'; }
     if(weekToggle) weekToggle.style.display='none';
-    if(sidebar) sidebar.style.display='none';
   }
+
+  // ★ 사이드바/햄버거 버튼: PC에서 #sidebar/#mob-sidebar-btn에 display:flex!important가 걸려있어
+  //   인라인 style.display로는 숨길 수 없으므로, body 클래스 + 더 높은 명시도의 CSS로 우회 처리(main.css)
+  if(sidebar) sidebar.style.display = showSidebar ? '' : 'none'; // 모바일 등 !important가 없는 환경 대비 유지
+  document.body.classList.toggle('sidebar-disabled', !showSidebar);
 
   var budgetBtn = document.getElementById('btn-budget');
   var mobBudget = document.getElementById('mob-btn-budget');

@@ -23,6 +23,13 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
    배너가 떠 있는 동안 본문 하단에 여백을 확보 (js/ui.js showPwaInstallNudge/hidePwaInstallNudge) */
 body.has-pwa-nudge{padding-bottom:104px;transition:padding-bottom .2s ease;}
 
+/* 직종별 사이드바(근무형태 설정 드로어) 표시 제어 — js/jobtype.js applyJobTypeUI()가
+   직장인/회사알바가 아닐 때 body에 sidebar-disabled 클래스를 부여한다.
+   #sidebar/#mob-sidebar-btn에 PC·모바일 미디어쿼리 양쪽 모두 display:flex!important가
+   걸려 있어 인라인 style.display로는 숨길 수 없으므로, 더 높은 명시도(body.class #id)로 덮어씀. */
+body.sidebar-disabled #sidebar { display: none !important; }
+body.sidebar-disabled #mob-sidebar-btn { display: none !important; }
+
 /* ══════════════════════════════════════════
    온보딩 튜토리얼 모달
 ══════════════════════════════════════════ */

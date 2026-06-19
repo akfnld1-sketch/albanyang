@@ -1,5 +1,8 @@
 /* ── 모바일 드로어 ── */
 function toggleDrawer(){
+  // ★ 직장인/회사알바가 아닌 직종(일반알바·프리랜서 등)에서는 사이드바가 비활성화되어 있으므로
+  //   햄버거 버튼이 어떤 경로로든 호출되더라도 드로어가 열리지 않도록 방어
+  if(document.body.classList.contains('sidebar-disabled')) return;
   const s = document.getElementById('sidebar');
   const o = document.getElementById('drawer-overlay');
   const isOpen = s.classList.contains('open');
