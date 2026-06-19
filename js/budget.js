@@ -996,7 +996,7 @@ function renderBudgetPage(){
         <div class="budget-card">
           <div style="font-size:14px;font-weight:700;margin-bottom:10px;">📊 이번달 수입·지출</div>
           <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:4px;"><span>🏢 직장인수입</span><b style="color:var(--text);">${income.employee.toLocaleString()}원</b></div>
-          <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:4px;"><span>💪 알바수입</span><b style="color:var(--text);">${income.alba.toLocaleString()}원</b></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:4px;"><span>💪 알바수입${income.alba>0?' <span style="font-size:10px;color:var(--text3);">(주휴수당 포함 가능)</span>':''}</span><b style="color:var(--text);">${income.alba.toLocaleString()}원</b></div>
           <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:4px;"><span>💻 프리랜서수입</span><b style="color:var(--text);">${income.freelancer.toLocaleString()}원</b></div>
           <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:8px;"><span>➕ 기타수입</span><b style="color:var(--text);">${income.etc.toLocaleString()}원</b></div>
           <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;border-top:1px solid var(--border);padding-top:8px;margin-bottom:6px;"><span>총수입</span><span style="color:var(--green);">${income.total.toLocaleString()}원</span></div>

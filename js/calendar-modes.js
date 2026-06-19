@@ -515,11 +515,19 @@ function renderAlbaCalendar(){
     const s = (typeof getAlbaPaySummary === 'function') ? getAlbaPaySummary(curY, curM) : null;
     if(s){
       const fp = s.finalPay;
+      // ★ 주휴수당 포함 사실 표시 + 진행중 주(확정 전) 보조 안내
+      const hasWeekly = (s.weeklyHolidayPay || 0) > 0;
+      const hasProgressWeek = (s.weeklyHolidayDetail || []).some(d => d.isFutureWeek);
+      const weeklyBadge = hasWeekly ? ' <span style="font-size:10px;color:#7fffd4;">(주휴수당 포함)</span>' : '';
+      const progressNotice = hasProgressWeek
+        ? `<div style="font-size:10px;color:#ffc850;margin-top:2px;">⏳ 이번 주는 진행중이라 주휴수당이 확정되지 않았습니다</div>`
+        : '';
       albaPaySummaryHtml = `
     <div class="stat-card" onclick="showAlbaPayDetail()" style="cursor:pointer;border:1.5px solid var(--green);position:relative;">
       <div style="position:absolute;top:-8px;right:8px;font-size:10px;font-weight:800;background:var(--green);color:#06281c;padding:2px 6px;border-radius:8px;">★ 기준</div>
-      <div class="lbl">💰 예상 실수령액 <span style="font-size:10px;color:var(--text3);">(근로소득)</span></div>
+      <div class="lbl">💰 예상 실수령액 <span style="font-size:10px;color:var(--text3);">(근로소득)</span>${weeklyBadge}</div>
       <div class="val" style="color:var(--green);font-size:20px;">${fp>=10000?Math.round(fp/10000)+'만':fp.toLocaleString()}원</div>
+      ${progressNotice}
     </div>`;
     }
   }catch(e){ albaPaySummaryHtml = ''; }
@@ -551,7 +559,13 @@ function showAlbaPayDetail(){
     overlay.onclick = e=>{ if(e.target===overlay) overlay.style.display='none'; };
     document.body.appendChild(overlay);
   }
-  const regPay = Math.max(0, s.grossPay - s.otPay - s.nightPay);
+  const weeklyHolidayPay = s.weeklyHolidayPay || 0;
+  // ★ 기본급(연장·야간·주휴수당 모두 제외) + 연장 + 야간 + 주휴수당 = 총급여 검산이 가능하도록
+  //   regPay에서 weeklyHolidayPay도 함께 제외
+  const regPay = Math.max(0, s.grossPay - s.otPay - s.nightPay - weeklyHolidayPay);
+  // 일반알바/N잡(추정치 정책 A안) 기여가 있으면 안내문구 노출
+  const hasGeneralWeekly = (s.weeklyHolidayDetail || []).some(d => d.source === 'general');
+  const hasProgressWeek = (s.weeklyHolidayDetail || []).some(d => d.isFutureWeek);
   overlay.innerHTML = `
     <div class="popup" style="width:380px;padding:22px 20px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
@@ -560,14 +574,17 @@ function showAlbaPayDetail(){
           style="background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer;">✕</button>
       </div>
       <div style="font-size:15px;line-height:2.0;color:var(--text2);">
-        <div>기본급(연장·야간 제외) &nbsp; ${fmt(regPay)}</div>
+        <div>기본급(연장·야간·주휴수당 제외) &nbsp; ${fmt(regPay)}</div>
         <div>+ 연장수당(8h 초과분 ×0.5 가산) &nbsp; ${fmt(s.otPay)}</div>
         <div>+ 야간수당(22~06시 ×0.5 가산) &nbsp; ${fmt(s.nightPay)}</div>
+        <div>+ 🌟 주휴수당(주 15h↑·개근 시) &nbsp; ${fmt(weeklyHolidayPay)}</div>
         <div style="border-top:1px solid var(--border);margin:6px 0;padding-top:6px;font-weight:700;color:var(--text);">= 총급여 &nbsp; ${fmt(s.grossPay)}</div>
         <div>- 4대보험(국민연금·건강·장기요양·고용) &nbsp; ${fmt(s.ins.total)}</div>
         <div>- 세금(소득세+지방소득세) &nbsp; ${fmt(s.tax.total)}</div>
         <div style="border-top:1px solid var(--border);margin:6px 0;padding-top:6px;font-weight:800;color:#7fffd4;font-size:18px;">= 최종 실수령액 &nbsp; ${fmt(s.finalPay)}</div>
       </div>
+      ${hasProgressWeek ? `<div style="font-size:13px;color:#ffc850;margin-top:10px;padding:8px 10px;background:rgba(255,200,80,.08);border-radius:8px;">⏳ 이번 주는 진행중이라 주휴수당이 아직 확정되지 않았습니다.</div>` : ''}
+      ${hasGeneralWeekly ? `<div style="font-size:13px;color:#ffc850;margin-top:8px;padding:8px 10px;background:rgba(255,200,80,.08);border-radius:8px;">※ 일반알바/N잡 주휴수당은 예정근무 정보가 없어 실근무시간 기준으로 추정 계산됩니다.</div>` : ''}
       <div style="font-size:12px;color:var(--text3);margin-top:14px;line-height:1.6;">
         ⚠️ 4대보험은 알바(직장)별 월 60시간 이상 근무 시 국민연금·건강보험·장기요양보험을 적용한 참고값이며,
         고용보험은 근무 실적이 있으면 별도 기준으로 계산됩니다. 실제 가입 여부·공제액은 사업장 정책에 따라 다를 수 있습니다.
