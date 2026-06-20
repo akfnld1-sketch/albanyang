@@ -478,17 +478,51 @@ function renderAlbaCalendar(){
   }
   const dim = new Date(curY,curM+1,0).getDate();
   let totalPay=0, workDays=0, totalHrs=0;
+  // ★ 회사알바(dayData)/N잡알바(njobLoad)도 캘린더 그리드(일별 표시 + 알바일수/총근무시간/
+  //   이번달 수입)에 반영 — 기존엔 레거시 albaData만 보고 있어 회사알바·N잡으로 입력해도
+  //   캘린더에 전혀 표시되지 않던 문제를 해소. getAlbaPaySummary()/getAlbaMonthlyAggregate()/
+  //   renderNjobYearlySummary()는 전혀 참조하지 않고, 이 함수 내부 표시용 집계만 별도로 계산.
+  const companyWorkStates = ['work','early','half','sat_work','sun_work','holiday'];
   for(let d=1;d<=dim;d++){
     const key=dk(curY,curM,d);
     const items = albaData[key]||[];
-    const dayPay = items.reduce((s,it)=>{
+    const legacyPay = items.reduce((s,it)=>{
       let h=it.endH-it.startH; if(h<0)h+=24;
       return s+Math.round(h*(it.wage||0));
     },0);
-    const dayHrs = items.reduce((s,it)=>{
+    const legacyHrs = items.reduce((s,it)=>{
       let h=it.endH-it.startH; if(h<0)h+=24; return s+h;
     },0);
-    if(items.length>0){ workDays++; totalPay+=dayPay; totalHrs+=dayHrs; }
+
+    // 회사알바(dayData) — 직장인과 동일한 net-hours 계산(calcNetHours)에 hourlyRate를 곱한 단순 시급
+    let companyHrs = 0, companyPay = 0, companyLabel = '';
+    const cdata = (typeof dayData !== 'undefined') ? dayData[key] : null;
+    if(cdata && cdata.status){
+      if(companyWorkStates.includes(cdata.status)){
+        companyHrs = calcNetHours(cdata.start, cdata.end, cdata.status, cdata.shift);
+        companyPay = Math.round(companyHrs * hourlyRate);
+        companyLabel = '회사알바';
+      } else if(cdata.status === 'leave'){
+        companyHrs = 8;
+        companyPay = Math.round(8 * hourlyRate);
+        companyLabel = '회사알바(연차)';
+      }
+    }
+
+    // N잡알바(njobLoad)
+    const njobData = (typeof njobLoad === 'function') ? njobLoad(key) : {alba:[]};
+    const njobItems = njobData.alba || [];
+    const njobPay = njobItems.reduce((s,it)=>{
+      const amt = (it.amount != null) ? it.amount : Math.round((it.wage||0) * (it.hours||0));
+      return s + amt;
+    }, 0);
+    const njobHrs = njobItems.reduce((s,it)=> s + (it.hours||0), 0);
+
+    const dayPay = legacyPay + companyPay + njobPay;
+    const dayHrs = legacyHrs + companyHrs + njobHrs;
+    const hasAnyWork = items.length>0 || companyHrs>0 || njobItems.length>0;
+    if(hasAnyWork){ workDays++; totalPay+=dayPay; totalHrs+=dayHrs; }
+
     const dow = new Date(curY,curM,d).getDay();
     const isToday = today.getFullYear()===curY&&today.getMonth()===curM&&today.getDate()===d;
     const el=document.createElement('div');
@@ -498,11 +532,21 @@ function renderAlbaCalendar(){
     let html=`<div class="dn">${d}</div>`;
     const hName=HOLIDAYS[key];
     if(hName) html+=`<div style="font-size:11px;color:var(--orange);margin-bottom:2px;">${hName}</div>`;
-    items.slice(0,2).forEach(item=>{
+
+    // 칩 표시: 레거시 + 회사알바 + N잡 통합(최대 2개만 보이고 나머지는 +N으로 요약)
+    const chips = [];
+    items.forEach(item=>{
       const hrs=(()=>{let h=item.endH-item.startH;if(h<0)h+=24;return h;})();
-      html+=`<div class="alba-chip${item.alarmTime?' has-alarm':''}">${item.name||'알바'} ${hrs}h</div>`;
+      chips.push({text:`${item.name||'알바'} ${hrs}h`, hasAlarm: !!item.alarmTime});
     });
-    if(items.length>2) html+=`<div style="font-size:11px;color:var(--text3);">+${items.length-2}</div>`;
+    if(companyHrs>0) chips.push({text:`${companyLabel} ${companyHrs}h`, hasAlarm:false});
+    njobItems.forEach(item=>{
+      chips.push({text:`${item.name||'알바'} ${item.hours||0}h`, hasAlarm:false});
+    });
+    chips.slice(0,2).forEach(c=>{
+      html+=`<div class="alba-chip${c.hasAlarm?' has-alarm':''}">${c.text}</div>`;
+    });
+    if(chips.length>2) html+=`<div style="font-size:11px;color:var(--text3);">+${chips.length-2}</div>`;
     if(dayPay>0) html+=`<div style="font-size:12px;color:var(--green);font-weight:700;margin-top:1px;">${Math.round(dayPay/1000)}천원</div>`;
     el.innerHTML=html;
     grid.appendChild(el);

@@ -5,8 +5,8 @@
  * ★ 통합본: cache-v8 기준, 캐시버스팅 쿼리 포함
  */
 
-// ★ Fix #33b: renderStats 중복정의(budget.js가 실제 활성판) 발견 — budget.js도 함께 수정(2026-06-20)
-const CACHE_NAME = 'moneynyang-v1-cache-v38';
+// ★ Fix #34: QA 2순위 3단계 — renderAlbaCalendar()에 회사알바/N잡 표시 반영(2026-06-20)
+const CACHE_NAME = 'moneynyang-v1-cache-v39';
 
 // ── 로컬 파일 (분리된 CSS/JS 전체) ──
 // ★ index.html의 <script>/<link> 태그와 쿼리스트링이 항상 일치해야 함 (불일치 시 사전 캐시 무의미)
