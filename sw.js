@@ -5,8 +5,8 @@
  * ★ 통합본: cache-v8 기준, 캐시버스팅 쿼리 포함
  */
 
-// ★ Fix #36: 스플래시 화면 모바일 기능카드 잘림 수정 — #sp-card height:auto로 이미지 비율 유지(2026-06-20)
-const CACHE_NAME = 'moneynyang-v1-cache-v41';
+// ★ Fix #37: 모바일 터치 영역 44px 미달 버튼 보강(alba-type/delivery-type/break-btn)(2026-06-20)
+const CACHE_NAME = 'moneynyang-v1-cache-v42';
 
 // ── 로컬 파일 (분리된 CSS/JS 전체) ──
 // ★ index.html의 <script>/<link> 태그와 쿼리스트링이 항상 일치해야 함 (불일치 시 사전 캐시 무의미)
