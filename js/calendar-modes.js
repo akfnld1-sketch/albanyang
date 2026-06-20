@@ -519,8 +519,11 @@ function renderAlbaCalendar(){
       const hasWeekly = (s.weeklyHolidayPay || 0) > 0;
       const hasProgressWeek = (s.weeklyHolidayDetail || []).some(d => d.isFutureWeek);
       const weeklyBadge = hasWeekly ? ' <span style="font-size:10px;color:#7fffd4;">(주휴수당 포함)</span>' : '';
+      // ★ 통계카드는 폭이 좁아 긴 문구를 넣으면 글자 단위로 줄바꿈되며 카드가 비정상적으로
+      //   길어지는 레이아웃 깨짐이 있었음 — 카드 안은 짧은 축약 문구만, 전체 설명은
+      //   카드 클릭 시 열리는 상세팝업(showAlbaPayDetail)에 그대로 유지.
       const progressNotice = hasProgressWeek
-        ? `<div style="font-size:10px;color:#ffc850;margin-top:2px;">⏳ 이번 주는 진행중이라 주휴수당이 확정되지 않았습니다</div>`
+        ? `<div style="font-size:10px;color:#ffc850;margin-top:2px;white-space:nowrap;">⏳ 확정 전(자세히)</div>`
         : '';
       albaPaySummaryHtml = `
     <div class="stat-card" onclick="showAlbaPayDetail()" style="cursor:pointer;border:1.5px solid var(--green);position:relative;">
@@ -1125,6 +1128,20 @@ function initDayJobTabs(key){
   if((data.etc||[]).length > 0) autoOpenNjobSec('etc');
 
   // 직장 기록 있으면 직장 섹션도 자동 펼침 (기존 팝업 로직이 처리)
+
+  // ★ 알바 시급 자동세팅 — 원래 initNjobSection()에 있던 로직인데 그 함수가 어디서도
+  //   호출되지 않아 죽은 코드였음(input에 value가 채워지지 않고 placeholder만 남아,
+  //   사용자가 "이미 입력됨"으로 착각하고 그대로 추가를 누르면 실패하는 문제의 원인).
+  //   openPopup() → initDayJobTabs()로 이어지는 실제 흐름에 연결.
+  try{
+    const albaWageEl = document.getElementById('njob-alba-wage');
+    if(albaWageEl && !albaWageEl.value){
+      const wageKey='atm2_jobWages'; let wages={};
+      try{ const r=localStorage.getItem(wageKey); if(r) wages=JSON.parse(r); }catch(e){}
+      const j = selectedJobs.find(j=>['convenience','shortAlba'].includes(j));
+      albaWageEl.value = wages[j] || 10320;
+    }
+  }catch(e){}
 
   // ★ 표시 전용 — 입력폼/저장/급여계산 로직에는 영향 없음
   renderPopupStatusBadge();

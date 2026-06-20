@@ -5,8 +5,8 @@
  * ★ 통합본: cache-v8 기준, 캐시버스팅 쿼리 포함
  */
 
-// ★ Fix #30: 회사알바 기본수입 누락 수정 — getAlbaMonthlyAggregate에 dayData 기반 집계 추가(2026-06-20)
-const CACHE_NAME = 'moneynyang-v1-cache-v31';
+// ★ Fix #31: QA 1순위 — placeholder 구분 + 통계카드 진행중주 안내 축약(2026-06-20)
+const CACHE_NAME = 'moneynyang-v1-cache-v32';
 
 // ── 로컬 파일 (분리된 CSS/JS 전체) ──
 // ★ index.html의 <script>/<link> 태그와 쿼리스트링이 항상 일치해야 함 (불일치 시 사전 캐시 무의미)
