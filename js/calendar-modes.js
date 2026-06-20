@@ -752,8 +752,15 @@ function getVisibleNjobSections(){
     return result;
   }
 
+  // ★ 회사알바(convenience + albaSubtype:'company')는 직장인과 동일한 dayData 기반
+  //   출퇴근 UI를 써야 하므로, N잡 "알바" 섹션(시급·시작·종료 직접입력 폼)은 노출하지 않음.
+  //   일반알바(convenience + albaSubtype이 'company'가 아닌 모든 경우)는 기존 그대로 유지.
+  let albaSubtype = '';
+  try{ albaSubtype = localStorage.getItem('atm2_albaSubtype')||''; }catch(e){}
+  const isAlbaCompany = selectedJobs.includes('convenience') && albaSubtype === 'company';
+
   selectedJobs.forEach(j=>{
-    if(['convenience','shortAlba'].includes(j)) result.alba = true;
+    if(['convenience','shortAlba'].includes(j) && !(j==='convenience' && isAlbaCompany)) result.alba = true;
     if(['delivery','driver'].includes(j))       result.delivery = true;
     if(j === 'freelancer')                      result.free = true;
     if(j === 'etc')                             result.etc = true;
@@ -1132,7 +1139,14 @@ function njobDayTotal(key){
 
 function initDayJobTabs(key){
   const selectedJobs = loadSelectedJobs ? loadSelectedJobs() : [];
-  const isEmployee = selectedJobs.includes('employee') || selectedJobs.length === 0;
+  // ★ 회사알바(convenience + albaSubtype:'company')는 직장인과 동일한 dayData 기반
+  //   출퇴근 UI(직장 근태 아코디언, 출근/퇴근 sticky 버튼)를 사용해야 함 — 이전엔 이 판정이
+  //   없어 회사알바도 N잡 알바 입력 폼(시급·시작·종료 직접입력)으로만 저장되어 dayData에
+  //   전혀 도달하지 못했음(주휴수당/기본급 계산이 입구 없이 만들어진 상태였음).
+  let _albaSubtype = '';
+  try{ _albaSubtype = localStorage.getItem('atm2_albaSubtype')||''; }catch(e){}
+  const isAlbaCompany = selectedJobs.includes('convenience') && _albaSubtype === 'company';
+  const isEmployee = selectedJobs.includes('employee') || selectedJobs.length === 0 || isAlbaCompany;
 
   // 선택한 직종에 맞는 섹션만 표시 (기록이 있으면 직종 무관하게 표시)
   const vis = getVisibleNjobSections();
