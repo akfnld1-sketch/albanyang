@@ -14,148 +14,52 @@ let _waitingDateClick = false;
 // ════════════════════════════════════════════════════════
 // 단계 정의 (총 10개 항목 → 표시 9단계, 2-1은 2단계 연장)
 // ════════════════════════════════════════════════════════
+// ★ 2026-06-20 콘텐츠 압축: 9단계(약 3분47초 소요 실측) → 5단계로 축소.
+//   제거: 환영 단계(진입 프롬프트가 이미 환영 역할), 직장인 팝업 데모(가장 길고
+//   인터랙션 대기시간까지 더해져 비효율적), SAO 메뉴 단계, 피드백 단계.
+//   각 단계는 문단형 설명 대신 1~2문장으로 압축해 1분 이내 완료를 목표로 함.
+//   모두 type:'info'로 단순화(인터랙티브 날짜클릭/데모팝업 단계 제거) —
+//   renderInteractStep()/renderDemoPopup()/attachDateClickListener()는 더 이상
+//   호출되지 않지만 코드는 그대로 보존(향후 복원 가능하도록 삭제하지 않음).
 const TUTORIAL_STEPS = [
-  // 1단계
+  // 1단계 — 직업 선택
   {
-    step: 1, icon: '🐱', type: 'info',
-    title: '머니냥에 오신 걸 환영해요!',
-    desc: `<b>머니냥</b>은 직장인·알바생·N잡러를 위한<br>
-<span style="color:var(--accent,#4f7cff)"><b>수입 · 근태 · 가계부</b></span> 올인원 관리 앱이에요.<br><br>
-✅ 출퇴근·급여 자동계산<br>
-✅ 알바·배달·프리랜서 수입관리<br>
-✅ 가계부 & 연간 수입 분석<br><br>
-지금부터 주요 기능을 하나씩 안내해 드릴게요 😊`,
+    step: 1, icon: '🔄', type: 'info',
+    title: '직업 유형 선택',
+    desc: `직업 유형을 선택하면 화면이 자동으로 변경됩니다.`,
     highlight: null, page: null,
   },
-  // 2단계 — 날짜 클릭 유도
+  // 2단계 — 날짜 입력
   {
-    step: 2, icon: '📅', type: 'interact',
-    title: '근태관리 — 날짜를 직접 눌러보세요!',
-    desc: `<b>근태관리</b> 탭이 열렸어요.<br><br>
-출퇴근 시간, 연차·반차·결근·조퇴를<br>날짜별로 기록할 수 있어요.<br><br>
-<span style="font-size:17px;color:var(--text3,#aaa);">
-💡 지금은 직장인 모드예요.<br>직종은 설정에서 언제든 바꿀 수 있어요!
-</span>`,
+    step: 2, icon: '📅', type: 'info',
+    title: '근태관리',
+    desc: `날짜를 눌러 근무를 입력하세요.`,
     highlight: null, page: 'att',
-    waitEvent: 'dateClick',
   },
-  // 2-1단계 — 직장인 팝업 시뮬레이션
-  {
-    step: '2-1', icon: '🏢', type: 'demo',
-    title: '직장인 출결 팝업이 열렸어요!',
-    desc: `날짜를 누르면 이런 팝업이 열려요.<br><br>
-📌 <b>입력 가능한 항목</b><br>
-• <b>출근 시간</b> — 실제 출근 시각<br>
-• <b>퇴근 시간</b> — 실제 퇴근 시각<br>
-• <b>연차</b> — 유급휴가 1일 사용<br>
-• <b>반차</b> — 오전/오후 반일 휴가<br>
-• <b>결근</b> — 무단 불참 처리<br>
-• <b>조퇴</b> — 중도 퇴근 기록<br><br>
-OT·야간수당이 <span style="color:var(--accent,#4f7cff)"><b>자동 계산</b></span>돼요!`,
-    highlight: null, page: null,
-    showDemoPopup: true,
-  },
-  // 3단계
+  // 3단계 — 예상 실수령액
   {
     step: 3, icon: '💰', type: 'info',
-    title: '수입관리 — 이번 달 얼마 벌었나요?',
-    desc: `<b>수입관리</b> 탭에서 이번 달 급여를 확인해요.<br><br>
-📊 <b>자동으로 보여주는 것들</b><br>
-• 시급 × 근무시간 = 예상 급여<br>
-• 야근수당 · OT 포함 자동 계산<br>
-• 3.3% 세금 자동 공제 (프리랜서)<br><br>
-수입을 직접 입력하거나<br>자동 집계 결과를 바로 확인하세요 💸`,
+    title: '수입관리',
+    desc: `입력한 근무를 기준으로 수입을 계산합니다.`,
     highlight: 'btn-sal', page: 'sal',
   },
-  // 4단계
+  // 4단계 — 생존관리
   {
-    step: 4, icon: '📊', type: 'info',
-    title: '대시보드 — 연간 수입 한눈에!',
-    desc: `<b>대시보드(연간요약)</b>에서<br>월별 · 연간 수입을 한눈에 봐요.<br><br>
-📈 <b>확인할 수 있는 것들</b><br>
-• 월별 수입 그래프<br>
-• 연간 누적 수입 합계<br>
-• 직종별 수입 비교<br><br>
-꾸준히 기록할수록<br>내 수입 패턴이 보여요! 🎯`,
-    highlight: 'btn-dash', page: 'dash',
-  },
-  // 5단계
-  {
-    step: 5, icon: '📒', type: 'info',
-    title: '생존관리 — 가계부로 지출 파악!',
-    desc: `<b>생존관리(가계부)</b> 탭에서<br>매일 쓴 돈을 기록해요.<br><br>
-🛒 <b>지출 카테고리</b><br>
-• 식비 · 교통 · 쇼핑 · 문화<br>
-• 월세 · 보험 · 통신비 등<br>
-• 나만의 항목 직접 추가 가능<br><br>
-수입 - 지출 = <span style="color:var(--green,#3dd68c)"><b>실제 남는 돈</b></span><br>
-매달 얼마나 모으는지 확인하세요 💡`,
+    step: 4, icon: '📒', type: 'info',
+    title: '생존관리',
+    desc: `월 예산과 생활비를 관리할 수 있습니다.`,
     highlight: 'btn-budget', page: 'budget',
   },
-  // 6단계
+  // 5단계 — 설정
   {
-    step: 6, icon: '🔄', type: 'info',
-    title: '직업 변경 — 내 직종에 맞게 설정!',
-    desc: `직종에 따라 앱 화면이 달라져요.<br><br>
-👔 <b>선택 가능한 직종</b><br>
-• 직장인 — 출퇴근·OT·연차<br>
-• 알바 — 시급 × 근무시간<br>
-• 배달/대리 — 건당 수입 합산<br>
-• 프리랜서 — 프로젝트 단가<br>
-• 추가수입 — 보험금·지원금 등<br><br>
-💡 여러 직종을 <b>동시에 선택</b>할 수 있어요!<br>
-설정 → <b>직업 변경</b>에서 바꿔보세요`,
-    highlight: null, page: 'att',
-  },
-  // 7단계
-  {
-    step: 7, icon: '☰', type: 'info',
-    title: 'SAO 메뉴 — 오른쪽에서 쓸어보세요!',
-    desc: `화면 오른쪽 <b>☰ 버튼</b>을 누르거나<br>
-오른쪽 가장자리에서 왼쪽으로 <b>쓸면</b><br>
-빠른 메뉴가 열려요.<br><br>
-⚡ <b>SAO 메뉴 기능</b><br>
-• 직업 변경 바로가기<br>
-• 이달 급여 빠른 확인<br>
-• 설정 바로가기<br>
-• 오늘 날짜 바로가기<br><br>
-📱 <span style="color:var(--accent,#4f7cff)"><b>오른쪽 끝에서 왼쪽으로 쓸어보세요!</b></span>`,
-    highlight: 'sao-handle', page: null,
-  },
-  // 8단계
-  {
-    step: 8, icon: '⚙️', type: 'info',
-    title: '설정 — 내 정보를 입력해요',
-    desc: `<b>설정</b>에서 기본 정보를 입력하면<br>자동계산이 훨씬 정확해져요.<br><br>
-✏️ <b>설정 항목</b><br>
-• 내 이름 (앱에 표시됨)<br>
-• 시급 / 기본급<br>
-• 근무 요일 · 시간<br>
-• 직종 변경<br>
-• 📖 튜토리얼 다시보기<br><br>
-💡 설정은 언제든지 수정할 수 있어요.<br>
-지금 바로 내 시급을 입력해 보세요! 😊`,
-    highlight: null, page: null,
-  },
-  // 9단계
-  {
-    step: 9, icon: '💌', type: 'info',
-    title: '피드백 & 문의 안내',
-    desc: `사용하다 불편한 점이 있으면<br>언제든지 알려주세요!<br><br>
-📬 <b>문의 방법</b><br>
-• 앱 내 <b>피드백 보내기</b> 버튼<br>
-• 카카오톡 채널 문의<br>
-• 이메일 문의<br><br>
-🎁 <b>버그 제보 · 기능 제안</b>은<br>
-앱 발전에 큰 도움이 돼요!<br><br>
-<span style="color:var(--accent,#4f7cff);font-weight:800;">
-이제 머니냥을 시작해봐요 🐱💰
-</span>`,
+    step: 5, icon: '⚙️', type: 'info',
+    title: '설정',
+    desc: `백업, 복원, 직업 변경, 튜토리얼 다시보기를 사용할 수 있습니다.`,
     highlight: null, page: null,
   },
 ];
 
-const TOTAL_DISPLAY = 9;
+const TOTAL_DISPLAY = 5;
 
 // ════════════════════════════════════════════════════════
 // 공개 API
@@ -206,7 +110,7 @@ function showTutorialPrompt() {
     '<h2 class="tut-h2">머니냥 처음이신가요?</h2>',
     '<p class="tut-p" style="margin-bottom:28px;">',
     '앱 사용법을 단계별로<br>안내해 드릴게요!<br>',
-    '<span style="font-size:17px;">(약 2분 소요)</span>',
+    '<span style="font-size:17px;">(약 1분 소요)</span>',
     '</p>',
     '<button class="tut-btn-primary" onclick="startTutorial()">👍 네, 알려주세요!</button>',
     '<button class="tut-btn-ghost" onclick="skipTutorial()" style="margin-top:12px;">괜찮아요, 혼자 할게요</button>',
