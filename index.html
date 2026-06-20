@@ -1523,8 +1523,12 @@ const _origShowPage = typeof showPage === 'function' ? showPage : null;
     </button>
   </div>
 
-  <!-- 하단: 출근 / 퇴근 대형 버튼 -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+  <!-- 하단: 출근 / 퇴근 대형 버튼 — ★ 가장 많이 쓰는 액션인데 팝업 맨 아래(상태버튼9개+시간섹션+
+       메모 다음)에 있어 스크롤해야만 보이던 문제 개선: .popup의 스크롤 컨테이너 기준 sticky로
+       하단에 항상 고정 표시(기존 DOM 순서/로직은 그대로 유지, 표시 위치만 변경) -->
+  <div id="checkin-checkout-sticky" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;
+       position:sticky;bottom:-28px;margin:14px -28px -28px;padding:10px 28px 28px;
+       background:var(--surface);border-top:1px solid var(--border);z-index:5;">
     <button id="btn-checkin" onclick="quickCheckIn()"
       style="padding:14px 8px;border-radius:12px;border:2px solid var(--green);background:rgba(61,214,140,.12);
              color:var(--green);font-size:16px;font-weight:900;cursor:pointer;font-family:'Noto Sans KR';
@@ -1935,7 +1939,8 @@ const _origShowPage = typeof showPage === 'function' ? showPage : null;
     </div>
   </div>
 
-  <div class="popup-bottom-actions">
+  <!-- ★ 위 출근/퇴근 버튼이 sticky로 항상 떠 있어 이 영역을 가릴 수 있으므로 여유 여백 확보 -->
+  <div class="popup-bottom-actions" style="margin-top:130px;">
     <button class="btn btn-ghost" onclick="closePopup()" style="width:100%;text-align:center;">취소</button>
   </div>
 </div>

@@ -5,8 +5,8 @@
  * ★ 통합본: cache-v8 기준, 캐시버스팅 쿼리 포함
  */
 
-// ★ Fix #31: QA 1순위 — placeholder 구분 + 통계카드 진행중주 안내 축약(2026-06-20)
-const CACHE_NAME = 'moneynyang-v1-cache-v32';
+// ★ Fix #32d: margin-bottom→margin-top으로 수정(겹침 진짜 원인)(2026-06-20)
+const CACHE_NAME = 'moneynyang-v1-cache-v36';
 
 // ── 로컬 파일 (분리된 CSS/JS 전체) ──
 // ★ index.html의 <script>/<link> 태그와 쿼리스트링이 항상 일치해야 함 (불일치 시 사전 캐시 무의미)
