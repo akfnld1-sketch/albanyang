@@ -451,14 +451,9 @@ function renderCalendar(){
   renderStats(wDays,lDays,absDays,totOT,satH,sunH);
   // ★ 사이드바 이번달 요약 갱신
   setTimeout(updateSbSummary, 0);
-  // 이번 달이면 오늘 칸으로 부드럽게 스크롤
-  const _now = new Date();
-  if(curY===_now.getFullYear() && curM===_now.getMonth()){
-    setTimeout(()=>{
-      const _td = document.querySelector('.cal-day.today');
-      if(_td) _td.scrollIntoView({behavior:'smooth', block:'nearest'});
-    }, 80);
-  }
+  // ★ 오늘 칸 자동 스크롤 제거 — 캘린더 진입 시 메인 지표("예상 실수령액" 카드)가
+  //   화면 밖으로 밀려나는 문제가 있어 제거함. 오늘 칸은 .cal-day.today 클래스의
+  //   테두리 강조(css/main.css)로 스크롤 없이도 충분히 식별 가능.
 }
 
 function renderStats(wDays,lDays,absDays,totOT,satH,sunH){

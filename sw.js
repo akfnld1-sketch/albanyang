@@ -5,8 +5,8 @@
  * ★ 통합본: cache-v8 기준, 캐시버스팅 쿼리 포함
  */
 
-// ★ Fix #34: QA 2순위 3단계 — renderAlbaCalendar()에 회사알바/N잡 표시 반영(2026-06-20)
-const CACHE_NAME = 'moneynyang-v1-cache-v39';
+// ★ Fix #35: 캘린더 오늘날짜 자동스크롤 제거(메인지표 가림 방지), 하이라이트는 유지(2026-06-20)
+const CACHE_NAME = 'moneynyang-v1-cache-v40';
 
 // ── 로컬 파일 (분리된 CSS/JS 전체) ──
 // ★ index.html의 <script>/<link> 태그와 쿼리스트링이 항상 일치해야 함 (불일치 시 사전 캐시 무의미)

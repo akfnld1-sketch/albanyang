@@ -20,16 +20,9 @@
   };
 })();
 
-// ── 오늘 날짜 칸 자동 스크롤 (이번 달 진입 시) ──
-(function scrollToToday(){
-  const now = new Date();
-  if(curY === now.getFullYear() && curM === now.getMonth()){
-    setTimeout(()=>{
-      const todayEl = document.querySelector('.cal-day.today');
-      if(todayEl) todayEl.scrollIntoView({behavior:'smooth', block:'center'});
-    }, 150);
-  }
-})();
+// ★ 오늘 날짜 칸 자동 스크롤 제거 — 캘린더 첫 진입 시 메인 지표("예상 실수령액" 카드)가
+//   화면 밖으로 밀려나는 문제가 있어 제거함. 오늘 칸은 .cal-day.today 클래스의 테두리
+//   강조(css/main.css)로 스크롤 없이도 충분히 식별 가능하므로 하이라이트는 그대로 유지됨.
 
 try { bgIdx = parseInt(localStorage.getItem('atm2_bgIdx')||'0')||0; } catch(e){}
 applyBg(bgIdx, false);

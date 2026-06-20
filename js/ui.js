@@ -692,14 +692,8 @@ function renderCalendar(){
   renderStats(wDays,lDays,absDays,totOT,satH,sunH);
   // ★ 사이드바 이번달 요약 갱신
   setTimeout(updateSbSummary, 0);
-  // 이번 달이면 오늘 칸으로 부드럽게 스크롤
-  const _now = new Date();
-  if(curY===_now.getFullYear() && curM===_now.getMonth()){
-    setTimeout(()=>{
-      const _td = document.querySelector('.cal-day.today');
-      if(_td) _td.scrollIntoView({behavior:'smooth', block:'nearest'});
-    }, 80);
-  }
+  // ★ 오늘 칸 자동 스크롤 제거(budget.js의 renderCalendar()와 동일 사유) —
+  //   오늘 칸은 .cal-day.today 클래스 강조로 스크롤 없이도 식별 가능.
 }
 
 function renderStats(wDays,lDays,absDays,totOT,satH,sunH){
