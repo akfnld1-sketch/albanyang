@@ -702,10 +702,11 @@ function renderCalendar(){
 function renderStats(wDays,lDays,absDays,totOT,satH,sunH){
   const twd = countWD(curY,curM);
   // 실수령액 계산
+  // ★ budget.js의 renderStats()와 동일 사유로 finalPay 참조로 통일(이전엔 netPay=grossPay)
   let netPay = 0, basePay = 0, totAllow = 0, totDeduct = 0;
   try {
     const pd = getPayData();
-    if(pd){ netPay=pd.netPay||0; basePay=pd.basePay||0; totAllow=pd.totAllow||0; totDeduct=pd.totDeduct||0; }
+    if(pd){ netPay=pd.finalPay||0; basePay=pd.basePay||0; totAllow=pd.totAllow||0; totDeduct=pd.totDeduct||0; }
   } catch(e){}
 
   // 이번달 진행률

@@ -464,10 +464,13 @@ function renderCalendar(){
 function renderStats(wDays,lDays,absDays,totOT,satH,sunH){
   const twd = countWD(curY,curM);
   // 실수령액 계산
+  // ★ "예상 실수령액" 라벨이 세후를 의미하므로 finalPay(4대보험·세금 차감 후) 참조로
+  //   통일(이전엔 pd.netPay=grossPay, 세전 — 수입관리 페이지의 finalPay와 값이 달라
+  //   같은 달인데도 화면마다 다른 금액이 보이는 용어 불일치였음)
   let netPay = 0, basePay = 0, totAllow = 0, totDeduct = 0;
   try {
     const pd = getPayData();
-    if(pd){ netPay=pd.netPay||0; basePay=pd.basePay||0; totAllow=pd.totAllow||0; totDeduct=pd.totDeduct||0; }
+    if(pd){ netPay=pd.finalPay||0; basePay=pd.basePay||0; totAllow=pd.totAllow||0; totDeduct=pd.totDeduct||0; }
   } catch(e){}
 
   // 이번달 진행률

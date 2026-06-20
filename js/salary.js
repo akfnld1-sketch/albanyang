@@ -610,14 +610,34 @@ function getPayDataForMonth(y, m){
   const isPerfect = wDays>=twd;
   const perfAmt   = isPerfect?(allowances.perfect||0):0;
   const totAllow  = aNight+aOT+aHoliday+aSat+aSun+(allowances.tenure||0)+(allowances.weekly||0)+perfAmt+(allowances.other||0);
-  const netPay    = basePay+totAllow-totDeduct;
+  // ★ netPay는 이름과 달리 grossPay(세전)와 동일한 값이라 "실수령액" 라벨에 쓰면 의미가
+  //   어긋남(앱 전체 용어 정리, 2026-06-20). 4대보험·세금까지 차감한 진짜 세후 실수령액인
+  //   finalPay를 getPayData()와 동일한 계산기(calc4Insurance/calcIncomeTax)로 추가 산출.
+  const netPay    = basePay+totAllow-totDeduct; // 하위호환용 유지(= grossPay, 세전) — 신규 참조 금지
+  const grossPay  = netPay;
+  const _ins4 = calc4Insurance(grossPay);
+  const _tax4 = calcIncomeTax(grossPay);
+  const ins = {
+    np  : insOverride.np   !== null ? insOverride.np   : _ins4.np,
+    hi  : insOverride.hi   !== null ? insOverride.hi   : _ins4.hi,
+    ltc : insOverride.ltc  !== null ? insOverride.ltc  : _ins4.ltc,
+    ei  : insOverride.ei   !== null ? insOverride.ei   : _ins4.ei,
+  };
+  ins.total = ins.np + ins.hi + ins.ltc + ins.ei;
+  const tax = {
+    income : taxOverride.income !== null ? taxOverride.income : _tax4.income,
+    local  : taxOverride.local  !== null ? taxOverride.local  : _tax4.local,
+  };
+  tax.total = tax.income + tax.local;
+  const finalPay = Math.max(0, grossPay - ins.total - tax.total);
   const totalWorkH= Object.keys(mData).reduce((sum,k)=>{
     const dd=mData[k]; if(!dd||!dd.status) return sum;
     return sum+calcNetHours(dd.start,dd.end,dd.status,dd.shift);
   },0);
 
   return { wDays, lDays, absDays, totOT, nightH, satH, sunH,
-           basePay, totAllow, totDeduct, netPay, totalWorkH, twd, isPerfect };
+           basePay, totAllow, totDeduct, netPay, grossPay, ins, tax, finalPay,
+           totalWorkH, twd, isPerfect };
 }
 
 let dashYear = new Date().getFullYear();
@@ -886,7 +906,9 @@ function renderDash(){
   const payList = months.map((d,m)=>{
     const ym = `${y}-${pad2(m+1)}`;
     const manual = manualPay[ym];
-    const auto = d.netPay;
+    // ★ "실수령 누적"/"예상 연봉" 등 라벨이 세후를 의미하므로 finalPay(4대보험·세금
+    //   차감 후) 참조로 통일(이전엔 netPay=grossPay, 세전 — 용어 불일치였음)
+    const auto = d.finalPay;
     const actual = manual !== undefined ? manual : auto;
     const hasManual = manual !== undefined;
     const isFuture = y > nowY || (y === nowY && m > nowM);
