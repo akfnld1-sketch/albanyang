@@ -730,7 +730,9 @@ function renderStats(wDays,lDays,absDays,totOT,satH,sunH){
 
       <!-- 히어로: 예상 실수령 -->
       <div style="flex:2;min-width:200px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 20px;position:relative;overflow:hidden;">
-        <div style="font-size:11px;color:var(--text3);font-weight:600;letter-spacing:.5px;margin-bottom:6px;">예상 실수령액</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:600;letter-spacing:.5px;margin-bottom:6px;">예상 실수령액
+          <span style="font-weight:400;opacity:.85;">· 월급제 고정값(근무일수와 무관)</span>
+        </div>
         <div style="font-size:28px;font-weight:900;font-family:'JetBrains Mono';color:var(--green);line-height:1.1;">
           ${netPay > 0 ? netPay.toLocaleString() + '<span style="font-size:14px;font-weight:600;margin-left:2px;">원</span>' : '<span style="font-size:16px;color:var(--text3);">급여 정보 없음</span>'}
         </div>
