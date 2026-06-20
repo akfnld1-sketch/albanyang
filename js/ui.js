@@ -533,6 +533,9 @@ function changeMonth(d){
 }
 
 function renderCalendar(){
+  // ★ budget.js의 renderCalendar()와 동일 사유로 추가(이 정의는 로드순서상 budget.js에
+  //   쉐도잉되는 비활성 버전이지만, 일관성을 위해 동일하게 둠)
+  if(typeof initTutorial === 'function'){ try{ initTutorial(); }catch(e){} }
   // ── 직종 분기 ──
   const _jobs = (typeof loadSelectedJobs==='function') ? loadSelectedJobs() : [];
   if(!_jobs.includes('employee') && _jobs.length > 0){

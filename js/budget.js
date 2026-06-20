@@ -292,6 +292,11 @@ function renderWeekSatRow(){
 // ══════════════════════════════════════════
 
 function renderCalendar(){
+  // ★ 직업선택(온보딩) 완료 후 캘린더가 처음 그려지는 모든 경로(직장인/회사알바/
+  //   일반알바/복수직종/프리랜서)가 공통으로 이 함수에 모이므로, 튜토리얼 자동 실행
+  //   트리거를 여기 한 곳에 둠. initTutorial() 내부에서 이미 완료/미선택 여부를
+  //   가볍게 체크해 조용히 return하므로 반복 호출(날짜 클릭, 월 이동마다)에도 안전.
+  if(typeof initTutorial === 'function'){ try{ initTutorial(); }catch(e){} }
   // ── 직종 분기 ──
   const _jobs = (typeof loadSelectedJobs==='function') ? loadSelectedJobs() : [];
   if(!_jobs.includes('employee') && _jobs.length > 0){

@@ -176,10 +176,13 @@ window.initTutorial = function() {
     }
   } catch(e) {}
   if (!shouldShowTutorial()) return;
-  // 온보딩이 완료된 상태여야 튜토리얼 표시
+  // ★ 구버전 4단계 온보딩 모달(atm2_onboarding_done)은 현재 코드 경로상 정상적으로
+  //   열리지 않는 죽은 의존성이었음(obOpen()이 showJobTypeSelector(true)로 리다이렉트됨,
+  //   2026-06-20 분석으로 확정) — 직업선택 완료(atm2_selectedJobs) 기준으로 게이트 변경.
   try {
-    if (localStorage.getItem('atm2_onboarding_done') !== '1') return;
-  } catch(e) {}
+    var jobs = localStorage.getItem('atm2_selectedJobs');
+    if (!jobs || JSON.parse(jobs).length === 0) return;
+  } catch(e) { return; }
   injectCSS();
   showTutorialPrompt();
 };
@@ -212,7 +215,11 @@ function showTutorialPrompt() {
   document.body.appendChild(ov);
 }
 
-window.skipTutorial  = function() { removeAll(); };
+// ★ 기존 버그: markTutorialDone()을 호출하지 않아, "괜찮아요" 선택 후에도
+//   캘린더가 재렌더링될 때마다(날짜 클릭, 월 이동 등) 진입 프롬프트가 계속 다시 뜨던 문제를
+//   발견·수정. "다시 보지 않기" 체크와 동일하게 완료 처리해 자동 재실행을 막음
+//   (설정 → 튜토리얼 다시보기는 reopenTutorial()이 별도 경로라 계속 가능).
+window.skipTutorial  = function() { removeAll(); markTutorialDone(); };
 window.startTutorial = function() { removeAll(); _tutorialIndex = 0; renderStep(); };
 
 // ════════════════════════════════════════════════════════

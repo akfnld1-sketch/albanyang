@@ -764,6 +764,10 @@ function renderSettingsPage(){
         style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid rgba(255,92,122,.3);
                background:none;color:var(--red);font-size:17px;font-weight:600;
                cursor:pointer;font-family:'Noto Sans KR';text-align:left;">🗑️ 전체 초기화</button>
+      <button onclick="reopenTutorial()"
+        style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border);
+               background:var(--surface2);color:var(--text);font-size:17px;font-weight:600;
+               cursor:pointer;font-family:'Noto Sans KR';text-align:left;">📖 튜토리얼 다시보기</button>
     </div>
   </div>`;
 

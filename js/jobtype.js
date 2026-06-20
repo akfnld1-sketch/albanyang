@@ -222,6 +222,9 @@ function showJobTypeSelector(forceShow){
       }
       if(tempSelected.length === 1 && tempSelected[0] === 'freelancer'){
         showPage('sal');
+        // ★ 프리랜서 단독 선택은 renderCalendar()를 거치지 않는 유일한 경로라
+        //   별도로 튜토리얼 트리거 필요(다른 경로는 모두 renderCalendar()에서 공통 처리됨)
+        if(typeof initTutorial === 'function'){ try{ initTutorial(); }catch(e){} }
       } else {
         renderCalendar();
       }

@@ -5,8 +5,8 @@
  * ★ 통합본: cache-v8 기준, 캐시버스팅 쿼리 포함
  */
 
-// ★ Fix #38: 회사알바 dayData 출퇴근 UI 연결 — initDayJobTabs/getVisibleNjobSections(2026-06-20)
-const CACHE_NAME = 'moneynyang-v1-cache-v43';
+// ★ Fix #39: 튜토리얼 시스템 복구 — 직업선택 완료 게이트 연결 + 설정메뉴 버튼 추가(2026-06-20)
+const CACHE_NAME = 'moneynyang-v1-cache-v44';
 
 // ── 로컬 파일 (분리된 CSS/JS 전체) ──
 // ★ index.html의 <script>/<link> 태그와 쿼리스트링이 항상 일치해야 함 (불일치 시 사전 캐시 무의미)
