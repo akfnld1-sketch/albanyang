@@ -374,9 +374,9 @@ function getPayData(){
   const perfectApplied = (typeof perfectOn !== 'undefined' && perfectOn) ? true : isPerfect;
   const perfAmt   = perfectApplied?(allowances.perfect||0):0;
 
-  // 주휴수당: weeklyHolidayEnabled=false면 항상 0, ON이면 사용자 입력값 사용
+  // 주휴수당: weeklyOn ON이면 사용자 입력값 사용 (weeklyHolidayEnabled는 표시 제어만 — 급여 미변경)
   const _whe = (typeof weeklyHolidayEnabled !== 'undefined') ? weeklyHolidayEnabled : true;
-  const aWeeklyManual = (_whe && weeklyOn) ? (allowances.weekly||0) : 0;
+  const aWeeklyManual = weeklyOn ? (allowances.weekly||0) : 0;
   const totAllow = aOT+aNight+aHoliday+aSat+aSun
                   +(allowances.tenure||0)
                   +aWeeklyManual

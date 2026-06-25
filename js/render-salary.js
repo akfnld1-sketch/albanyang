@@ -563,13 +563,10 @@ function renderSalary(){
             ${(weeklyHolidayEnabled !== false) ? 'checked' : ''}
             onchange="weeklyHolidayEnabled=this.checked;localStorage.setItem('atm2_weekly_holiday_enabled',String(this.checked));lsSave();renderSalary();"
             style="width:18px;height:18px;accent-color:#7fffd4;cursor:pointer;">
-          <span style="font-size:16px;font-weight:700;color:var(--text);">주휴수당 별도 계산</span>
+          <span style="font-size:16px;font-weight:700;color:var(--text);">주휴수당 별도 표시</span>
         </label>
         <div style="font-size:12px;color:var(--text3);padding-left:28px;">
-          ${(weeklyHolidayEnabled !== false)
-            ? '현재: 주휴수당을 별도로 계산합니다 (시급 + 주휴 분리)'
-            : '현재: 주휴수당이 시급에 포함된 것으로 계산됩니다'}
-          <br>회사마다 급여 체계가 다를 수 있습니다.
+          체크 해제 시 주휴수당이 시급에 포함된 것으로 간주하며 별도 표시하지 않습니다.
         </div>
       </div>
       <div class="allow-card" style="grid-column:1/-1;display:${(weeklyHolidayEnabled !== false)?'flex':'none'};background:${weeklyOn?'rgba(127,255,212,.08)':'rgba(255,255,255,.03)'};border:1px solid ${weeklyOn?'rgba(127,255,212,.3)':'var(--border)'};transition:all .25s;">
