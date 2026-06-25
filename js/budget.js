@@ -323,6 +323,17 @@ function renderCalendar(){
   document.getElementById('month-title').textContent=`${curY}년 ${MO_KO[curM]}`;
   const grid=document.getElementById('calendar');
   grid.innerHTML='';
+  // 범례: N잡 직종 선택 사용자에게만 표시
+  const _hasNjobJobs = _jobs.some(j=>['convenience','shortAlba','delivery','driver','freelancer'].includes(j));
+  let _legEl = document.getElementById('njob-cal-legend');
+  if(!_legEl){
+    _legEl = document.createElement('div');
+    _legEl.id = 'njob-cal-legend';
+    _legEl.className = 'njob-cal-legend';
+    grid.parentNode.insertBefore(_legEl, grid);
+  }
+  _legEl.style.display = _hasNjobJobs ? '' : 'none';
+  _legEl.innerHTML = '<span class="njob-dot"></span> N잡 기록 있음 &middot; 날짜를 탭하면 상세 확인';
   // 헤더: 일월화수목금토 (일요일 시작)
   [{t:'일',cls:'h-sun'},{t:'월',cls:''},{t:'화',cls:''},{t:'수',cls:''},{t:'목',cls:''},{t:'금',cls:''},
    {t:'토',cls:'h-sat'}].forEach(d=>{
@@ -366,7 +377,15 @@ function renderCalendar(){
       if(s==='sun_work') sunH+=net;
     }
 
-    let html=`<div class="dn">${d}</div>`;
+    // N잡 데이터 존재 여부 (도트 표시용) — N잡 직종 선택 시에만 체크
+    let _hasNjobDot = false;
+    if(_hasNjobJobs){
+      try{
+        const _njRaw = localStorage.getItem('atm2_njob_'+key);
+        if(_njRaw){ const _nj=JSON.parse(_njRaw); _hasNjobDot=(_nj.alba||[]).length>0||(_nj.delivery||[]).length>0||(_nj.free||[]).length>0; }
+      }catch(e){}
+    }
+    let html=`<div class="dn">${d}${_hasNjobDot?'<span class="njob-dot"></span>':''}</div>`;
     // 공휴일 DB 표시 (status 없어도 날짜 이름 표시)
     const hName = HOLIDAYS[key];
     if(hName && (!data||!data.status||data.status==='none')){
@@ -428,26 +447,8 @@ function renderCalendar(){
         }
       }
     }
-    // ── N잡 데이터 달력 표시 (아이콘만) ──
-    try{
-      const njRaw = localStorage.getItem('atm2_njob_'+key);
-      if(njRaw){
-        const nj = JSON.parse(njRaw);
-        const hasAlba     = (nj.alba||[]).length > 0;
-        const hasDelivery = (nj.delivery||[]).length > 0;
-        const hasFree     = (nj.free||[]).length > 0;
-        const hasNight    = (nj.alba||[]).some(it=>it.nightHours>0);
-
-        if(hasAlba || hasDelivery || hasFree){
-          let icons = '';
-          if(hasAlba)     icons += hasNight ? '⏰🌙' : '⏰';
-          if(hasDelivery) icons += '🛵';
-          if(hasFree)     icons += '💻';
-          html += `<div style="font-size:11px;margin-top:2px;line-height:1.2;">${icons}</div>`;
-          el.style.borderColor = 'rgba(255,140,66,.4)';
-        }
-      }
-    }catch(e){}
+    // N잡 기록 있는 셀 테두리 강조 (도트는 .dn 안에 이미 삽입됨)
+    if(_hasNjobDot) el.style.borderColor = 'rgba(255,140,66,.4)';
 
     el.innerHTML=html;
     grid.appendChild(el);
@@ -467,10 +468,19 @@ function renderStats(wDays,lDays,absDays,totOT,satH,sunH){
   // ★ "예상 실수령액" 라벨이 세후를 의미하므로 finalPay(4대보험·세금 차감 후) 참조로
   //   통일(이전엔 pd.netPay=grossPay, 세전 — 수입관리 페이지의 finalPay와 값이 달라
   //   같은 달인데도 화면마다 다른 금액이 보이는 용어 불일치였음)
+  // ★ Income Gateway: 히어로카드는 직업유형과 무관하게 항상 직장인 전용 계산(getPayData)만
+  //   보여주던 버그가 있었음 — 직업유형에 맞는 합산 수입(getIncomeSummary)으로 교체.
+  //   기본급/공제 미니정보는 직장인일 때만 의미가 있으므로 직장인 선택 시에만 채움.
   let netPay = 0, basePay = 0, totAllow = 0, totDeduct = 0;
   try {
-    const pd = getPayData();
-    if(pd){ netPay=pd.finalPay||0; basePay=pd.basePay||0; totAllow=pd.totAllow||0; totDeduct=pd.totDeduct||0; }
+    const _selJobsHero = (typeof loadSelectedJobs==='function') ? loadSelectedJobs() : [];
+    if(_selJobsHero.indexOf('employee')>=0){
+      const pd = getPayData();
+      if(pd){ netPay=pd.finalPay||0; basePay=pd.basePay||0; totAllow=pd.totAllow||0; totDeduct=pd.totDeduct||0; }
+    } else if(typeof getIncomeSummary==='function'){
+      const summary = getIncomeSummary(curY, curM);
+      netPay = summary.total || 0;
+    }
   } catch(e){}
 
   // 이번달 진행률
@@ -491,12 +501,12 @@ function renderStats(wDays,lDays,absDays,totOT,satH,sunH){
     <div style="width:100%;display:flex;gap:10px;flex-wrap:wrap;">
 
       <!-- 히어로: 예상 실수령 -->
-      <div style="flex:2;min-width:200px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 20px;position:relative;overflow:hidden;">
+      <div style="flex:2;min-width:200px;align-self:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 20px;position:relative;">
         <div style="font-size:11px;color:var(--text3);font-weight:600;letter-spacing:.5px;margin-bottom:6px;">예상 실수령액
-          <span style="font-weight:400;opacity:.85;">· 월급제 고정값(근무일수와 무관)</span>
+          <span style="font-weight:400;opacity:.85;">· 기록할수록 더 정확해져요</span>
         </div>
         <div style="font-size:28px;font-weight:900;font-family:'JetBrains Mono';color:var(--green);line-height:1.1;">
-          ${netPay > 0 ? netPay.toLocaleString() + '<span style="font-size:14px;font-weight:600;margin-left:2px;">원</span>' : '<span style="font-size:16px;color:var(--text3);">급여 정보 없음</span>'}
+          ${netPay > 0 ? netPay.toLocaleString() + '<span style="font-size:14px;font-weight:600;margin-left:2px;">원</span>' : '<span style="font-size:15px;color:var(--text3);">날짜를 눌러 근무를 기록하면 예상 급여가 표시돼요</span>'}
         </div>
         ${prevPay > 0 && netPay > 0 ? `<div style="font-size:11px;margin-top:5px;color:${diffColor};">${diffSign}${diff.toLocaleString()}원 <span style="color:var(--text3);">전월 대비</span></div>` : ''}
         <div style="margin-top:10px;">
@@ -507,6 +517,7 @@ function renderStats(wDays,lDays,absDays,totOT,satH,sunH){
             <div style="height:100%;width:${progress}%;background:var(--accent);border-radius:2px;transition:width .6s ease;"></div>
           </div>
         </div>
+        <div style="font-size:12px;font-weight:700;color:var(--accent);margin-top:10px;">이 돈으로 다음 월급날까지 버틸 수 있을까요?</div>
         <div style="position:absolute;top:12px;right:14px;font-size:10px;color:var(--text3);text-align:right;line-height:1.6;">
           <div>기본급 <b style="color:var(--text2);font-family:'JetBrains Mono';">${basePay > 0 ? (basePay).toLocaleString() : '—'}</b></div>
           <div>공제 <b style="color:var(--red);font-family:'JetBrains Mono';">${totDeduct > 0 ? '-'+totDeduct.toLocaleString() : '—'}</b></div>
@@ -795,19 +806,35 @@ function budgetSave(){
   try{ localStorage.setItem('atm2_budgetState', JSON.stringify(budgetState)); }catch(e){}
 }
 
-// ── 수입 집계: 직장인/알바는 기존 계산기를 그대로 재사용, 프리랜서/기타는 기존 저장소(njobLoad·atm2_income_)를 병합 ──
-function getBudgetIncomeBreakdown(y, m){
+// ════════════════════════════════════════════════════════
+// Income Gateway — 모든 화면의 수입 집계는 이 함수 하나만 거쳐야 함.
+// selectedJobs 검증을 이 함수 안에서만 수행하고, 각 직종별 원시 계산기
+// (getPayData/getAlbaPaySummary 등)는 공식을 그대로 유지한 채 "호출할지
+// 말지"만 여기서 결정한다. 화면에서 금액이 필요하면 항상 getIncomeSummary()를
+// 호출할 것 — getPayData()/getAlbaPaySummary()를 직접 호출하지 말 것.
+// ════════════════════════════════════════════════════════
+function getIncomeSummary(y, m){
   let employee=0, alba=0, freelancer=0, etc=0;
 
+  const selectedJobs = (typeof loadSelectedJobs==='function') ? loadSelectedJobs() : [];
+  let albaSubtype = '';
+  try{ albaSubtype = localStorage.getItem('atm2_albaSubtype')||''; }catch(e){}
+  const isAlbaCompany = selectedJobs.indexOf('convenience')>=0 && albaSubtype === 'company';
+  const isEmployee = selectedJobs.indexOf('employee')>=0;
+  const isAlba = selectedJobs.some(j=>['convenience','shortAlba'].indexOf(j)>=0) || isAlbaCompany;
+  const isDelivery = selectedJobs.some(j=>['delivery','driver'].indexOf(j)>=0);
+  const isFreelancer = selectedJobs.indexOf('freelancer')>=0;
+
   try{
-    const selectedJobs = (typeof loadSelectedJobs==='function') ? loadSelectedJobs() : [];
-    if(selectedJobs.includes('employee') && typeof getPayData==='function'){
-      employee = getPayData().finalPay || 0;
+    if(isEmployee && typeof getPayData==='function'){
+      const isCurMonth = (typeof curY!=='undefined' && typeof curM!=='undefined' && y===curY && m===curM);
+      const pd = isCurMonth ? getPayData() : ((typeof getPayDataForMonth==='function') ? getPayDataForMonth(y,m) : null);
+      if(pd) employee = pd.finalPay || 0;
     }
   }catch(e){}
 
   try{
-    if(typeof getAlbaPaySummary==='function'){
+    if(isAlba && typeof getAlbaPaySummary==='function'){
       alba = getAlbaPaySummary(y, m).finalPay || 0;
     }
   }catch(e){}
@@ -818,11 +845,16 @@ function getBudgetIncomeBreakdown(y, m){
       const key = (typeof dk==='function') ? dk(y,m,d) : `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
       if(typeof njobLoad !== 'function') break;
       const nd = njobLoad(key);
-      (nd.free||[]).forEach(it=>{
-        const gross = (typeof freeItemAmount==='function') ? freeItemAmount(it) : ((it.count||0)*(it.price||0));
-        freelancer += Math.round(gross * 0.967); // 3.3% 원천징수(사업소득)
-      });
-      (nd.delivery||[]).forEach(it=>{ etc += (it.count||0)*(it.price||0); });
+      if(isFreelancer){
+        (nd.free||[]).forEach(it=>{
+          const gross = (typeof freeItemAmount==='function') ? freeItemAmount(it) : ((it.count||0)*(it.price||0));
+          freelancer += Math.round(gross * 0.967); // 3.3% 원천징수(사업소득)
+        });
+      }
+      if(isDelivery){
+        (nd.delivery||[]).forEach(it=>{ etc += (it.count||0)*(it.price||0); });
+      }
+      // 기타(etc) 항목은 특정 직종에 종속되지 않는 자유 입력 수입이라 직업유형과 무관하게 포함
       (nd.etc||[]).forEach(it=>{ etc += it.amount||0; });
     }
   }catch(e){}
@@ -835,15 +867,18 @@ function getBudgetIncomeBreakdown(y, m){
       items.forEach(it=>{
         const amt = parseInt(it.amount)||0;
         const net = (it.platformNet!=null) ? parseInt(it.platformNet) : Math.round(amt*0.967);
-        if(it.jobType === 'freelancer') freelancer += net;
-        else if(it.jobType && it.jobType !== 'employee') etc += net;
+        if(it.jobType === 'freelancer'){ if(isFreelancer) freelancer += net; }
+        else if(it.jobType === 'employee'){ /* 직장 수입은 employee 변수에서만 집계 */ }
+        else if(it.jobType && ['convenience','shortAlba'].indexOf(it.jobType)>=0){ if(isAlba) alba += net; }
+        else if(it.jobType && ['delivery','driver'].indexOf(it.jobType)>=0){ if(isDelivery) etc += net; }
+        else { etc += net; } // 직종 미지정/기타 항목은 자유 입력으로 간주
       });
     }
   }catch(e){}
 
-  etc += (budgetState.customIncome || 0);
+  etc += (budgetState && budgetState.customIncome || 0);
 
-  return { employee, alba, freelancer, etc, total: employee+alba+freelancer+etc };
+  return { employee, alba, freelancer, etc, total: employee+alba+freelancer+etc, selectedJobs };
 }
 
 // ── 잔고 소진일 예측 (4단계) ──
@@ -852,7 +887,7 @@ function calcZeroBalanceDate(){
   const today = new Date();
   const y=today.getFullYear(), m=today.getMonth(), d=today.getDate();
 
-  const income = getBudgetIncomeBreakdown(y, m);
+  const income = getIncomeSummary(y, m);
   const fixedTotal = Object.values(budgetState.fixedExpenses||{}).reduce((s,v)=>s+(parseInt(v)||0),0);
   const ymPrefix = `${y}-${String(m+1).padStart(2,'0')}`;
   const monthVar = (budgetState.variableExpenses||[]).filter(e=>e.date && e.date.startsWith(ymPrefix));
@@ -864,10 +899,10 @@ function calcZeroBalanceDate(){
 
   let dateStr, daysLeft;
   if(avgDailySpend <= 0){
-    dateStr = '데이터 부족'; daysLeft = null;
+    dateStr = '지출 기록이 쌓이면 표시돼요'; daysLeft = null;
   } else {
     daysLeft = Math.floor(currentBalance / avgDailySpend);
-    if(daysLeft < 0){ dateStr = '이미 위험'; }
+    if(daysLeft < 0){ dateStr = '이미 부족해요'; }
     else{
       const zeroDate = new Date(today); zeroDate.setDate(zeroDate.getDate() + daysLeft);
       dateStr = `${zeroDate.getMonth()+1}월 ${zeroDate.getDate()}일`;
@@ -877,7 +912,8 @@ function calcZeroBalanceDate(){
   // 위험도(사용설명서 기준): 안전(<80%) / 주의(80%+) / 위험(85%+) / 초위험(100%+)
   const spentPct = availableBudget>0 ? Math.round((varTotal/availableBudget)*100) : (varTotal>0?100:0);
   let riskLevel = 'safe', riskLabel = '✅ 안전';
-  if(spentPct>=100){ riskLevel='danger_high'; riskLabel='🚨 초위험'; }
+  if(varTotal===0){ riskLevel='nodata'; riskLabel='지출 기록이 쌓이면 분석이 시작돼요'; }
+  else if(spentPct>=100){ riskLevel='danger_high'; riskLabel='🚨 초위험'; }
   else if(spentPct>=85){ riskLevel='danger'; riskLabel='🔥 위험'; }
   else if(spentPct>=80){ riskLevel='warning'; riskLabel='⚠️ 주의'; }
 
@@ -941,7 +977,7 @@ function renderBudgetPage(){
 
   const today = new Date();
   const y = today.getFullYear(), m = today.getMonth();
-  const income = getBudgetIncomeBreakdown(y, m);
+  const income = getIncomeSummary(y, m);
   const fixedTotal = Object.values(budgetState.fixedExpenses).reduce((s,v)=>s+(parseInt(v)||0),0);
   const ymPrefix = `${y}-${String(m+1).padStart(2,'0')}`;
   const monthVar = (budgetState.variableExpenses||[]).filter(e=>e.date && e.date.startsWith(ymPrefix));
@@ -950,8 +986,8 @@ function renderBudgetPage(){
   const remain = income.total - totalExpense;
   const zb = calcZeroBalanceDate();
 
-  const riskBg = { safe:'rgba(61,214,140,.1)', warning:'rgba(255,209,102,.1)', danger:'rgba(255,159,67,.12)', danger_high:'rgba(255,92,122,.12)' }[zb.riskLevel];
-  const riskBorder = { safe:'rgba(61,214,140,.3)', warning:'rgba(255,209,102,.35)', danger:'rgba(255,159,67,.35)', danger_high:'rgba(255,92,122,.35)' }[zb.riskLevel];
+  const riskBg = { nodata:'var(--surface2)', safe:'rgba(61,214,140,.1)', warning:'rgba(255,209,102,.1)', danger:'rgba(255,159,67,.12)', danger_high:'rgba(255,92,122,.12)' }[zb.riskLevel];
+  const riskBorder = { nodata:'var(--border)', safe:'rgba(61,214,140,.3)', warning:'rgba(255,209,102,.35)', danger:'rgba(255,159,67,.35)', danger_high:'rgba(255,92,122,.35)' }[zb.riskLevel];
 
   // 카테고리별 변동지출 합계(3단계)
   const catTotals = {};
@@ -983,9 +1019,11 @@ function renderBudgetPage(){
   page.innerHTML = `
     <div class="budget-container">
 
+      <div style="font-size:15px;font-weight:700;color:var(--accent);padding:0 2px 10px;">이번 달 받을 돈과 지출을 비교해서, 월급날까지 버틸 수 있는지 확인해보세요</div>
+
       <!-- 경고 배너(4단계) — 항상 전체 폭 -->
       <div style="background:${riskBg};border:1px solid ${riskBorder};border-radius:12px;padding:14px;margin-bottom:14px;">
-        <div style="font-size:15px;font-weight:800;margin-bottom:8px;">${zb.riskLabel} (이번달 가용예산의 ${zb.spentPct}% 사용)</div>
+        <div style="font-size:15px;font-weight:800;margin-bottom:8px;">${zb.riskLevel==='nodata' ? '📭 ' + zb.riskLabel : zb.riskLabel + ` (이번달 가용예산의 ${zb.spentPct}% 사용)`}</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;color:var(--text2);">
           <div>💰 현재잔고<br><b style="font-size:15px;color:var(--text);">${zb.currentBalance.toLocaleString()}원</b></div>
           <div>📉 일평균지출<br><b style="font-size:15px;color:var(--text);">${zb.avgDailySpend.toLocaleString()}원</b></div>

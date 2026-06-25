@@ -466,7 +466,7 @@ function promptRenameWp(wpId){
 function promptDeleteWp(wpId){
   const wp = wpGet(wpId);
   if(wpList().length<=1){ showToast('마지막 사업장은 삭제할 수 없습니다'); return; }
-  if(confirm(`"${wp?.name}" 사업장과 모든 직원 데이터를 삭제하시겠어요?`)){
+  showCustomConfirm(`"${wp?.name}" 사업장과 모든 직원 데이터를 삭제하시겠어요?`, function(){
     wpDelete(wpId);
     if(activeWpId===wpId){
       const remain=wpList(); activeWpId=remain[0]?.id;
@@ -478,7 +478,7 @@ function promptDeleteWp(wpId){
     }
     document.getElementById('emp-manage-overlay')?.remove();
     updateEmpSwitcher(); showToast('삭제했습니다');
-  }
+  });
 }
 function promptRenameEmp(wpId, empId){
   openEmpEditModal(wpId, empId);
@@ -514,7 +514,7 @@ function openEmpEditModal(wpId, empId){
           시급 <span style="font-size:14px;color:var(--text3);font-weight:400;">(2026 최저 10,320원)</span>
         </label>
         <div style="display:flex;align-items:center;gap:6px;">
-          <input id="ee-wage" type="number" value="${emp.hourlyRate||10320}" min="10320" step="0.01"
+          <input id="ee-wage" type="number" value="${emp.hourlyRate||10320}" min="10320" step="1"
             style="flex:1;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:var(--surface2);color:var(--text);font-size:21px;font-family:'JetBrains Mono';font-weight:700;text-align:right;outline:none;"
             onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"
             oninput="var w=parseFloat(this.value)||0;document.getElementById('ee-wage-warn').style.display=w>0&&w<10320?'block':'none';">
@@ -551,7 +551,7 @@ function openEmpEditModal(wpId, empId){
 
 function confirmEmpEdit(wpId, empId){
   const name  = document.getElementById('ee-name')?.value?.trim();
-  const wage  = parseFloat(document.getElementById('ee-wage')?.value||'10320');
+  const wage  = Math.round(parseFloat(document.getElementById('ee-wage')?.value||'10320'));
   const wtype = document.getElementById('ee-wt')?.value||'day';
   const hire  = document.getElementById('ee-hire')?.value||'';
   if(!name){ showToast('이름을 입력해주세요'); return; }
@@ -579,7 +579,7 @@ function promptDeleteEmp(wpId, empId){
   const emp = empGet(wpId, empId);
   const empName = emp?.name || '직원';
   if(empList(wpId).length<=1){ showToast('마지막 직원은 삭제할 수 없습니다'); return; }
-  if(confirm(`"${empName}" 님과 모든 근태 데이터를 삭제하시겠어요?`)){
+  showCustomConfirm(`"${empName}" 님과 모든 근태 데이터를 삭제하시겠어요?`, function(){
     empDelete(wpId, empId);
     if(activeEmpId===empId){
       const remEmp=empList(wpId); activeEmpId=remEmp[0]?.id;
@@ -589,6 +589,6 @@ function promptDeleteEmp(wpId, empId){
     }
     document.getElementById('emp-manage-overlay')?.remove();
     updateEmpSwitcher(); showToast('삭제했습니다');
-  }
+  });
 }
 

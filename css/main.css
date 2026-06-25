@@ -66,7 +66,7 @@ body.sidebar-disabled #mob-sidebar-btn { display: none !important; }
    온보딩 튜토리얼 모달
 ══════════════════════════════════════════ */
 #onboarding-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);
+  position:fixed;inset:0;background:rgba(0,0,0,.65);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
   z-index:99999;display:flex;align-items:center;justify-content:center;
   opacity:0;transition:opacity .4s ease;pointer-events:none;
 }
@@ -397,7 +397,7 @@ body.sidebar-disabled #mob-sidebar-btn { display: none !important; }
 .s-sun_work{background:rgba(255,80,130,.25);color:#bb0044;border:1px solid rgba(255,80,130,.4);font-weight:700;}
 
 /* POPUP */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;display:flex;align-items:center;justify-content:center;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
 .popup{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:440px;max-width:96vw;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow);}
 .popup h3{font-size:18px;font-weight:700;margin-bottom:18px;color:var(--text);}
 .p-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
@@ -469,7 +469,7 @@ body.sidebar-disabled #mob-sidebar-btn { display: none !important; }
 ══════════════════════════════════════════ */
 #job-type-overlay {
   position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:5000;
-  display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
 }
 .job-type-card {
   background:var(--surface2);border:2px solid var(--border);border-radius:16px;
@@ -496,6 +496,11 @@ body.sidebar-disabled #mob-sidebar-btn { display: none !important; }
 .fl-chip.type-etc      { background:rgba(160,160,160,.2);color:#888; }
 .fl-chip.has-alarm     { position:relative; }
 .fl-chip.has-alarm::after { content:'🔔';font-size:8px;margin-left:2px; }
+
+/* ── N잡 도트 (A++안: 단일 도트로 기록 여부만 표시) ── */
+.njob-dot{display:inline-block;width:6px;height:6px;background:var(--accent);border-radius:50%;margin-left:3px;vertical-align:super;flex-shrink:0;}
+.njob-cal-legend{font-size:11px;color:var(--text3);padding:3px 2px 4px;display:flex;align-items:center;gap:4px;line-height:1;}
+.njob-cal-legend .njob-dot{vertical-align:middle;margin-left:0;}
 
 /* ── 알바 달력 칩 ── */
 .alba-chip {
@@ -643,6 +648,10 @@ body.sidebar-disabled #mob-sidebar-btn { display: none !important; }
 .acc-item.wt-active { border-color: var(--accent); }
 .acc-item.wt-active .acc-hdr { color: var(--accent); }
 
+
+/* ★ Fix #56: 설정 페이지 내부 컨테이너 기본값(모바일 포함 전 구간) —
+   기존 인라인(max-width:520px)을 대체. PC 미디어쿼리가 이 값을 덮어씀 */
+#settings-page > div { max-width: 520px; margin: 0 auto; }
 
 /* ══════════════════════════════════════════
    PC 반응형 (769px 이상)
@@ -867,6 +876,7 @@ body.sidebar-disabled #mob-sidebar-btn { display: none !important; }
     inset: 0;
     background: rgba(0,0,0,.45);
     z-index: 590;
+    -webkit-backdrop-filter: blur(2px);
     backdrop-filter: blur(2px);
   }
   #drawer-overlay.show { display: block !important; }
@@ -979,6 +989,9 @@ body.sidebar-disabled #mob-sidebar-btn { display: none !important; }
   .dn { font-size: 17px !important; }
   .stat-card .val { font-size: 24px !important; }
   .total-box .amt { font-size: 42px !important; }
+  /* ★ Fix #56: 설정 페이지 내부는 PC(1025px+)에서만 넓히고 태블릿은 기존
+     모바일과 동일한 폭(520px)을 유지 — 769px+ 일반 규칙(900px)을 여기서 되돌림 */
+  #settings-page > div { max-width: 520px !important; }
 }
 
 /* ── 노트북 (1025~1439px) ── */
@@ -988,6 +1001,37 @@ body.sidebar-disabled #mob-sidebar-btn { display: none !important; }
   #att-page, #salary-page, #dash-page, #budget-page, #settings-page { max-width: 1100px !important; }
 }
 
+/* ── PC 전용 통계카드 가로형 레이아웃 (1366px+) ──
+   기존엔 모바일 카드의 padding/font-size만 키운 구조라 "확대된 모바일 카드"
+   느낌이 있었음. 라벨/보조설명을 좌측, 숫자를 우측에 배치하는 가로형으로 전환.
+   .stat-card는 캘린더/일정관리/알바수입 등 여러 화면에서 공통으로 쓰이므로
+   배치 순서만 CSS로 재정렬하고 색상·데이터·클릭 로직은 전혀 건드리지 않음.
+   모바일·태블릿(~1365px)에는 이 블록이 전혀 적용되지 않음(2026-06-21). */
+@media (min-width: 1366px) {
+  .stat-card {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 14px;
+    row-gap: 2px;
+  }
+  .stat-card .lbl {
+    flex: 1 1 auto;
+    margin-bottom: 0 !important;
+    order: 1;
+  }
+  .stat-card .val {
+    flex: 0 0 auto;
+    order: 2;
+    text-align: right;
+  }
+  .stat-card > div:not(.lbl):not(.val) {
+    flex: 1 1 100%;
+    order: 3;
+    margin-top: 4px !important;
+  }
+}
+
 /* ── 대형 (1440px+) ── */
 @media (min-width: 1440px) {
   #att-page, #salary-page, #dash-page, #budget-page, #settings-page { max-width: 1320px !important; }
@@ -995,5 +1039,13 @@ body.sidebar-disabled #mob-sidebar-btn { display: none !important; }
   .dn { font-size: 22px !important; }
   .stat-card .val { font-size: 30px !important; }
   .total-box .amt { font-size: 58px !important; }
+}
+
+/* ── 초대형 (1800px+, 1920px 모니터 등) ──
+   #app(1600px)·콘텐츠(1320px) 한도에서 멈춰 1920px 화면에 빈 공간이 과도하게
+   남던 문제 보정. 새 콘텐츠 추가 없이 기존 컨테이너 폭만 확장(회귀 위험 최소) */
+@media (min-width: 1800px) {
+  #app { max-width: 1880px; }
+  #att-page, #salary-page, #dash-page, #budget-page, #settings-page { max-width: 1500px !important; }
 }
 

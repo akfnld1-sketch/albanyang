@@ -5,8 +5,9 @@
  * ★ 통합본: cache-v8 기준, 캐시버스팅 쿼리 포함
  */
 
-// ★ Fix #41: "실수령액" 용어 통일 — netPay(세전 혼용) 제거, finalPay(세후)로 일치(2026-06-20)
-const CACHE_NAME = 'moneynyang-v1-cache-v46';
+// ★ Fix #70: 근태관리 히어로카드에 생존관리로 이어지는 질문형 문구 추가
+//   ("이 돈으로 다음 월급날까지 버틸 수 있을까요?") — 기능 변경 없음 (2026-06-22)
+const CACHE_NAME = 'moneynyang-v1-cache-v92';
 
 // ── 로컬 파일 (분리된 CSS/JS 전체) ──
 // ★ index.html의 <script>/<link> 태그와 쿼리스트링이 항상 일치해야 함 (불일치 시 사전 캐시 무의미)

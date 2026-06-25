@@ -161,19 +161,35 @@ document.getElementById('sp-btn').addEventListener('click', function(){
   try{ obDone = localStorage.getItem('atm2_onboarding_done') === '1'; }catch(e){}
 
   if(obDone){
-    return; // 스플래시만 닫고 끝 — 메인 화면 그대로 노출
+    // 온보딩 완료했어도 직업선택 안 한 경우 직업선택으로 이동 (구버전 사용자 대응)
+    var _selJ=[]; try{ _selJ=JSON.parse(localStorage.getItem('atm2_selectedJobs')||'[]'); }catch(e){}
+    if(_selJ.length===0){
+      setTimeout(function(){ if(typeof showJobTypeSelector==='function') showJobTypeSelector(true); }, 300);
+    }
+    return;
   }
 
   // 온보딩 열기 (최초 사용자)
   setTimeout(function(){
-    if(typeof obOpen === 'function'){
-      obOpen();
-    } else {
-      var ov = document.getElementById('onboarding-overlay');
-      if(ov){
-        ov.classList.add('show');
-        if(typeof _obUpdateUI === 'function') _obUpdateUI();
+    function proceedToOnboarding(){
+      if(typeof obOpen === 'function'){
+        obOpen();
+      } else {
+        var ov = document.getElementById('onboarding-overlay');
+        if(ov){
+          ov.classList.add('show');
+          if(typeof _obUpdateUI === 'function') _obUpdateUI();
+        }
       }
+    }
+
+    // ★ Fix #48: 직업선택 진입 전 화면 크기(일반/시니어) 선택 — 최초 1회만
+    var uiModeSet = false;
+    try{ uiModeSet = !!localStorage.getItem('atm2_uiMode'); }catch(e){}
+    if(!uiModeSet && typeof showUiModeSelector === 'function'){
+      showUiModeSelector(proceedToOnboarding);
+    } else {
+      proceedToOnboarding();
     }
   }, 100);
 });
@@ -317,10 +333,12 @@ document.getElementById('sp-btn').addEventListener('click', function(){
             var ov=document.getElementById('onboarding-overlay');
             if(ov) ov.classList.remove('show');
             try{localStorage.setItem('atm2_onboarding_done','1');}catch(e){}
-            // 온보딩 완료 → 1.5초 후 튜토리얼 시작 제안
+            // 온보딩 완료 → 직업선택으로 이동 (직업 미선택 시) 또는 튜토리얼
             setTimeout(function(){
-              if(typeof initTutorial==='function') initTutorial();
-            }, 1500);
+              var _sj=[]; try{ _sj=JSON.parse(localStorage.getItem('atm2_selectedJobs')||'[]'); }catch(e){}
+              if(_sj.length===0 && typeof showJobTypeSelector==='function'){ showJobTypeSelector(true); }
+              else if(typeof initTutorial==='function'){ initTutorial(); }
+            }, 500);
           }
         }
       ">다음 →</button>
@@ -368,7 +386,7 @@ document.getElementById('sp-btn').addEventListener('click', function(){
     <span class="sao-icon">📊</span>연간요약
   </button>
   <button class="sao-btn" onclick="closeSaoMenu();showJobTypeSelector(true)">
-    <span class="sao-icon">🔄</span>직업변경
+    <span class="sao-icon">🛠️</span>직업 설정 변경
   </button>
   <button class="sao-btn" onclick="closeSaoMenu();reopenTutorial();" style="background:rgba(79,124,255,.12);border-color:var(--accent);color:var(--accent);">
     🎯 튜토리얼
@@ -392,9 +410,9 @@ document.getElementById('sp-btn').addEventListener('click', function(){
   <nav id="main-tabbar">
     <button class="main-tab active" id="btn-att" onclick="showPage('att')"><span class="tab-icon">📋</span> 근태관리</button>
     <button class="main-tab" id="btn-sal" onclick="showPage('sal')"><span class="tab-icon">💰</span> 수입관리</button>
-    <button class="main-tab" id="btn-dash" onclick="showPage('dash')"><span class="tab-icon">📊</span> 연간요약</button>
     <button class="main-tab" id="btn-budget" onclick="showPage('budget')"><span class="tab-icon">🛡️</span> 생존관리</button>
-    <button class="main-tab" id="btn-jobtype" onclick="showJobTypeSelector(true)"><span class="tab-icon">🔄</span> 직업변경</button>
+    <button class="main-tab" id="btn-dash" onclick="showPage('dash')"><span class="tab-icon">📊</span> 연간요약</button>
+    <button class="main-tab" id="btn-jobtype" onclick="showJobTypeSelector(true)"><span class="tab-icon">🛠️</span> 직업 설정 변경</button>
     <button class="main-tab" id="btn-settings" onclick="showPage('settings')"><span class="tab-icon">⚙️</span> 설정</button>
   </nav>
   <div class="header-right">
@@ -663,6 +681,7 @@ document.getElementById('sp-btn').addEventListener('click', function(){
   <div id="att-page">
 
     <div id="cal-area">
+      <div style="font-size:15px;font-weight:700;color:var(--accent);padding:0 2px 6px;">날짜를 눌러 출근·퇴근을 기록하면, 예상 급여가 더 정확해져요</div>
       <div class="month-nav">
         <button onclick="changeMonth(-1)">◀</button>
         <h2 id="month-title"></h2>
@@ -676,6 +695,11 @@ document.getElementById('sp-btn').addEventListener('click', function(){
             <button class="toggle-all-btn" onclick="applyHolidays()">🗓️ 공휴일 자동표시</button>
             <button class="toggle-all-btn" onclick="toggleAllWeekend()">전체 토글</button>
           </div>
+        </div>
+        <!-- ★ Fix #63: 신규 사용자가 이 토글의 용도를 알 수 있도록 짧은 안내 추가
+             (기능/구조 변경 없음, 안내 문구 한 줄만 추가, 2026-06-21) -->
+        <div style="font-size:11px;color:var(--text3);padding:0 4px 6px;line-height:1.5;">
+          매주 토요일·일요일에 특근하면 여기서 미리 켜두세요 — 아래 날짜에 자동 적용돼요
         </div>
         <div class="week-toggle-row" id="week-sat-row"></div>
       </div>
@@ -1073,15 +1097,15 @@ const _origShowPage = typeof showPage === 'function' ? showPage : null;
     <div id="man-panel-2" style="display:none;">
 
       <div style="background:rgba(79,124,255,.08);border:1px solid rgba(79,124,255,.2);border-radius:10px;padding:14px;margin-bottom:12px;">
-        <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px;">🏢 직장인 — 급여관리 탭</div>
+        <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px;">🏢 직장인 — 수입관리 탭</div>
         <div style="font-size:12px;color:var(--text2);line-height:2;">
-          상단 <b>💰 급여관리</b> 탭 탭<br>
+          상단 <b>💰 수입관리</b> 탭 탭<br>
           → 이번달 실수령액(4대보험·세금 공제 후) 자동 계산 표시<br>
           → 시급·OT수당·야간수당·휴일수당·특근수당 상세 내역<br>
           → 4대보험(국민연금 4.5%, 건강 3.545%, 고용 0.9%) 자동 계산<br>
           → 전월 대비 수령액 증감 자동 비교<br><br>
-          <b>시급 설정:</b> 급여관리 탭 → ① 법정 최저시급 / ② 회사 실제 시급 각각 설정<br>
-          <b>주휴수당:</b> 급여관리 탭 → 🌟 주휴수당 ON/OFF 토글 → 금액 직접 입력
+          <b>시급 설정:</b> 수입관리 탭 → ① 법정 최저시급 / ② 회사 실제 시급 각각 설정<br>
+          <b>주휴수당:</b> 수입관리 탭 → 🌟 주휴수당 ON/OFF 토글 → 금액 직접 입력
         </div>
       </div>
 
@@ -1131,7 +1155,7 @@ const _origShowPage = typeof showPage === 'function' ? showPage : null;
         <div style="font-size:12px;color:var(--text2);line-height:2;">
           상단 <b>🛡️ 생존관리</b> 탭 탭 → 생존 관리 시스템<br><br>
           <b>① 수입 설정:</b><br>
-          &nbsp;&nbsp;• 직장인: 급여관리 탭 데이터 자동 연동<br>
+          &nbsp;&nbsp;• 직장인: 수입관리 탭 데이터 자동 연동<br>
           &nbsp;&nbsp;• 알바/프리랜서: 수입계산기 탭 → <b>🛡️ 생존관리에 반영</b> 버튼<br>
           &nbsp;&nbsp;• 또는 생존관리 하단 수입 직접입력란에 입력<br><br>
           <b>② 고정지출 설정:</b><br>
@@ -1446,17 +1470,22 @@ const _origShowPage = typeof showPage === 'function' ? showPage : null;
   <div id="employee-acc-body" style="display:block;">
 
   <!-- 상단: 빠른 상태 버튼 -->
+  <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">지나간 날짜나 정확한 시간을 입력할 때 사용해요</div>
   <div style="display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap;">
-    <div class="s-opt-sm" data-s="leave"    onclick="openLeaveNotePopup('leave')">🌿 연차</div>
+    <!-- ★ 버튼을 누르기 전에 의미를 알 수 있도록 칩 안에 짧은 상태설명 1줄 추가(2026-06-20).
+         기존 매뉴얼 문구를 그대로 가져오지 않고 "유급/무급 + 시간단위" 핵심만 압축해 새로 작성.
+         white-space:nowrap이 유지된 채로 <br>만 추가되는 구조라 칩 높이만 살짝 늘어나고
+         가로폭/클릭 로직(onclick, data-s)은 전혀 변경 없음. -->
+    <div class="s-opt-sm" data-s="leave"    onclick="openLeaveNotePopup('leave')">🌿 연차<br><span style="font-size:10px;font-weight:400;opacity:.7;">유급·1일</span></div>
     <div class="s-opt-sm" data-s="half"     onclick="openLeaveNotePopup('half')"
-         style="border-color:rgba(255,209,102,.5);color:var(--yellow);">⏰ 반차</div>
+         style="border-color:rgba(255,209,102,.5);color:var(--yellow);">⏰ 반차<br><span style="font-size:10px;font-weight:400;opacity:.7;">유급·4h</span></div>
     <div class="s-opt-sm" data-s="early"    onclick="openLeaveNotePopup('early')"
-         style="border-color:rgba(255,92,122,.4);color:var(--red);">🚶 조퇴</div>
-    <div class="s-opt-sm" data-s="absent"   onclick="openLeaveNotePopup('absent')">❌ 결근</div>
-    <div class="s-opt-sm" data-s="holiday"  onclick="selStAndTime('holiday')">🌙 휴일근무</div>
-    <div class="s-opt-sm" data-s="public"   onclick="quickSave('public')">🏛️ 공휴일</div>
-    <div class="s-opt-sm" data-s="sat_work" onclick="selStAndTime('sat_work')" style="border-color:rgba(127,179,255,.4);color:var(--sat);">🔵 토요특근</div>
-    <div class="s-opt-sm" data-s="sun_work" onclick="selStAndTime('sun_work')" style="border-color:rgba(255,143,171,.4);color:var(--sun);">🔴 일요특근</div>
+         style="border-color:rgba(255,92,122,.4);color:var(--red);">🚶 조퇴<br><span style="font-size:10px;font-weight:400;opacity:.7;">중도퇴근</span></div>
+    <div class="s-opt-sm" data-s="absent"   onclick="openLeaveNotePopup('absent')">❌ 결근<br><span style="font-size:10px;font-weight:400;opacity:.7;">무급 처리</span></div>
+    <div class="s-opt-sm" data-s="holiday"  onclick="selStAndTime('holiday')">🌙 휴일근무<br><span style="font-size:10px;font-weight:400;opacity:.7;">1.5~2.0배</span></div>
+    <div class="s-opt-sm" data-s="public"   onclick="quickSave('public')">🏛️ 공휴일<br><span style="font-size:10px;font-weight:400;opacity:.7;">무급·8h공제</span></div>
+    <div class="s-opt-sm" data-s="sat_work" onclick="selStAndTime('sat_work')" style="border-color:rgba(127,179,255,.4);color:var(--sat);">🔵 토요특근<br><span style="font-size:10px;font-weight:400;opacity:.7;">×1.5 수당</span></div>
+    <div class="s-opt-sm" data-s="sun_work" onclick="selStAndTime('sun_work')" style="border-color:rgba(255,143,171,.4);color:var(--sun);">🔴 일요특근<br><span style="font-size:10px;font-weight:400;opacity:.7;">×2.0 수당</span></div>
     <div class="s-opt-sm" data-s="none"     onclick="confirmResetDay()" style="border-color:rgba(255,92,122,.3);color:var(--red);">🗑️ 초기화</div>
   </div>
 
@@ -1967,6 +1996,11 @@ const _origShowPage = typeof showPage === 'function' ? showPage : null;
   overflow:hidden;
   transition:transform .2s, box-shadow .2s;
   animation: asst-float 3s ease-in-out infinite;
+  /* ★ Fix #60: 상시 애니메이션 중인 fixed 버튼을 별도 GPU 합성 레이어로
+     승격 — 스크롤 시 메인스레드 재페인트 부담 완화(시각적 변화 없음, 2026-06-21) */
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 #asst-btn:hover { transform:scale(1.10); box-shadow:0 6px 28px rgba(0,0,0,.3); }
 .nav-btn.bg-off {
@@ -1985,13 +2019,17 @@ const _origShowPage = typeof showPage === 'function' ? showPage : null;
   background:#fff; color:#1a1a2e; border-radius:14px 14px 4px 14px;
   padding:10px 14px; font-size:13px; font-weight:600;
   box-shadow:0 4px 16px rgba(0,0,0,.18);
-  white-space:nowrap; pointer-events:auto; cursor:pointer;
+  white-space:nowrap; cursor:pointer;
   opacity:0; transform:translateY(8px);
   transition:opacity .3s, transform .3s;
   max-width:240px; white-space:normal; line-height:1.45;
   border:1px solid var(--border);
+  /* ★ Fix #65: 안 보이는 상태(opacity:0)에서도 pointer-events:auto라서
+     챗봇 패널과 같은 좌표(bottom:100px;right:20px)에 투명하게 겹쳐
+     입력창 우측 터치를 가로채던 문제 수정 — 보일 때만 클릭 가능하게(2026-06-21) */
+  pointer-events:none;
 }
-#asst-bubble.show { opacity:1; transform:translateY(0); }
+#asst-bubble.show { opacity:1; transform:translateY(0); pointer-events:auto; }
 #asst-bubble:hover { background:#f0f4ff; box-shadow:0 6px 20px rgba(0,0,0,.25); }
 #asst-bubble::after {
   content:'💬';
@@ -2115,6 +2153,7 @@ const _origShowPage = typeof showPage === 'function' ? showPage : null;
     <button id="asst-close" onclick="toggleAsst()">✕</button>
   </div>
   <div id="asst-msgs"></div>
+  <div style="font-size:11px;color:var(--text3);padding:0 6px 4px;">오늘 출근했다면 빠르게 기록해보세요</div>
   <div id="asst-quick">
     <button class="asst-q" id="asst-checkin-btn" onclick="manualRecordAttendance()" style="background:rgba(61,214,140,.15);border-color:var(--green);color:var(--green);font-weight:700;font-size:13px;">🟢 출근</button>
     <button class="asst-q" id="asst-checkout-btn" onclick="manualRecordLeave()" style="background:rgba(255,92,122,.15);border-color:var(--red);color:var(--red);font-weight:700;font-size:13px;">🔴 퇴근</button>
@@ -2124,10 +2163,15 @@ const _origShowPage = typeof showPage === 'function' ? showPage : null;
     <button class="asst-q" onclick="askQuick('OT 수당 얼마야?')">⏰ OT 수당</button>
     <button class="asst-q" onclick="askQuick('4대보험 얼마 나와?')">🛡️ 4대보험</button>
   </div>
-  <div id="asst-input-wrap">
-    <input id="asst-input" placeholder="무엇이든 물어보세요..." onkeydown="if(event.key==='Enter')sendAsst()">
-    <button id="asst-send" onclick="sendAsst()">➤</button>
-  </div>
+  <!-- ★ Fix #66: div→form 전환 + enterkeyhint 추가(2026-06-21).
+       모바일 가상 키보드의 엔터/Go/완료 키는 keydown의 event.key가 'Enter'로
+       일관되게 오지 않는 기기가 있어, <form>의 표준 submit 이벤트(엔터·Go·완료
+       키 입력 시 브라우저가 자동 발생시킴)에 위임하는 방식으로 변경.
+       전송 버튼은 type="button"으로 명시해 form 자동제출과 중복 호출되지 않게 함. -->
+  <form id="asst-input-wrap" onsubmit="event.preventDefault();sendAsst();return false;">
+    <input id="asst-input" placeholder="무엇이든 물어보세요..." enterkeyhint="send" autocomplete="off">
+    <button id="asst-send" type="button" onclick="sendAsst()">➤</button>
+  </form>
 </div>
 
 <!-- Chart.js (가계부 차트용) -->
@@ -2139,19 +2183,19 @@ const _origShowPage = typeof showPage === 'function' ? showPage : null;
 <!-- 1. 가계부 (budget.js) -->
 <script src="js/storage.js"></script>      <!-- [1] 상수 + 다중사업장 + STATE + localStorage -->
 <script src="js/leave.js"></script>        <!-- [2] 전역변수(curY/curM/dayData) + 연차 + lsSave/lsLoad -->
-<script src="js/ui.js?v=20260611-fix3"></script>           <!-- [3] pad2/dk/showToast/calcNetHours/countWD -->
-<script src="js/salary.js"></script>       <!-- [4] fmt/getPayData + 급여계산 + 4대보험 -->
-<script src="js/budget.js?v=20260617"></script>       <!-- [5] 생존관리 (pad2/fmt/lsSave 의존) -->
+<script src="js/ui.js?v=20260623"></script>           <!-- [3] pad2/dk/showToast/calcNetHours/countWD -->
+<script src="js/salary.js?v=20260623c"></script>       <!-- [4] fmt/getPayData + 급여계산 + 4대보험 -->
+<script src="js/budget.js?v=20260625"></script>       <!-- [5] 생존관리 (pad2/fmt/lsSave 의존) -->
 <script src="js/data-utils.js"></script>   <!-- [6] 드로어/SAO 유틸 -->
 <script src="js/nyang-emoji.js"></script>    <!-- [7-0] 감정 이모지 시스템 -->
-<script src="js/assistant.js"></script>    <!-- [7] AI 챗봇 (getPayData/fmt/curY 의존) -->
-<script src="js/freelance.js"></script>    <!-- [8] 프리랜서/알바 수입계산기 -->
+<script src="js/assistant.js?v=20260623b"></script>    <!-- [7] AI 챗봇 (getPayData/fmt/curY 의존) -->
+<script src="js/freelance.js?v=20260623b"></script>    <!-- [8] 프리랜서/알바 수입계산기 -->
 <script src="js/render-salary.js"></script><!-- [9] 급여 렌더링 함수들 -->
-<script src="js/jobtype.js?v=20260617"></script>      <!-- [10] 직업유형 선택 + 모드전환 -->
+<script src="js/jobtype.js?v=20260623"></script>      <!-- [10] 직업유형 선택 + 모드전환 -->
 <script src="js/calendar-modes.js?v=20260614-fix2"></script><!-- [11] 달력 렌더링 (프리랜서/알바 모드) -->
 <script src="js/notifications.js?v=20260617"></script><!-- [12] 알람 + 스마트 알림 (최종 초기화 포함) -->
-<script src="js/init.js"></script>         <!-- [13] 배경색 + 출퇴근 + 온보딩 (마지막) -->
-<script src="js/tutorial.js"></script>   <!-- [14] 9단계 튜토리얼 시스템 -->
+<script src="js/init.js?v=20260623"></script>         <!-- [13] 배경색 + 출퇴근 + 온보딩 (마지막) -->
+<script src="js/tutorial.js?v=20260623"></script>   <!-- [14] 9단계 튜토리얼 시스템 -->
 
 
 <!-- ══════════════════════════════════════════ -->
@@ -2217,7 +2261,7 @@ const _origShowPage = typeof showPage === 'function' ? showPage : null;
 
 <!-- ── 초기화 확인 팝업 ── -->
 <div id="reset-confirm-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);
-     z-index:99995;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);"
+     z-index:99995;align-items:center;justify-content:center;padding:16px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);"
      onclick="if(event.target===this)closeResetConfirm()">
   <div style="background:var(--surface);border:1px solid rgba(255,92,122,.3);border-radius:20px;
               padding:28px 22px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center;">
@@ -2241,12 +2285,39 @@ const _origShowPage = typeof showPage === 'function' ? showPage : null;
   </div>
 </div>
 
+<!-- ── 범용 확인 모달 (window.confirm() 대체) ──
+     Android/iPhone PWA(standalone) 환경에서 네이티브 confirm()이 무시되는
+     문제가 있어, 파괴적 작업의 확인 UI를 전부 이 커스텀 모달로 통일함.
+     기존 reset-confirm-overlay와 동일한 스타일, 메시지/콜백만 동적 바인딩(2026-06-21) -->
+<div id="generic-confirm-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);
+     z-index:99996;align-items:center;justify-content:center;padding:16px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);"
+     onclick="if(event.target===this)closeGenericConfirm()">
+  <div style="background:var(--surface);border:1px solid rgba(255,92,122,.3);border-radius:20px;
+              padding:28px 22px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center;">
+    <div style="font-size:48px;margin-bottom:12px;">⚠️</div>
+    <div id="generic-confirm-msg" style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:22px;white-space:pre-line;line-height:1.6;text-align:left;"></div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="closeGenericConfirm()" style="flex:1;padding:13px;border-radius:12px;
+        border:1px solid var(--border);background:transparent;color:var(--text2);
+        font-size:16px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">
+        취소
+      </button>
+      <button id="generic-confirm-ok-btn" style="flex:1;padding:13px;border-radius:12px;
+        border:none;background:#ff5c7a;color:#fff;
+        font-size:16px;font-weight:800;cursor:pointer;font-family:'Noto Sans KR',sans-serif;
+        box-shadow:0 4px 14px rgba(255,92,122,.4);">
+        확인
+      </button>
+    </div>
+  </div>
+</div>
+
 
 <!-- ── 연차/반차/결근/조퇴 사유 입력 팝업 ── -->
 <div id="leave-note-overlay"
      style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);
             z-index:99992;align-items:center;justify-content:center;
-            padding:16px;backdrop-filter:blur(4px);"
+            padding:16px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);"
      onclick="if(event.target===this)closeLeaveNotePopup()">
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;
               padding:24px 20px;max-width:400px;width:100%;

@@ -94,8 +94,14 @@ function detectPayLoss(d, weeklyData) {
   return { items, totalRisk };
 }
 
-/** [3] 오늘 실시간 수익 계산 */
+/** [3] 오늘 실시간 수익 계산 — 직장인 선택 + companyRate 유효 시에만 */
 function calcTodayEarnings() {
+  // 직장인 미선택 시 카드 미표시 (N잡 단독 사용자 오표시 방지)
+  const _sj = (typeof loadSelectedJobs==='function') ? loadSelectedJobs() : [];
+  if(_sj.indexOf('employee') < 0) return null;
+  // 시급 미설정 시 카드 미표시 (0원 표기 방지)
+  if(!companyRate || companyRate <= 0) return null;
+
   const today = new Date();
   const isToday = (today.getFullYear() === curY && today.getMonth() === curM);
   if (!isToday) return null;
@@ -470,8 +476,8 @@ function renderSalary(){
           <div style="font-size:14px;color:var(--text3);margin-top:2px;">기본급(209h) 계산 기준</div>
         </div>
         <div style="display:flex;align-items:center;gap:6px;">
-          <input class="hrly-inp" type="number" id="hrly-inp" value="${hourlyRate}" step="0.01"
-            onchange="hourlyRate=parseFloat(this.value)||CURRENT_MIN_WAGE;if(activeWpId&&activeEmpId)empUpdate(activeWpId,activeEmpId,{hourlyRate});lsSave();renderSalary()">
+          <input class="hrly-inp" type="number" id="hrly-inp" value="${hourlyRate}" step="1"
+            onchange="hourlyRate=Math.round(parseFloat(this.value)||CURRENT_MIN_WAGE);if(activeWpId&&activeEmpId)empUpdate(activeWpId,activeEmpId,{hourlyRate});lsSave();renderSalary()">
           <span style="font-size:17px;color:var(--text3);">원</span>
         </div>
       </div>
@@ -482,8 +488,8 @@ function renderSalary(){
           <div style="font-size:14px;color:var(--text3);margin-top:2px;">OT·야간·휴일 등 추가수당 계산 기준</div>
         </div>
         <div style="display:flex;align-items:center;gap:6px;">
-          <input class="hrly-inp" type="number" id="company-rate-inp" value="${companyRate}" step="0.01"
-            onchange="companyRate=parseFloat(this.value)||hourlyRate;if(activeWpId&&activeEmpId)empUpdate(activeWpId,activeEmpId,{companyRate});lsSave();renderSalary()">
+          <input class="hrly-inp" type="number" id="company-rate-inp" value="${companyRate}" step="1"
+            onchange="companyRate=Math.round(parseFloat(this.value)||hourlyRate);if(activeWpId&&activeEmpId)empUpdate(activeWpId,activeEmpId,{companyRate});lsSave();renderSalary()">
           <span style="font-size:17px;color:var(--text3);">원</span>
         </div>
       </div>
