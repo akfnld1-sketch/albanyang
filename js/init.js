@@ -1427,6 +1427,9 @@ function importData(event){
     try {
       const data = JSON.parse(e.target.result);
       showCustomConfirm('현재 데이터를 덮어쓰고 복원할까요?\n백업 파일의 데이터로 교체됩니다!', function(){
+        // [S3 버그 수정] v11_migrated 플래그를 먼저 제거해 구버전 백업도 마이그레이션이 재실행되도록 보장
+        localStorage.removeItem('atm2_v11_migrated');
+
         let count = 0;
         Object.keys(data).forEach(k => {
           if(k.startsWith('atm2_')){
@@ -1434,6 +1437,22 @@ function importData(event){
             count++;
           }
         });
+
+        // [v10 하위호환] atm2_selectedJobs 없고 atm2_jobType 있으면 자동 변환
+        if(!data['atm2_selectedJobs'] && data['atm2_jobType']){
+          var jt = data['atm2_jobType'];
+          var jobs = jt === 'employee' ? ['employee']
+                   : jt === 'multi'    ? []
+                   : (jt ? [jt] : []);
+          if(jobs.length > 0){
+            localStorage.setItem('atm2_selectedJobs', JSON.stringify(jobs));
+          }
+        }
+
+        // [atm2_ 외 키] 로고·급여일 설정 별도 복원
+        if(data['companyLogo']) localStorage.setItem('companyLogo', data['companyLogo']);
+        if(data['payDay_setting']) localStorage.setItem('payDay_setting', data['payDay_setting']);
+
         if(typeof showToast === 'function') showToast(`✅ ${count}개 항목 복원 완료! 앱을 새로고침합니다.`);
         setTimeout(() => location.reload(), 1200);
       });
