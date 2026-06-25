@@ -164,6 +164,9 @@ document.getElementById('sp-btn').addEventListener('click', function(){
     // 온보딩 완료했어도 직업선택 안 한 경우 직업선택으로 이동 (구버전 사용자 대응)
     var _selJ=[]; try{ _selJ=JSON.parse(localStorage.getItem('atm2_selectedJobs')||'[]'); }catch(e){}
     if(_selJ.length===0){
+      // window.load 300ms 타이머가 ui-mode-overlay를 이미 열었을 수 있으므로 제거 후 직업선택
+      var _uiOv=document.getElementById('ui-mode-overlay');
+      if(_uiOv) _uiOv.remove();
       setTimeout(function(){ if(typeof showJobTypeSelector==='function') showJobTypeSelector(true); }, 300);
     }
     return;
@@ -2181,7 +2184,7 @@ const _origShowPage = typeof showPage === 'function' ? showPage : null;
 <!-- ══ JavaScript (의존성 순서 중요) ══ -->
 
 <!-- 1. 가계부 (budget.js) -->
-<script src="js/storage.js"></script>      <!-- [1] 상수 + 다중사업장 + STATE + localStorage -->
+<script src="js/storage.js?v=20260625"></script>      <!-- [1] 상수 + 다중사업장 + STATE + localStorage -->
 <script src="js/leave.js"></script>        <!-- [2] 전역변수(curY/curM/dayData) + 연차 + lsSave/lsLoad -->
 <script src="js/ui.js?v=20260623"></script>           <!-- [3] pad2/dk/showToast/calcNetHours/countWD -->
 <script src="js/salary.js?v=20260623c"></script>       <!-- [4] fmt/getPayData + 급여계산 + 4대보험 -->
@@ -2190,7 +2193,7 @@ const _origShowPage = typeof showPage === 'function' ? showPage : null;
 <script src="js/nyang-emoji.js"></script>    <!-- [7-0] 감정 이모지 시스템 -->
 <script src="js/assistant.js?v=20260623b"></script>    <!-- [7] AI 챗봇 (getPayData/fmt/curY 의존) -->
 <script src="js/freelance.js?v=20260623b"></script>    <!-- [8] 프리랜서/알바 수입계산기 -->
-<script src="js/render-salary.js"></script><!-- [9] 급여 렌더링 함수들 -->
+<script src="js/render-salary.js?v=20260625"></script><!-- [9] 급여 렌더링 함수들 -->
 <script src="js/jobtype.js?v=20260623"></script>      <!-- [10] 직업유형 선택 + 모드전환 -->
 <script src="js/calendar-modes.js?v=20260614-fix2"></script><!-- [11] 달력 렌더링 (프리랜서/알바 모드) -->
 <script src="js/notifications.js?v=20260617"></script><!-- [12] 알람 + 스마트 알림 (최종 초기화 포함) -->
