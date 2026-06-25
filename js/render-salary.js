@@ -40,7 +40,7 @@ function detectPayLoss(d, weeklyData) {
     items.push({
       id: 'weekly',
       icon: '🌟',
-      title: `주휴수당 대상 (${weeklyData.qualCount}주)`,
+      title: `주휴수당 발생 확정 (${weeklyData.qualCount}주)`,
       detail: `조건 충족 ${weeklyData.qualCount}주 × ${weeklyData.weeklyAmt.toLocaleString()}원 = ${weeklyData.totalWeeklyAmt.toLocaleString()}원`,
       amount: weeklyData.totalWeeklyAmt,
       risk: 'info',
