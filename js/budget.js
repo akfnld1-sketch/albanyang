@@ -502,7 +502,7 @@ function renderStats(wDays,lDays,absDays,totOT,satH,sunH){
 
       <!-- 히어로: 예상 실수령 -->
       <div style="flex:2;min-width:200px;align-self:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 20px;position:relative;">
-        <div style="font-size:11px;color:var(--text3);font-weight:600;letter-spacing:.5px;margin-bottom:6px;">${wDays > 0 ? '예상 실수령액' : '기록 전 예상 실수령액'}
+        <div style="font-size:11px;color:var(--text3);font-weight:600;letter-spacing:.5px;margin-bottom:6px;">${wDays > 0 ? '예상 실수령액' : (netPay > 0 ? '기록 전 예상 실수령액' : '예상 실수령액')}
           <span style="font-weight:400;opacity:.85;">· 기록할수록 더 정확해져요</span>
         </div>
         <div style="font-size:28px;font-weight:900;font-family:'JetBrains Mono';color:var(--green);line-height:1.1;">
