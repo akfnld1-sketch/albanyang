@@ -506,8 +506,9 @@ function renderStats(wDays,lDays,absDays,totOT,satH,sunH){
           <span style="font-weight:400;opacity:.85;">· 기록할수록 더 정확해져요</span>
         </div>
         <div style="font-size:28px;font-weight:900;font-family:'JetBrains Mono';color:var(--green);line-height:1.1;">
-          ${netPay > 0 ? netPay.toLocaleString() + '<span style="font-size:14px;font-weight:600;margin-left:2px;">원</span>' : '<span style="font-size:15px;color:var(--text3);">날짜를 눌러 근무를 기록하면 예상 급여가 표시돼요</span>'}
+          ${netPay > 0 ? netPay.toLocaleString() + '<span style="font-size:14px;font-weight:600;margin-left:2px;">원</span>' : '<span style="font-size:15px;color:var(--text3);">아직 기록이 없어요</span>'}
         </div>
+        ${netPay === 0 ? `<div style="font-size:13px;color:var(--accent);font-weight:600;margin-top:8px;">오늘 날짜를 탭해서 첫 출근을 기록해보세요 👆</div>` : ''}
         ${prevPay > 0 && netPay > 0 ? `<div style="font-size:11px;margin-top:5px;color:${diffColor};">${diffSign}${diff.toLocaleString()}원 <span style="color:var(--text3);">전월 대비</span></div>` : ''}
         <div style="margin-top:10px;">
           <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:3px;">
@@ -517,7 +518,7 @@ function renderStats(wDays,lDays,absDays,totOT,satH,sunH){
             <div style="height:100%;width:${progress}%;background:var(--accent);border-radius:2px;transition:width .6s ease;"></div>
           </div>
         </div>
-        <div style="font-size:12px;font-weight:700;color:var(--accent);margin-top:10px;">이 돈으로 다음 월급날까지 버틸 수 있을까요?</div>
+        ${netPay > 0 ? `<div style="font-size:12px;font-weight:700;color:var(--accent);margin-top:10px;">이 돈으로 다음 월급날까지 버틸 수 있을까요?</div>` : ''}
         <div style="position:absolute;top:12px;right:14px;font-size:10px;color:var(--text3);text-align:right;line-height:1.6;">
           <div>기본급 <b style="color:var(--text2);font-family:'JetBrains Mono';">${basePay > 0 ? (basePay).toLocaleString() : '—'}</b></div>
           <div>공제 <b style="color:var(--red);font-family:'JetBrains Mono';">${totDeduct > 0 ? '-'+totDeduct.toLocaleString() : '—'}</b></div>

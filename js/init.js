@@ -830,6 +830,40 @@ function renderSettingsPage(){
 
   html += '</div>';
   page.innerHTML = html;
+  // 설정 탭 스마트 알림 토글 렌더 (smart-notif-toggles-s)
+  setTimeout(_renderSettingsNotifToggles, 0);
+}
+
+// 설정 탭 전용 스마트 알림 토글 렌더 (notifications.js const TDZ 우회)
+function _renderSettingsNotifToggles() {
+  const wrap = document.getElementById('smart-notif-toggles-s');
+  if (!wrap) return;
+  const ITEMS = [
+    { id:'budget',   emoji:'💸', label:'지출 예산 초과 + 잔고소진 알림',   desc:'변동지출 80%·100% 초과 / 잔고 소진 7일·3일·당일 경보' },
+    { id:'overwork', emoji:'😓', label:'주간 과로 감지 알림',               desc:'이번주 40h·52h 초과 시 경고' },
+    { id:'payday',   emoji:'💰', label:'급여일 D-3 / D-1 / D-day 알림',    desc:'급여일 3일 전·하루 전·당일' },
+    { id:'commute',  emoji:'🚌', label:'출근 예정 알림',                    desc:'등록된 근무 시작 30분 전' },
+  ];
+  let cfg = {};
+  try { const r = localStorage.getItem('atm2_smart_notif_cfg_v1'); cfg = r ? JSON.parse(r) : {}; } catch(e) {}
+  ITEMS.forEach(i => { if(cfg[i.id] === undefined) cfg[i.id] = true; });
+  wrap.innerHTML = ITEMS.map(item => `
+    <label style="display:flex;align-items:center;justify-content:space-between;
+      padding:9px 4px;border-bottom:1px solid var(--border);cursor:pointer;gap:8px;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:17px;font-weight:600;color:var(--text);">${item.emoji} ${item.label}</div>
+        <div style="font-size:15px;color:var(--text3);margin-top:2px;">${item.desc}</div>
+      </div>
+      <div class="smart-toggle ${cfg[item.id]?'on':''}"
+           onclick="toggleSmartNotif('${item.id}',this)"
+           style="flex-shrink:0;width:40px;height:22px;border-radius:11px;
+             background:${cfg[item.id]?'var(--accent,#4f7cff)':'var(--border)'};
+             position:relative;transition:background .25s;cursor:pointer;">
+        <span style="position:absolute;top:3px;left:${cfg[item.id]?'20px':'3px'};
+          width:16px;height:16px;border-radius:50%;background:#fff;
+          box-shadow:0 1px 4px rgba(0,0,0,.2);transition:left .25s;display:block;"></span>
+      </div>
+    </label>`).join('');
 }
 
 // 설정 페이지에서 근무형태 선택

@@ -259,9 +259,11 @@ function initMultiEmp(){
   migrateV10toV11();
   const wps = wpList();
   if(wps.length === 0){
-    // 완전 첫 실행
-    const wpId  = wpCreate('내 사업장');
-    const empId = empCreate(wpId, {name:'나'});
+    // 완전 첫 실행 — 온보딩 입력값 우선 사용
+    const _obCo   = localStorage.getItem('atm2_companyName') || '내 사업장';
+    const _obName = localStorage.getItem('atm2_ob_empName')  || '나';
+    const wpId  = wpCreate(_obCo);
+    const empId = empCreate(wpId, {name: _obName});
     activeWpId  = wpId;
     activeEmpId = empId;
   } else {
