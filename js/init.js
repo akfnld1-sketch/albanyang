@@ -449,10 +449,14 @@ function renderSettingsPage(){
 
   // ★ Fix #45: 설정 페이지 최상단에 사용설명서 버튼 — 신규 사용자 QA에서
   //   기존 위치(페이지 하단, 약 5스크롤 아래)는 거의 발견되지 않는 것으로 확인되어 이동(2026-06-20)
+  html += `<button onclick="reopenTutorial()"
+    style="width:100%;padding:12px;border-radius:8px;border:1px solid rgba(79,124,255,.3);
+           background:rgba(79,124,255,.06);color:var(--accent);font-size:17px;font-weight:700;
+           cursor:pointer;font-family:'Noto Sans KR';margin-bottom:8px;">🎯 앱 사용법 안내</button>`;
   html += `<button onclick="openManual()"
     style="width:100%;padding:12px;border-radius:8px;border:1px solid rgba(127,179,255,.3);
            background:rgba(127,179,255,.06);color:#7fb3ff;font-size:17px;font-weight:700;
-           cursor:pointer;font-family:'Noto Sans KR';margin-bottom:8px;">📖 사용설명서 보기</button>`;
+           cursor:pointer;font-family:'Noto Sans KR';margin-bottom:8px;">📄 상세 설명서</button>`;
 
   // ★ Fix #49: 직업변경 버튼도 같은 발견성 문제(모바일에서 SAO메뉴 안에만 있어
   //   진입점이 거의 비가시 수준 — 멘토 1차 피드백 재검증에서 확인) — 설정 최상단에 추가(2026-06-20)
@@ -795,22 +799,7 @@ function renderSettingsPage(){
         style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid rgba(255,92,122,.3);
                background:none;color:var(--red);font-size:17px;font-weight:600;
                cursor:pointer;font-family:'Noto Sans KR';text-align:left;">🗑️ 전체 초기화</button>
-      <button onclick="reopenTutorial()"
-        style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border);
-               background:var(--surface2);color:var(--text);font-size:17px;font-weight:600;
-               cursor:pointer;font-family:'Noto Sans KR';text-align:left;">📖 튜토리얼 다시보기</button>
     </div>
-  </div>`;
-
-  // ── 도움말 ──
-  // ★ Fix #45: "사용설명서 보기" 버튼은 설정 페이지 최상단으로 이동(2026-06-20) —
-  //   이 위치(화면 약 5스크롤 아래)는 실사용자 QA에서 발견성이 거의 없는 것으로 확인되어 제거.
-  html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:12px;">
-    <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:14px;">📖 도움말</div>
-    <button onclick="reopenTutorial()"
-      style="width:100%;padding:12px;border-radius:8px;border:1px solid rgba(79,124,255,.3);
-             background:rgba(79,124,255,.06);color:var(--accent);font-size:17px;font-weight:700;
-             cursor:pointer;font-family:'Noto Sans KR';">🗺️ 사용 가이드 다시보기</button>
   </div>`;
 
   // ── 문의하기 ──
