@@ -508,7 +508,7 @@ function renderStats(wDays,lDays,absDays,totOT,satH,sunH){
         <div style="font-size:28px;font-weight:900;font-family:'JetBrains Mono';color:var(--green);line-height:1.1;">
           ${netPay > 0 ? netPay.toLocaleString() + '<span style="font-size:14px;font-weight:600;margin-left:2px;">원</span>' : '<span style="font-size:15px;color:var(--text3);">아직 기록이 없어요</span>'}
         </div>
-        ${netPay === 0 ? `<div style="font-size:13px;color:var(--accent);font-weight:600;margin-top:8px;">오늘 날짜를 탭해서 첫 출근을 기록해보세요 👆</div>` : ''}
+        ${netPay === 0 ? `<div style="font-size:13px;color:var(--accent);font-weight:600;margin-top:8px;">출근을 기록하면 월급날까지 버틸 수 있는지 알 수 있어요 👆</div>` : ''}
         ${prevPay > 0 && netPay > 0 ? `<div style="font-size:11px;margin-top:5px;color:${diffColor};">${diffSign}${diff.toLocaleString()}원 <span style="color:var(--text3);">전월 대비</span></div>` : ''}
         <div style="margin-top:10px;">
           <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:3px;">

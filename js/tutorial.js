@@ -10,6 +10,17 @@ const TUTORIAL_VERSION = '2';
 let _tutorialIndex    = 0;
 let _noShowChecked    = false;
 let _waitingDateClick = false;
+// ★ Fix #44: 튜토리얼 진행 중 여부 플래그. renderStep()이 step.page로 showPage()를
+//   호출하면 renderCalendar()가 재실행되며 initTutorial()도 같이 트리거되는데,
+//   이때 이미 removeAll()로 오버레이가 지워진 뒤라 DOM 존재 체크로는 막을 수 없어
+//   별도 플래그로 "진행 중" 상태를 추적함(2026-06-20).
+let _tutorialActive   = false;
+// ★ Fix #52: "다시 보지 않기"를 체크하지 않고 튜토리얼을 끝내거나 건너뛰면, 같은 세션
+//   안에서 탭/페이지 이동(renderCalendar→initTutorial())마다 시작 프롬프트가 계속 다시
+//   떠서 "방금 끝냈는데 왜 또?"라는 혼란을 줌. localStorage 영구 플래그(다음 실행 시
+//   재노출 여부)와는 별도로, "이번 세션에 이미 한 번 보여줬다"는 세션 한정 플래그를 둬서
+//   최초 1회 흐름만 유지(2026-06-20). 설정의 "튜토리얼 다시보기"는 이 플래그와 무관하게 항상 동작.
+let _tutorialShownThisSession = false;
 
 // ════════════════════════════════════════════════════════
 // 단계 정의 (총 10개 항목 → 표시 9단계, 2-1은 2단계 연장)
@@ -26,35 +37,35 @@ const TUTORIAL_STEPS = [
   {
     step: 1, icon: '🔄', type: 'info',
     title: '직업 유형 선택',
-    desc: `직업 유형을 선택하면 화면이 자동으로 변경됩니다.`,
+    desc: `직업 유형에 맞춰 이번 달 예상 수입을 계산해드려요.`,
     highlight: null, page: null,
   },
   // 2단계 — 날짜 입력
   {
     step: 2, icon: '📅', type: 'info',
-    title: '근태관리',
-    desc: `날짜를 눌러 근무를 입력하세요.`,
+    title: '근무 기록하기',
+    desc: `날짜를 탭해 출퇴근을 기록하세요.<br>기록할수록 이번 달 받을 돈이 더 정확하게 계산돼요.`,
     highlight: null, page: 'att',
   },
   // 3단계 — 예상 실수령액
   {
     step: 3, icon: '💰', type: 'info',
-    title: '수입관리',
-    desc: `입력한 근무를 기준으로 수입을 계산합니다.`,
+    title: '수입 확인하기',
+    desc: `기록한 근무를 바탕으로 예상 실수령액을 자동 계산해드려요.<br>4대보험·세금·수당까지 반영돼요.`,
     highlight: 'btn-sal', page: 'sal',
   },
   // 4단계 — 생존관리
   {
-    step: 4, icon: '📒', type: 'info',
-    title: '생존관리',
-    desc: `월 예산과 생활비를 관리할 수 있습니다.`,
+    step: 4, icon: '🛡️', type: 'info',
+    title: '이번 달 버틸 수 있나요?',
+    desc: `수입과 지출을 비교해 다음 월급날까지 잔고가 버티는지 알 수 있어요.<br>이게 머니냥의 핵심 기능이에요.`,
     highlight: 'btn-budget', page: 'budget',
   },
   // 5단계 — 설정
   {
     step: 5, icon: '⚙️', type: 'info',
     title: '설정',
-    desc: `백업, 복원, 직업 변경, 튜토리얼 다시보기를 사용할 수 있습니다.`,
+    desc: `백업, 복원, 직업 변경, 튜토리얼 다시보기를 사용할 수 있습니다.<br>자세한 사용법은 설정 → 사용설명서에서 확인할 수 있습니다.`,
     highlight: null, page: null,
   },
 ];
@@ -80,6 +91,11 @@ window.initTutorial = function() {
     }
   } catch(e) {}
   if (!shouldShowTutorial()) return;
+  // ★ Fix #44: 튜토리얼이 이미 진행 중이면 재실행 안 함(아래 _tutorialActive 선언부 참고)
+  if (_tutorialActive) return;
+  // ★ Fix #52: 이번 세션에 이미 한 번 보여줬으면(완료/건너뛰기 불문) 탭 이동 등으로
+  //   다시 트리거되어도 재노출하지 않음 — 신규 사용자 최초 1회 흐름만 유지
+  if (_tutorialShownThisSession) return;
   // ★ 구버전 4단계 온보딩 모달(atm2_onboarding_done)은 현재 코드 경로상 정상적으로
   //   열리지 않는 죽은 의존성이었음(obOpen()이 showJobTypeSelector(true)로 리다이렉트됨,
   //   2026-06-20 분석으로 확정) — 직업선택 완료(atm2_selectedJobs) 기준으로 게이트 변경.
@@ -103,13 +119,14 @@ window.reopenTutorial = function() {
 // ════════════════════════════════════════════════════════
 function showTutorialPrompt() {
   removeAll();
+  _tutorialShownThisSession = true;
   const ov = makeOverlay('tutorial-prompt-overlay', 'center');
   ov.innerHTML = [
     '<div class="tut-card" style="text-align:center;max-width:400px;">',
     '<div style="font-size:68px;margin-bottom:14px;">🐱</div>',
     '<h2 class="tut-h2">머니냥 처음이신가요?</h2>',
     '<p class="tut-p" style="margin-bottom:28px;">',
-    '앱 사용법을 단계별로<br>안내해 드릴게요!<br>',
+    '이번 달 받을 돈과,<br>월급날까지 버틸 수 있는지<br>미리 알아보는 법을 알려드릴게요!<br>',
     '<span style="font-size:17px;">(약 1분 소요)</span>',
     '</p>',
     '<button class="tut-btn-primary" onclick="startTutorial()">👍 네, 알려주세요!</button>',
@@ -123,8 +140,8 @@ function showTutorialPrompt() {
 //   캘린더가 재렌더링될 때마다(날짜 클릭, 월 이동 등) 진입 프롬프트가 계속 다시 뜨던 문제를
 //   발견·수정. "다시 보지 않기" 체크와 동일하게 완료 처리해 자동 재실행을 막음
 //   (설정 → 튜토리얼 다시보기는 reopenTutorial()이 별도 경로라 계속 가능).
-window.skipTutorial  = function() { removeAll(); markTutorialDone(); };
-window.startTutorial = function() { removeAll(); _tutorialIndex = 0; renderStep(); };
+window.skipTutorial  = function() { removeAll(); markTutorialDone(); _tutorialActive = false; };
+window.startTutorial = function() { removeAll(); _tutorialIndex = 0; _tutorialActive = true; renderStep(); };
 
 // ════════════════════════════════════════════════════════
 // 단계 렌더 라우터
@@ -403,6 +420,7 @@ window.closeTutorial = function() {
     delete el.dataset.tutHighlight;
   });
   removeAll();
+  _tutorialActive = false;
 };
 window.toggleNoShow = function() {
   _noShowChecked = !_noShowChecked;
@@ -420,6 +438,7 @@ window.toggleNoShow = function() {
 window.finishTutorial = function() {
   if (_noShowChecked) markTutorialDone();
   removeAll();
+  _tutorialActive = false;
   if (typeof showToast === 'function') showToast('🐱 머니냥과 함께 시작해봐요!');
 };
 
@@ -441,7 +460,7 @@ function makeOverlay(id, pos) {
     'background:rgba(0,0,0,' + (pos === 'bottom' ? '.5' : '.65') + ');',
     'display:flex;align-items:' + align + ';justify-content:center;',
     'z-index:99998;',
-    pos === 'bottom' ? 'padding:0;' : 'padding:16px;backdrop-filter:blur(5px);',
+    pos === 'bottom' ? 'padding:0;' : 'padding:16px;-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);',
     'overflow-y:auto;',
   ].join('');
   return ov;
