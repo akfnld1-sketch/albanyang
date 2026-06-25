@@ -374,8 +374,9 @@ function getPayData(){
   const perfectApplied = (typeof perfectOn !== 'undefined' && perfectOn) ? true : isPerfect;
   const perfAmt   = perfectApplied?(allowances.perfect||0):0;
 
-  // 주휴수당: ON이면 사용자 입력값 사용, OFF면 0
-  const aWeeklyManual = weeklyOn ? (allowances.weekly||0) : 0;
+  // 주휴수당: weeklyHolidayEnabled=false면 항상 0, ON이면 사용자 입력값 사용
+  const _whe = (typeof weeklyHolidayEnabled !== 'undefined') ? weeklyHolidayEnabled : true;
+  const aWeeklyManual = (_whe && weeklyOn) ? (allowances.weekly||0) : 0;
   const totAllow = aOT+aNight+aHoliday+aSat+aSun
                   +(allowances.tenure||0)
                   +aWeeklyManual
@@ -407,7 +408,9 @@ function getPayData(){
 
   // ── 주휴수당 자동체크 (발생 여부 표시용 - 실제 급여에는 이미 포함) ──
   // 209h 기본급에 이미 주휴 포함 → 별도 금액 가산 없음, UI 표시용으로만 사용
-  const wd = getWeeklyHolidayData();
+  // weeklyHolidayEnabled=false면 표시용 데이터도 zeroing
+  const _wdRaw = getWeeklyHolidayData();
+  const wd = _whe ? _wdRaw : Object.assign({}, _wdRaw, {qualCount:0, totalWeeklyAmt:0});
   const aWeeklyHoliday = 0;  // 이미 기본급에 포함
   const totAllowWithWH = totAllow;
   const netPayWithWH   = grossPay;
@@ -646,6 +649,42 @@ let dashYear = new Date().getFullYear();
 // N잡러 연간 수입 요약
 // 알바/배달/프리랜서 직종: 올해 총수입 + 월평균 + 월별 그래프
 // ══════════════════════════════════════════
+// ── 월별 N잡 수입 집계 ── (★ 연간요약 통합 작업에서 renderNjobYearlySummary 내부 함수를
+//   모듈 레벨로 추출 — 직장인+N잡 조합 섹션에서도 재사용하기 위함. 계산 공식은 한 글자도
+//   변경하지 않음, 위치만 이동.)
+function getNjobIncomeForMonth(yr, mo){
+  const _p = n => String(n).padStart(2,'0');
+  const dim = new Date(yr, mo+1, 0).getDate();
+  let gross = 0;
+  let albaH  = 0;
+  try{
+    for(let d=1; d<=dim; d++){
+      const key = `${yr}-${_p(mo+1)}-${_p(d)}`;
+      const raw = localStorage.getItem('atm2_njob_'+key);
+      if(!raw) continue;
+      const data = JSON.parse(raw);
+      (data.alba||[]).forEach(it=>{
+        let amt;
+        if(it.amount && it.amount > 0){
+          amt = it.amount;
+        } else if(it.dayHours !== undefined){
+          amt = Math.round((it.dayHours||0)*(it.wage||0))
+              + Math.round((it.nightHours||0)*(it.wage||0)*1.5)
+              + (it.extraNight||0)+(it.extraOver||0)+(it.extraOther||0)+(it.extraMeal||0);
+        } else {
+          amt = Math.round((it.wage||0)*(it.hours||0));
+        }
+        gross += amt;
+        albaH += (it.hours || it.dayHours || 0);
+      });
+      (data.delivery||[]).forEach(it=>{ gross += (it.count||0)*(it.price||0); });
+      (data.free||[]).forEach(it=>{ gross += it.type==='lecture' ? (it.fee||0) : (it.count||0)*(it.price||0); });
+      (data.etc||[]).forEach(it=>{ gross += (it.amount||0); });
+    }
+  }catch(e){}
+  return { gross, albaH };
+}
+
 function renderNjobYearlySummary(){
   const container = document.getElementById('dash-page');
   if(!container) return;
@@ -654,40 +693,6 @@ function renderNjobYearlySummary(){
   const nowY = new Date().getFullYear();
   const nowM = new Date().getMonth(); // 0-indexed
   const MO_KO_S = ['1','2','3','4','5','6','7','8','9','10','11','12'];
-
-  // ── 월별 N잡 수입 집계 ──
-  function getNjobIncomeForMonth(yr, mo){
-    const _p = n => String(n).padStart(2,'0');
-    const dim = new Date(yr, mo+1, 0).getDate();
-    let gross = 0;
-    let albaH  = 0;
-    try{
-      for(let d=1; d<=dim; d++){
-        const key = `${yr}-${_p(mo+1)}-${_p(d)}`;
-        const raw = localStorage.getItem('atm2_njob_'+key);
-        if(!raw) continue;
-        const data = JSON.parse(raw);
-        (data.alba||[]).forEach(it=>{
-          let amt;
-          if(it.amount && it.amount > 0){
-            amt = it.amount;
-          } else if(it.dayHours !== undefined){
-            amt = Math.round((it.dayHours||0)*(it.wage||0))
-                + Math.round((it.nightHours||0)*(it.wage||0)*1.5)
-                + (it.extraNight||0)+(it.extraOver||0)+(it.extraOther||0)+(it.extraMeal||0);
-          } else {
-            amt = Math.round((it.wage||0)*(it.hours||0));
-          }
-          gross += amt;
-          albaH += (it.hours || it.dayHours || 0);
-        });
-        (data.delivery||[]).forEach(it=>{ gross += (it.count||0)*(it.price||0); });
-        (data.free||[]).forEach(it=>{ gross += it.type==='lecture' ? (it.fee||0) : (it.count||0)*(it.price||0); });
-        (data.etc||[]).forEach(it=>{ gross += (it.amount||0); });
-      }
-    }catch(e){}
-    return { gross, albaH };
-  }
 
   // 12개월 데이터
   const monthlyData = Array.from({length:12}, (_,m)=>{
@@ -755,6 +760,7 @@ function renderNjobYearlySummary(){
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
     <div>
       <h2 style="font-size:26px;font-weight:700;">💼 ${y}년 수입 연간요약</h2>
+      <div style="font-size:15px;font-weight:700;color:var(--accent);margin-top:4px;">월별 수입 흐름을 그래프로 확인해보세요</div>
       <div style="font-size:15px;color:var(--text3);margin-top:3px;">${jobLabels}</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
@@ -990,6 +996,7 @@ function renderDash(){
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
     <div>
       <h2 style="font-size:26px;font-weight:700;">💰 ${y}년 연봉 현황</h2>
+      <div style="font-size:15px;font-weight:700;color:var(--accent);margin-top:4px;">월별 수입 흐름을 그래프로 확인해보세요</div>
       <div style="font-size:15px;color:var(--text3);margin-top:3px;">직접 입력(노란색) 우선 · 미입력 시 앱 자동계산</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
@@ -1087,6 +1094,63 @@ function renderDash(){
     </div>
     ${barRows}
   </div>`;
+
+  // ★ 연간요약 통합(직장인+N잡 조합) — 기존 코드는 위까지 한 글자도 변경하지 않음.
+  //   직장인 단독(_njobTypesForCombo.length===0)이면 아래 블록은 전혀 실행되지 않아
+  //   화면이 기존과 100% 동일하다. 조합일 때만 "본업 수입(세후)" 라벨을 맨 위에,
+  //   "N잡 수입 현황(세전)" 카드를 맨 아래에 추가로 삽입한다(innerHTML 재할당 아님 —
+  //   insertAdjacentHTML로 기존 DOM에 추가만 함).
+  const _njobTypesForCombo = _selectedJobs.filter(j=>j!=='employee');
+  if(_njobTypesForCombo.length > 0 && typeof getNjobIncomeForMonth==='function'){
+    const _dashPageEl = document.getElementById('dash-page');
+    _dashPageEl.insertAdjacentHTML('afterbegin',
+      `<div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:10px;">🏢 본업 수입 (세후)</div>`);
+
+    const _comboMonthly = Array.from({length:12}, (_,cm)=>{
+      const _isFuture = y > nowY || (y === nowY && cm > nowM);
+      const {gross} = getNjobIncomeForMonth(y, cm);
+      return { m: cm, gross, isFuture: _isFuture };
+    });
+    const _comboPast = _comboMonthly.filter(d=>!d.isFuture && d.gross>0);
+    const _comboTotal = _comboPast.reduce((s,d)=>s+d.gross,0);
+    const _comboMax = Math.max(..._comboMonthly.map(d=>d.gross), 1);
+    const _comboJobLabels = _njobTypesForCombo.map(j=>{
+      const info = (typeof JOB_TYPES!=='undefined'&&JOB_TYPES[j]) || {};
+      return (info.icon||'💼')+' '+(info.name||j);
+    }).join(' · ');
+    const _comboBarRows = _comboMonthly.map(({m:cm, gross, isFuture})=>{
+      const pct = gross > 0 ? (gross/_comboMax*100).toFixed(1) : 0;
+      const isNow = (cm===nowM && y===nowY);
+      const label = isFuture
+        ? `<span style="font-size:14px;color:var(--text3);">-</span>`
+        : gross > 0
+          ? `<span style="font-size:16px;font-weight:700;color:var(--text);font-family:'JetBrains Mono';">${fmtK(gross)}</span>`
+          : `<span style="font-size:14px;color:var(--text3);">기록없음</span>`;
+      const bar = gross > 0
+        ? `<div style="height:14px;background:rgba(255,140,66,.12);border-radius:3px;overflow:hidden;">
+             <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--orange),var(--yellow));border-radius:3px;"></div>
+           </div>`
+        : `<div style="height:14px;display:flex;align-items:center;"><span style="font-size:14px;color:var(--text3);">${isFuture?'미래':'기록없음'}</span></div>`;
+      return `
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);">
+        <div style="width:26px;font-size:15px;font-weight:700;color:${isNow?'var(--accent)':'var(--text2)'};">${MO_KO_S[cm]}월</div>
+        <div style="flex:1;min-width:0;">${bar}</div>
+        <div style="width:90px;text-align:right;">${label}</div>
+      </div>`;
+    }).join('');
+
+    const _njobSectionHTML = `
+    <div class="sal-section" style="margin-top:16px;border:1px solid rgba(255,140,66,.25);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
+        <h3 style="margin:0;">💼 N잡 수입 현황 (세전)</h3>
+        <div style="font-size:13px;color:var(--text3);">${_comboJobLabels}</div>
+      </div>
+      <div style="font-size:13px;color:var(--text3);margin-bottom:10px;">본업 수입(세후)과는 세금 계산 방식이 달라 따로 집계해요</div>
+      <div style="font-size:30px;font-weight:900;font-family:'JetBrains Mono';color:var(--orange);margin-bottom:10px;">${fmtK(_comboTotal)}</div>
+      ${_comboBarRows}
+    </div>`;
+    _dashPageEl.insertAdjacentHTML('beforeend', _njobSectionHTML);
+  }
 
   // ── Chart.js 차트 렌더링 ──
   requestAnimationFrame(() => {
@@ -1239,12 +1303,15 @@ function renderIncomePage(){
   const _p = n => String(n).padStart(2,'0');
   const dim = new Date(curY, curM+1, 0).getDate();
 
-  // ── 직장인 급여 ──
+  // ── 직장인 급여 ── (Income Gateway: selectedJobs에 employee가 없으면 집계하지 않음)
   let employeePay = 0;
   let employeeData = null;
   try{
-    const d = getPayData();
-    if(d && d.finalPay > 0){ employeePay = d.finalPay; employeeData = d; }
+    const selectedJobs = (typeof loadSelectedJobs==='function') ? loadSelectedJobs() : [];
+    if(selectedJobs.indexOf('employee')>=0){
+      const d = getPayData();
+      if(d && d.finalPay > 0){ employeePay = d.finalPay; employeeData = d; }
+    }
   }catch(e){}
 
   // ── N잡 수입 데이터 집계 (달력 calendar-modes.js와 동일한 atm2_njob_ 키 사용) ──
@@ -1335,6 +1402,8 @@ function renderIncomePage(){
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
     <div>
       <h2 style="font-size:26px;font-weight:700;">💰 ${curY}년 ${curM+1}월 수입관리</h2>
+      <div style="font-size:15px;font-weight:700;color:var(--accent);margin-top:4px;">이번 달 받을 돈을 미리 확인해보세요</div>
+      <div style="font-size:13px;color:var(--text2);margin-top:2px;">이 돈으로 버틸 수 있는지는 생존관리에서 확인할 수 있어요</div>
       <div style="font-size:15px;color:var(--text3);margin-top:2px;">달력 기록 자동 집계 · 직장+N잡 통합</div>
     </div>
     <div style="display:flex;gap:6px;">

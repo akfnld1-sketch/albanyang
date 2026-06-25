@@ -35,8 +35,9 @@ function detectPayLoss(d, weeklyData) {
     });
   }
 
-  // ─ 주휴수당 대상 여부
-  if (weeklyData.qualCount > 0) {
+  // ─ 주휴수당 대상 여부 (별도 계산 OFF면 카드 숨김)
+  const _whe = (typeof weeklyHolidayEnabled !== 'undefined') ? weeklyHolidayEnabled : true;
+  if (_whe && weeklyData.qualCount > 0) {
     items.push({
       id: 'weekly',
       icon: '🌟',
@@ -555,7 +556,23 @@ function renderSalary(){
       ${aC('🔵 토요특근수당','자동',`${d.satH}h × ${d._companyRate.toLocaleString()} × 1.5`,d.aSat,'var(--sat)')}
       ${aC('🔴 일요특근수당','8h↑×2.0',`${d.sunH}h (8h 이내 × 1.5, 초과분 × 2.0)`,d.aSun,'var(--sun)')}
       ${eC('tenure','근속수당','직접 입력')}
-      <div class="allow-card" style="grid-column:1/-1;background:${weeklyOn?'rgba(127,255,212,.08)':'rgba(255,255,255,.03)'};border:1px solid ${weeklyOn?'rgba(127,255,212,.3)':'var(--border)'};transition:all .25s;">
+      <!-- 주휴수당 별도 계산 체크박스 -->
+      <div style="grid-column:1/-1;padding:10px 14px 4px;display:flex;flex-direction:column;gap:6px;">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+          <input type="checkbox" id="whe-toggle"
+            ${(weeklyHolidayEnabled !== false) ? 'checked' : ''}
+            onchange="weeklyHolidayEnabled=this.checked;localStorage.setItem('atm2_weekly_holiday_enabled',String(this.checked));lsSave();renderSalary();"
+            style="width:18px;height:18px;accent-color:#7fffd4;cursor:pointer;">
+          <span style="font-size:16px;font-weight:700;color:var(--text);">주휴수당 별도 계산</span>
+        </label>
+        <div style="font-size:12px;color:var(--text3);padding-left:28px;">
+          ${(weeklyHolidayEnabled !== false)
+            ? '현재: 주휴수당을 별도로 계산합니다 (시급 + 주휴 분리)'
+            : '현재: 주휴수당이 시급에 포함된 것으로 계산됩니다'}
+          <br>회사마다 급여 체계가 다를 수 있습니다.
+        </div>
+      </div>
+      <div class="allow-card" style="grid-column:1/-1;display:${(weeklyHolidayEnabled !== false)?'flex':'none'};background:${weeklyOn?'rgba(127,255,212,.08)':'rgba(255,255,255,.03)'};border:1px solid ${weeklyOn?'rgba(127,255,212,.3)':'var(--border)'};transition:all .25s;">
         <div style="flex:1;">
           <div class="nm" style="display:flex;align-items:center;gap:10px;">
             🌟 주휴수당
@@ -660,8 +677,8 @@ function renderSalary(){
   </div>
 
 
-  <!-- 주휴수당 상세 -->
-  ${weeklyOn ? `<div class="sal-section" style="border:1px solid rgba(127,255,212,.3);">
+  <!-- 주휴수당 상세 (별도 계산 ON + weeklyOn 상태일 때만 표시) -->
+  ${(weeklyHolidayEnabled !== false) && weeklyOn ? `<div class="sal-section" style="border:1px solid rgba(127,255,212,.3);">
     <h3>🌟 주휴수당 상세 <span style="font-size:14px;font-weight:400;color:var(--text3);">(주 15h 이상 + 개근 조건 참고용)</span></h3>
     <div id="weekly-detail-body"></div>
   </div>` : ''}

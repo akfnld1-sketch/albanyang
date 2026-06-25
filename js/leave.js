@@ -46,6 +46,7 @@ let hourlyRate    = CURRENT_MIN_WAGE;  // 법정 최저시급 2026년 기준 (�
 let companyRate   = CURRENT_MIN_WAGE;  // 회사 실제 시급 (OT·야간·휴일 등 추가수당 계산용)
 let allowances = {tenure:0,weekly:0,perfect:0,other:0};
 let weeklyOn = false;  // 주휴수당 ON/OFF 토글 (기본 OFF)
+let weeklyHolidayEnabled = true; // 주휴수당 별도 계산 여부 (기본 ON — 기존 사용자 호환)
 // 4대보험/세금 직접 수정값 (null이면 자동계산 사용)
 let insOverride = {np:null, hi:null, ltc:null, ei:null};
 let taxOverride = {income:null, local:null};
@@ -418,6 +419,7 @@ function lsSave(){
       memSave(activeWpId, activeEmpId, mem);
     }
     localStorage.setItem('atm2_st', JSON.stringify(satToggle));
+    localStorage.setItem('atm2_weekly_holiday_enabled', String(weeklyHolidayEnabled));
     if(leaveOverride !== null) localStorage.setItem('atm2_leaveOverride', String(leaveOverride));
     else localStorage.removeItem('atm2_leaveOverride');
     // 채팅 히스토리 (전역)
@@ -515,6 +517,8 @@ function lsLoad(){
       }catch(e2){}
     }
     const st = localStorage.getItem('atm2_st'); if(st) satToggle=JSON.parse(st);
+    const _whe = localStorage.getItem('atm2_weekly_holiday_enabled');
+    if(_whe !== null) weeklyHolidayEnabled = (_whe !== 'false');
     const mp=localStorage.getItem('atm2_manual'); if(mp && !manualPay) manualPay=JSON.parse(mp); // 레거시 fallback
     const lov=localStorage.getItem('atm2_leaveOverride');
     leaveOverride = lov !== null ? parseFloat(lov) : null;
@@ -604,7 +608,8 @@ function resetAllData(skipConfirm){
   chatHistory.length = 0;
   hourlyRate   = CURRENT_MIN_WAGE;
   companyRate  = CURRENT_MIN_WAGE;
-  weeklyOn     = false;
+  weeklyOn              = false;
+  weeklyHolidayEnabled  = true;
   lunchBreak   = 1;
   wt           = 'day';
   dayStart     = 9;
