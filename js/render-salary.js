@@ -220,9 +220,9 @@ function renderSalaryAnalysis(d) {
     </div>
     ${lossHtml}
     <div style="margin-top:12px;display:flex;gap:16px;flex-wrap:wrap;">
-      <div style="font-size:15px;color:var(--text3);">기본급 <b style="color:var(--text2);">₩${basePay.toLocaleString()}</b></div>
-      <div style="font-size:15px;color:var(--text3);">수당 <b style="color:var(--accent);">+₩${totAllow.toLocaleString()}</b></div>
-      <div style="font-size:15px;color:var(--text3);">공제 <b style="color:var(--red);">-₩${totDeduct.toLocaleString()}</b></div>
+      <div style="font-size:15px;color:var(--text3);">기본급 <b style="color:var(--text2);">₩${Math.round(basePay).toLocaleString()}</b></div>
+      <div style="font-size:15px;color:var(--text3);">수당 <b style="color:var(--accent);">+₩${Math.round(totAllow).toLocaleString()}</b></div>
+      <div style="font-size:15px;color:var(--text3);">공제 <b style="color:var(--red);">-₩${Math.round(totDeduct).toLocaleString()}</b></div>
     </div>
     <div style="position:absolute;right:16px;top:16px;font-size:40px;opacity:.06;">💰</div>
   </div>`;

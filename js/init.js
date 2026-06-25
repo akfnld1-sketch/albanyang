@@ -756,14 +756,8 @@ function renderSettingsPage(){
 
   html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:12px;">
     <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:14px;">🔔 스마트 알림</div>
-    <div style="margin-bottom:14px;">
-      <div style="font-size:16px;font-weight:700;color:var(--text2);margin-bottom:8px;">알람음 선택 (탭하면 미리듣기)</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-        ${soundBtns}
-      </div>
-    </div>
-    <div id="smart-notif-toggles-s" style="margin-bottom:8px;"></div>
-    <label style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;cursor:pointer;">
+    <div id="smart-notif-toggles-s" style="margin-bottom:12px;"></div>
+    <label style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer;margin-bottom:12px;">
       <div>
         <div style="font-size:17px;font-weight:600;color:var(--text);">🔊 알림 소리 ON/OFF</div>
         <div style="font-size:15px;color:var(--text3);">선택한 알람음으로 알림</div>
@@ -776,6 +770,17 @@ function renderSettingsPage(){
                      background:#fff;transition:left .25s;display:block;"></span>
       </div>
     </label>
+    <div>
+      <button onclick="(function(btn){var p=document.getElementById('alarm-sound-panel');var open=p.style.display==='none';p.style.display=open?'grid':'none';btn.textContent=open?'🔔 알람음 선택 (탭하면 미리듣기) ▲':'🔔 알람음 선택 (탭하면 미리듣기) ▼';})(this)"
+        style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);
+               background:var(--surface2);color:var(--text2);font-size:16px;font-weight:600;
+               cursor:pointer;font-family:'Noto Sans KR';text-align:left;">
+        🔔 알람음 선택 (탭하면 미리듣기) ▼ <span style="font-size:14px;color:var(--text3);">(현재: ${alarmSounds.find(s=>s.id===currentAlarm)?.label || '기본 비프음'})</span>
+      </button>
+      <div id="alarm-sound-panel" style="display:none;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;">
+        ${soundBtns}
+      </div>
+    </div>
   </div>`;
 
   // ★ Fix #49: 시니어모드 토글은 발견성 문제로 설정 페이지 최상단으로 이동(2026-06-20)

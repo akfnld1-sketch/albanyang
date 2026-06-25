@@ -141,10 +141,10 @@ function playNotifSound(type) {
   } catch(e) {}
 
   // ── 설정 화면에서 선택한 알람음(atm2_alarmSound)이 있으면 그 소리로 재생 ──
-  // (기본값 'beep'이 아닌 다른 알람음을 선택한 경우 우선 사용)
+  // beep 포함 모든 선택값을 playAlarmSound()로 통일 재생
   try {
     const chosen = localStorage.getItem('atm2_alarmSound');
-    if (chosen && chosen !== 'beep' && typeof playAlarmSound === 'function') {
+    if (chosen && typeof playAlarmSound === 'function') {
       playAlarmSound(chosen);
       return;
     }
