@@ -143,9 +143,8 @@ function handleLogo(e){
       // PWA manifest 동적 생성
       updateManifest(b64);
 
-      // localStorage 저장 (single writer: saveCompanyLogo in ui.js)
-      if(typeof saveCompanyLogo==='function') saveCompanyLogo(b64);
-      else try{ localStorage.setItem('companyLogo', b64); }catch(err){ showToast('⚠️ 저장 공간 부족으로 로고를 저장하지 못했어요'); }
+      // localStorage 저장 (ui.js #3이 budget.js #5보다 먼저 로드되므로 항상 사용 가능)
+      saveCompanyLogo(b64);
     };
     img.src=ev.target.result;
   };
