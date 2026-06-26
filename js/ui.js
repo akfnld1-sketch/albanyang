@@ -735,7 +735,37 @@ function renderStats(wDays,lDays,absDays,totOT,satH,sunH){
   const diffSign = diff > 0 ? '+' : '';
   const diffColor = diff >= 0 ? 'var(--green)' : 'var(--red)';
 
-  document.getElementById('stats-row').innerHTML = `
+  // 힌트 카드: 튜토리얼 건너뛴 신규 사용자에게 한 번만 표시
+  const _hintKey = 'moneynyang_start_hint_dismissed';
+  const _skipDone = localStorage.getItem('moneynyang_tutorial_done') === '2' || localStorage.getItem('atm2_onboarding_done') === '1';
+  const _hintDismissed = localStorage.getItem(_hintKey);
+  const _hintCard = (!_hintDismissed && _skipDone) ? `
+    <div id="start-hint-card" style="width:100%;background:linear-gradient(135deg,rgba(79,124,255,.12),rgba(79,124,255,.05));border:1px solid rgba(79,124,255,.3);border-radius:14px;padding:14px 16px;margin-bottom:8px;position:relative;">
+      <button onclick="localStorage.setItem('${_hintKey}','1');document.getElementById('start-hint-card')?.remove();"
+        style="position:absolute;top:8px;right:10px;background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;line-height:1;">✕</button>
+      <div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:8px;">👋 머니냥 시작하는 법</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.9;">
+        ① 설정에서 <b>시급·급여일</b>을 입력하세요<br>
+        ② 날짜를 눌러 <b>오늘 출근</b>을 기록하세요<br>
+        ③ 기록할수록 <b>예상 실수령액</b>이 자동 계산됩니다
+      </div>
+      <button onclick="if(typeof startTutorial==='function')startTutorial();else if(typeof uigStart==='function')uigStart();"
+        style="margin-top:10px;padding:6px 14px;border-radius:20px;border:1px solid var(--accent);background:none;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR';">📖 사용법 보기</button>
+    </div>` : '';
+
+  // 계산 근거 한 줄 생성
+  const _selJobsHero3 = (typeof loadSelectedJobs==='function') ? loadSelectedJobs() : [];
+  let _calcBasis = '';
+  if(_selJobsHero3.indexOf('employee')>=0 && hourlyRate > 0){
+    const _pd2 = (function(){ try{ return getPayData(); }catch(e){ return null; } })();
+    const _bh = (_pd2 && _pd2.BASE_HOURS) ? _pd2.BASE_HOURS : 209;
+    const _parts = [`시급 ${hourlyRate.toLocaleString()}원 × ${_bh}h`];
+    if(lDays > 0) _parts.push(`연차 ${lDays}일`);
+    if(_pd2 && (_pd2.insWH||_pd2.ins) && (_pd2.insWH||_pd2.ins).total > 0) _parts.push('공제 반영');
+    _calcBasis = _parts.join(' · ');
+  }
+
+  document.getElementById('stats-row').innerHTML = _hintCard + `
     <div style="width:100%;display:flex;gap:10px;flex-wrap:wrap;">
 
       <!-- 히어로: 예상 실수령 -->
@@ -755,6 +785,7 @@ function renderStats(wDays,lDays,absDays,totOT,satH,sunH){
             <div style="height:100%;width:${progress}%;background:var(--accent);border-radius:2px;transition:width .6s ease;"></div>
           </div>
         </div>
+        ${_calcBasis ? `<div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.5;">${_calcBasis}</div>` : ''}
         <div style="font-size:12px;font-weight:700;color:var(--accent);margin-top:10px;">이 돈으로 다음 월급날까지 버틸 수 있을까요?</div>
         <div style="position:absolute;top:12px;right:14px;font-size:10px;color:var(--text3);text-align:right;line-height:1.6;">
           <div>기본급 <b style="color:var(--text2);font-family:'JetBrains Mono';">${basePay > 0 ? (basePay).toLocaleString() : '—'}</b></div>

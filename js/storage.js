@@ -164,6 +164,7 @@ function attSaveMonth(wpId, empId, y, m, data){
   const monthData = {};
   const ym = `${y}-${pad2(m+1)}`;
   Object.keys(data).forEach(k=>{ if(k.startsWith(ym+'-')) monthData[k]=data[k]; });
+  if(Object.keys(monthData).length === 0) return;
   localStorage.setItem(ATT_KEY(wpId, empId, y, m), JSON.stringify(monthData));
 }
 function attLoadMonth(wpId, empId, y, m){

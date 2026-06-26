@@ -346,6 +346,8 @@ document.getElementById('sp-btn').addEventListener('click', function(){
               var _aem = localStorage.getItem('atm2_activeEmp');
               if(_obCo && _awp && typeof wpUpdate==='function')   wpUpdate(_awp, {name:_obCo});
               if(_obName && _awp && _aem && typeof empUpdate==='function') empUpdate(_awp, _aem, {name:_obName});
+              // 배너 즉시 갱신 (wpUpdate 후 company-input이 자동 갱신되지 않으므로)
+              if(_obCo){ var _bci=document.getElementById('company-input'); if(_bci) _bci.value=_obCo; }
             }catch(e){}
             // 온보딩 완료 → 직업선택으로 이동 (직업 미선택 시) 또는 튜토리얼
             setTimeout(function(){
@@ -695,7 +697,11 @@ document.getElementById('sp-btn').addEventListener('click', function(){
   <div id="att-page">
 
     <div id="cal-area">
-      <div style="font-size:15px;font-weight:700;color:var(--accent);padding:0 2px 6px;">날짜를 눌러 출근·퇴근을 기록하면, 예상 급여가 더 정확해져요</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 2px 6px;">
+        <div style="font-size:15px;font-weight:700;color:var(--accent);">날짜를 눌러 출근·퇴근을 기록하면, 예상 급여가 더 정확해져요</div>
+        <button onclick="if(typeof startTutorial==='function')startTutorial();else if(typeof uigStart==='function')uigStart();"
+          style="flex-shrink:0;padding:5px 10px;border-radius:20px;border:1px solid rgba(79,124,255,.4);background:rgba(79,124,255,.08);color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR';white-space:nowrap;min-height:32px;">📖 사용법</button>
+      </div>
       <div class="month-nav">
         <button onclick="changeMonth(-1)">◀</button>
         <h2 id="month-title"></h2>
@@ -2198,7 +2204,7 @@ const _origShowPage = typeof showPage === 'function' ? showPage : null;
 <!-- 1. 가계부 (budget.js) -->
 <script src="js/storage.js?v=20260625b"></script>      <!-- [1] 상수 + 다중사업장 + STATE + localStorage -->
 <script src="js/leave.js?v=20260627"></script>        <!-- [2] 전역변수(curY/curM/dayData) + 연차 + lsSave/lsLoad -->
-<script src="js/ui.js?v=20260627"></script>           <!-- [3] pad2/dk/showToast/calcNetHours/countWD -->
+<script src="js/ui.js?v=20260628"></script>           <!-- [3] pad2/dk/showToast/calcNetHours/countWD -->
 <script src="js/salary.js?v=20260627"></script>       <!-- [4] fmt/getPayData + 급여계산 + 4대보험 -->
 <script src="js/budget.js?v=20260627"></script>       <!-- [5] 생존관리 (pad2/fmt/lsSave 의존) -->
 <script src="js/data-utils.js"></script>   <!-- [6] 드로어/SAO 유틸 -->
