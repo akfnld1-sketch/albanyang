@@ -647,7 +647,7 @@ document.getElementById('sp-btn').addEventListener('click', function(){
         style="padding:10px 16px;border-radius:10px;border:none;
           background:var(--accent);color:#fff;font-size:13px;font-weight:700;
           cursor:pointer;font-family:'Noto Sans KR';white-space:nowrap;flex-shrink:0;
-          transition:opacity .2s;"
+          transition:opacity .2s;min-height:44px;"
         onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">저장</button>
     </div>
     <div id="payday-status" style="margin-top:6px;font-size:12px;color:var(--text3);text-align:center;min-height:16px;"></div>
@@ -666,7 +666,7 @@ document.getElementById('sp-btn').addEventListener('click', function(){
     <div id="smart-notif-toggles"></div>
     <!-- 소리 ON/OFF -->
     <label style="display:flex;align-items:center;justify-content:space-between;
-      padding:9px 4px;border-bottom:1px solid var(--border);cursor:pointer;">
+      padding:9px 4px;border-bottom:1px solid var(--border);cursor:pointer;min-height:44px;">
       <div>
         <div style="font-size:13px;font-weight:600;color:var(--text);">🔊 알림 소리</div>
         <div style="font-size:11px;color:var(--text3);">비프음 (Web Audio)</div>
@@ -675,17 +675,16 @@ document.getElementById('sp-btn').addEventListener('click', function(){
            onclick="toggleSoundNotif(this)"
            style="width:40px;height:22px;border-radius:11px;
              background:var(--accent,#4f7cff);
-             position:relative;transition:background .25s;cursor:pointer;flex-shrink:0;
-             margin:11px 0;">
+             position:relative;transition:background .25s;cursor:pointer;flex-shrink:0;">
         <span id="sound-toggle-knob" style="position:absolute;top:3px;left:20px;
           width:16px;height:16px;border-radius:50%;background:#fff;
           box-shadow:0 1px 4px rgba(0,0,0,.2);transition:left .25s;display:block;"></span>
       </div>
     </label>
     <button onclick="resetSmartNotifState()" style="margin-top:10px;width:100%;
-      padding:7px;border-radius:10px;border:1px solid var(--border);
+      padding:11px 7px;border-radius:10px;border:1px solid var(--border);
       background:transparent;color:var(--text3);font-size:12px;cursor:pointer;
-      font-family:'Noto Sans KR';">🗑 오늘 알림 기록 초기화</button>
+      font-family:'Noto Sans KR';min-height:44px;">🗑 오늘 알림 기록 초기화</button>
   </div>
 
   </div><!-- /sb-section 설정 -->
@@ -2082,7 +2081,7 @@ const _origShowPage = typeof showPage === 'function' ? showPage : null;
 #asst-head .title span { font-size:11px; color:rgba(255,255,255,.75); }
 #asst-close {
   background:rgba(255,255,255,.2); border:none; color:#fff;
-  width:28px; height:28px; border-radius:50%; cursor:pointer;
+  width:44px; height:44px; border-radius:50%; cursor:pointer;
   font-size:16px; display:flex; align-items:center; justify-content:center;
 }
 /* 메시지 영역 */
@@ -2107,11 +2106,11 @@ const _origShowPage = typeof showPage === 'function' ? showPage : null;
   padding:8px 14px 4px; display:flex; flex-wrap:wrap; gap:6px; flex-shrink:0;
 }
 .asst-q {
-  padding:6px 12px; border-radius:20px;
+  padding:11px 12px; border-radius:20px;
   border:1px solid #4f7cff; background:transparent;
   color:#4f7cff; font-size:12px; font-weight:600;
   cursor:pointer; font-family:'Noto Sans KR'; transition:all .15s;
-  white-space:nowrap;
+  white-space:nowrap; min-height:44px;
 }
 .asst-q:hover { background:#4f7cff; color:#fff; }
 /* 입력창 */
@@ -2127,7 +2126,7 @@ const _origShowPage = typeof showPage === 'function' ? showPage : null;
 #asst-input:focus { border-color:#4f7cff; }
 #asst-send {
   background:#4f7cff; border:none; color:#fff;
-  width:38px; height:38px; border-radius:10px;
+  width:44px; height:44px; border-radius:10px;
   cursor:pointer; font-size:18px; display:flex;
   align-items:center; justify-content:center; flex-shrink:0;
 }
@@ -2200,7 +2199,7 @@ const _origShowPage = typeof showPage === 'function' ? showPage : null;
 <script src="js/storage.js?v=20260625b"></script>      <!-- [1] 상수 + 다중사업장 + STATE + localStorage -->
 <script src="js/leave.js?v=20260627"></script>        <!-- [2] 전역변수(curY/curM/dayData) + 연차 + lsSave/lsLoad -->
 <script src="js/ui.js?v=20260627"></script>           <!-- [3] pad2/dk/showToast/calcNetHours/countWD -->
-<script src="js/salary.js?v=20260626a"></script>       <!-- [4] fmt/getPayData + 급여계산 + 4대보험 -->
+<script src="js/salary.js?v=20260627"></script>       <!-- [4] fmt/getPayData + 급여계산 + 4대보험 -->
 <script src="js/budget.js?v=20260627"></script>       <!-- [5] 생존관리 (pad2/fmt/lsSave 의존) -->
 <script src="js/data-utils.js"></script>   <!-- [6] 드로어/SAO 유틸 -->
 <script src="js/nyang-emoji.js"></script>    <!-- [7-0] 감정 이모지 시스템 -->

@@ -764,9 +764,9 @@ function renderNjobYearlySummary(){
       <div style="font-size:15px;color:var(--text3);margin-top:3px;">${jobLabels}</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
-      <button onclick="dashYear--;renderDash()" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:20px;cursor:pointer;">◀</button>
+      <button onclick="dashYear--;renderDash()" style="width:44px;height:44px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:20px;cursor:pointer;">◀</button>
       <span style="font-size:21px;font-weight:700;min-width:60px;text-align:center;">${y}년</span>
-      <button onclick="dashYear++;renderDash()" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:20px;cursor:pointer;">▶</button>
+      <button onclick="dashYear++;renderDash()" style="width:44px;height:44px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:20px;cursor:pointer;">▶</button>
     </div>
   </div>
 
@@ -1000,9 +1000,9 @@ function renderDash(){
       <div style="font-size:15px;color:var(--text3);margin-top:3px;">직접 입력(노란색) 우선 · 미입력 시 앱 자동계산</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
-      <button onclick="dashYear--;renderDash()" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:20px;cursor:pointer;">◀</button>
+      <button onclick="dashYear--;renderDash()" style="width:44px;height:44px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:20px;cursor:pointer;">◀</button>
       <span style="font-size:21px;font-weight:700;min-width:60px;text-align:center;">${y}년</span>
-      <button onclick="dashYear++;renderDash()" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:20px;cursor:pointer;">▶</button>
+      <button onclick="dashYear++;renderDash()" style="width:44px;height:44px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:20px;cursor:pointer;">▶</button>
     </div>
   </div>
 
