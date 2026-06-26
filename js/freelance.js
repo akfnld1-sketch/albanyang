@@ -298,7 +298,19 @@ function getAlbaMonthlyAggregate(y, m){
   //   5단계에서 만든 "회사알바 주휴수당도 byJob 밖" 설계와 일관성 유지).
   // ★ 연장(OT)/야간수당 가산 없이 단순 시급(net×hourlyRate)만 집계 — 1차 최소 범위.
   let companyGross = 0, companyHours = 0;
-  {
+  // ★ Income Gateway 연계: dayData는 "회사알바"(알바인데 캘린더로 출퇴근 기록) 전용 입력이다.
+  //   employee가 selectedJobs에 별도로 선택되어 있으면 같은 dayData가 이미 직장인 수입
+  //   계산(getPayData)에 쓰이고 있으므로, 여기서 또 가져오면 이중집계가 된다. employee가
+  //   선택되어 있지 않을 때만 dayData를 "회사알바" 수입으로 집계한다.
+  const _selJobsForCompany = (typeof loadSelectedJobs==='function') ? loadSelectedJobs() : [];
+  const _hasEmployeeAlready = _selJobsForCompany.indexOf('employee')>=0;
+  // ★ "회사알바"는 albaSubtype==='company'로 명시적으로 설정된 경우에만 의미가 있다.
+  //   이 체크가 없으면, 일반 알바로 전환한 사용자의 과거 직장인 시절 dayData 잔존 기록이
+  //   "회사알바 수입"으로 잘못 해석되는 문제가 있었음(직업변경 반복 시나리오에서 발견).
+  let _albaSubtypeForCompany = '';
+  try{ _albaSubtypeForCompany = localStorage.getItem('atm2_albaSubtype')||''; }catch(e){}
+  const _isCompanyAlba = _albaSubtypeForCompany === 'company';
+  if(!_hasEmployeeAlready && _isCompanyAlba){
     const monthData = (y === curY && m === curM)
       ? dayData
       : ((typeof attLoadMonth === 'function' && activeWpId && activeEmpId)
@@ -330,7 +342,7 @@ function getAlbaMonthlyAggregate(y, m){
   let weeklyHolidayPay = 0;
   const weeklyHolidayDetail = [];
 
-  if(typeof getCompanyAlbaWeeklyHolidayData === 'function'){
+  if(!_hasEmployeeAlready && _isCompanyAlba && typeof getCompanyAlbaWeeklyHolidayData === 'function'){
     getCompanyAlbaWeeklyHolidayData(y, m).forEach(w => {
       weeklyHolidayDetail.push({
         source: 'company', jobName: '회사알바',
@@ -556,7 +568,7 @@ function renderIncomeCalc(){
               padding:16px 18px;margin-bottom:16px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
       <div style="font-size:17px;font-weight:700;color:var(--text);">📋 수입 내역 (${incomeItems.length}건)</div>
-      <button onclick="if(confirm('모두 삭제할까요?'))clearIncomeItems()"
+      <button onclick="showCustomConfirm('모두 삭제할까요?', clearIncomeItems)"
         style="font-size:15px;padding:3px 8px;border-radius:5px;border:1px solid rgba(255,92,122,.3);
                background:none;color:var(--red);cursor:pointer;">전체삭제</button>
     </div>
@@ -647,7 +659,7 @@ function saveWageSetting(key,val){
   let wages={};
   try{const raw=localStorage.getItem(wageKey);if(raw)wages=JSON.parse(raw);}catch(e){}
   wages[key]=parseInt(val)||0;
-  try{localStorage.setItem(wageKey,JSON.stringify(wages));}catch(e){}
+  if(typeof saveJobWages==='function') saveJobWages(wages); else try{localStorage.setItem(wageKey,JSON.stringify(wages));}catch(e){}
   showToast('✅ 저장됨');
 }
 
@@ -1069,7 +1081,7 @@ function saveIncomeItem(){
     const wageKey='atm2_jobWages';let wages={};
     try{const raw=localStorage.getItem(wageKey);if(raw)wages=JSON.parse(raw);}catch(e){}
     wages[jobType_]=wage;
-    try{localStorage.setItem(wageKey,JSON.stringify(wages));}catch(e){}
+    if(typeof saveJobWages==='function') saveJobWages(wages); else try{localStorage.setItem(wageKey,JSON.stringify(wages));}catch(e){}
   } else {
     // 건수제: 여러 건 합산
     const rows=document.querySelectorAll('[id^="case-row-"]');

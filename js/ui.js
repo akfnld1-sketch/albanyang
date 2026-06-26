@@ -1,3 +1,11 @@
+// ── Single Writer: companyLogo 저장 진입점 ──
+window.saveCompanyLogo = function(b64){
+  try{
+    localStorage.setItem('companyLogo', b64);
+    if(typeof activeWpId!=='undefined' && activeWpId) wpUpdate(activeWpId,{logo:b64});
+  }catch(err){ if(typeof showToast==='function') showToast('⚠️ 저장 공간 부족으로 로고를 저장하지 못했어요'); }
+};
+
 // ══════════════════════════════════════════
 // 범용 토스트 (배경색 토스트와 별개)
 // ══════════════════════════════════════════
@@ -237,11 +245,8 @@ function handleLogo(e){
       // PWA manifest 동적 생성
       updateManifest(b64);
 
-      // localStorage 저장 (192px 리사이즈 후 약 30KB)
-      try{
-        localStorage.setItem('companyLogo', b64);
-        if(typeof activeWpId!=='undefined' && activeWpId) wpUpdate(activeWpId,{logo:b64});
-      }catch(err){ showToast('⚠️ 저장 공간 부족으로 로고를 저장하지 못했어요'); }
+      // localStorage 저장 (single writer: saveCompanyLogo)
+      saveCompanyLogo(b64);
     };
     img.src=ev.target.result;
   };
@@ -703,10 +708,17 @@ function renderStats(wDays,lDays,absDays,totOT,satH,sunH){
   const twd = countWD(curY,curM);
   // 실수령액 계산
   // ★ budget.js의 renderStats()와 동일 사유로 finalPay 참조로 통일(이전엔 netPay=grossPay)
+  // ★ Income Gateway: 직업유형과 무관하게 직장인 전용 계산만 보여주던 버그 수정
   let netPay = 0, basePay = 0, totAllow = 0, totDeduct = 0;
   try {
-    const pd = getPayData();
-    if(pd){ netPay=pd.finalPay||0; basePay=pd.basePay||0; totAllow=pd.totAllow||0; totDeduct=pd.totDeduct||0; }
+    const _selJobsHero2 = (typeof loadSelectedJobs==='function') ? loadSelectedJobs() : [];
+    if(_selJobsHero2.indexOf('employee')>=0){
+      const pd = getPayData();
+      if(pd){ netPay=pd.finalPay||0; basePay=pd.basePay||0; totAllow=pd.totAllow||0; totDeduct=pd.totDeduct||0; }
+    } else if(typeof getIncomeSummary==='function'){
+      const summary = getIncomeSummary(curY, curM);
+      netPay = summary.total || 0;
+    }
   } catch(e){}
 
   // 이번달 진행률
@@ -727,12 +739,12 @@ function renderStats(wDays,lDays,absDays,totOT,satH,sunH){
     <div style="width:100%;display:flex;gap:10px;flex-wrap:wrap;">
 
       <!-- 히어로: 예상 실수령 -->
-      <div style="flex:2;min-width:200px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 20px;position:relative;overflow:hidden;">
+      <div style="flex:2;min-width:200px;align-self:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 20px;position:relative;">
         <div style="font-size:11px;color:var(--text3);font-weight:600;letter-spacing:.5px;margin-bottom:6px;">예상 실수령액
-          <span style="font-weight:400;opacity:.85;">· 월급제 고정값(근무일수와 무관)</span>
+          <span style="font-weight:400;opacity:.85;">· 기록할수록 더 정확해져요</span>
         </div>
         <div style="font-size:28px;font-weight:900;font-family:'JetBrains Mono';color:var(--green);line-height:1.1;">
-          ${netPay > 0 ? netPay.toLocaleString() + '<span style="font-size:14px;font-weight:600;margin-left:2px;">원</span>' : '<span style="font-size:16px;color:var(--text3);">급여 정보 없음</span>'}
+          ${netPay > 0 ? netPay.toLocaleString() + '<span style="font-size:14px;font-weight:600;margin-left:2px;">원</span>' : '<span style="font-size:15px;color:var(--text3);">날짜를 눌러 근무를 기록하면 예상 급여가 표시돼요</span>'}
         </div>
         ${prevPay > 0 && netPay > 0 ? `<div style="font-size:11px;margin-top:5px;color:${diffColor};">${diffSign}${diff.toLocaleString()}원 <span style="color:var(--text3);">전월 대비</span></div>` : ''}
         <div style="margin-top:10px;">
@@ -743,6 +755,7 @@ function renderStats(wDays,lDays,absDays,totOT,satH,sunH){
             <div style="height:100%;width:${progress}%;background:var(--accent);border-radius:2px;transition:width .6s ease;"></div>
           </div>
         </div>
+        <div style="font-size:12px;font-weight:700;color:var(--accent);margin-top:10px;">이 돈으로 다음 월급날까지 버틸 수 있을까요?</div>
         <div style="position:absolute;top:12px;right:14px;font-size:10px;color:var(--text3);text-align:right;line-height:1.6;">
           <div>기본급 <b style="color:var(--text2);font-family:'JetBrains Mono';">${basePay > 0 ? (basePay).toLocaleString() : '—'}</b></div>
           <div>공제 <b style="color:var(--red);font-family:'JetBrains Mono';">${totDeduct > 0 ? '-'+totDeduct.toLocaleString() : '—'}</b></div>
@@ -1478,8 +1491,8 @@ function changeAppIcon(){
         const w = img.width*s, h = img.height*s;
         ctx.drawImage(img, (192-w)/2, (192-h)/2, w, h);
         const resized = canvas.toDataURL('image/png');
-        // 저장 & 적용
-        try { localStorage.setItem('companyLogo', resized); } catch(err){}
+        // 저장 & 적용 (single writer: saveCompanyLogo)
+        saveCompanyLogo(resized);
         // 배너 로고도 업데이트
         const logoImg = document.getElementById('logo-img');
         const logoPh = document.getElementById('logo-ph');
@@ -2002,4 +2015,38 @@ function doResetDay() {
   closeResetConfirm();
   quickSave('none');
   showToast('🗑️ 기록이 초기화됐어요');
+}
+
+// ════════════════════════════════════════
+// 범용 확인 모달 — window.confirm() 대체(2026-06-21)
+// Android/iPhone의 PWA(standalone) 환경에서 네이티브 confirm()이
+// 다이얼로그를 그리지 않고 무시되는 경우가 있어, 파괴적 작업의 확인
+// UI를 전부 이 커스텀 모달로 통일함. 각 호출부의 메시지·콜백(실제
+// 실행되는 동작)은 그대로 유지 — 확인 UI만 교체.
+// ════════════════════════════════════════
+let _genericConfirmCallback = null;
+
+function showCustomConfirm(message, onConfirm) {
+  const ov    = document.getElementById('generic-confirm-overlay');
+  const msg   = document.getElementById('generic-confirm-msg');
+  const okBtn = document.getElementById('generic-confirm-ok-btn');
+  if (!ov || !msg || !okBtn) {
+    // 모달 마크업이 없는 예외 상황에서도 동작은 막히지 않게 하는 안전망
+    if (typeof onConfirm === 'function') onConfirm();
+    return;
+  }
+  msg.textContent = message;
+  _genericConfirmCallback = onConfirm;
+  okBtn.onclick = function () {
+    const cb = _genericConfirmCallback;
+    closeGenericConfirm();
+    if (typeof cb === 'function') cb();
+  };
+  ov.style.display = 'flex';
+}
+
+function closeGenericConfirm() {
+  const ov = document.getElementById('generic-confirm-overlay');
+  if (ov) ov.style.display = 'none';
+  _genericConfirmCallback = null;
 }

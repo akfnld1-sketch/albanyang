@@ -1083,8 +1083,7 @@ function saveAllPaydaySettings(){
   try{ localStorage.setItem('atm2_payday_settings', JSON.stringify(settings)); }catch(e){}
   // 기존 직장인 급여일 호환성 유지 — atm2_payday + payDay_setting 동시 기록
   if(settings.employee?.day){
-    localStorage.setItem('atm2_payday',     String(settings.employee.day));
-    localStorage.setItem('payDay_setting',  String(settings.employee.day));
+    savePayDaySetting(settings.employee.day);
     const el = document.getElementById('payday-input');
     if(el){ el.value = settings.employee.day; if(typeof savePayday==='function') savePayday(); }
   }
@@ -1098,8 +1097,7 @@ function savePaydayFromSettings(){
   const paydayInp = document.getElementById('payday-input');
   if(paydayInp) paydayInp.value = val;
   // atm2_payday + payDay_setting 동시 기록 (leave.js 알림 계산 호환)
-  localStorage.setItem('atm2_payday',    val);
-  localStorage.setItem('payDay_setting', val);
+  savePayDaySetting(val);
   if(typeof savePayday === 'function') savePayday();
   else showToast('✅ 급여일 ' + val + '일 저장됨');
 }
@@ -1114,9 +1112,27 @@ function saveNjobWages(){
     const el = document.getElementById('njob-wage-'+id);
     if(el) wages[id] = parseInt(el.value)||0;
   });
-  try{ localStorage.setItem('atm2_jobWages', JSON.stringify(wages)); }catch(e){}
+  saveJobWages(wages);
   showToast('✅ N잡 단가 설정 저장됨');
 }
+
+// ── Single Writer helpers ──
+// 온보딩/설정에서 회사명·이름 저장 (atm2_companyName, atm2_ob_empName 의 단일 저장 진입점)
+window.saveObInfo = function(co, name){
+  try{ if(co)   localStorage.setItem('atm2_companyName', co);   }catch(e){}
+  try{ if(name) localStorage.setItem('atm2_ob_empName',  name); }catch(e){}
+};
+
+// 급여일 저장 (payDay_setting + atm2_payday 의 단일 저장 진입점)
+window.savePayDaySetting = function(val){
+  try{ localStorage.setItem('atm2_payday',    String(val)); }catch(e){}
+  try{ localStorage.setItem('payDay_setting', String(val)); }catch(e){}
+};
+
+// N잡 단가 저장 (atm2_jobWages 의 단일 저장 진입점)
+window.saveJobWages = function(wages){
+  try{ localStorage.setItem('atm2_jobWages', JSON.stringify(wages)); }catch(e){}
+};
 
 // ── 기본정보 ReadOnly 토글 ──
 function toggleSettingsEdit(checked){
@@ -1138,16 +1154,11 @@ function saveBasicSettings(){
   const wage    = parseFloat(document.getElementById('set-base-wage')?.value||'10320');
   const hire    = document.getElementById('set-hire-date')?.value||'';
 
-  // 회사명 저장
+  // 회사명 + 이름 저장 (single writer: saveObInfo)
+  saveObInfo(name, empName);
   if(name){
-    localStorage.setItem('atm2_companyName', name);
     const compEl = document.getElementById('company-name');
     if(compEl) compEl.textContent = name;
-  }
-
-  // 사용자 이름 저장 (온보딩 키와 동기화)
-  if(empName){
-    localStorage.setItem('atm2_ob_empName', empName);
   }
 
   // 시급 저장

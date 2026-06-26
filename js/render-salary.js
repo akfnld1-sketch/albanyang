@@ -561,7 +561,7 @@ function renderSalary(){
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
           <input type="checkbox" id="whe-toggle"
             ${(weeklyHolidayEnabled !== false) ? 'checked' : ''}
-            onchange="weeklyHolidayEnabled=this.checked;localStorage.setItem('atm2_weekly_holiday_enabled',String(this.checked));lsSave();renderSalary();"
+            onchange="weeklyHolidayEnabled=this.checked;lsSave();renderSalary();"
             style="width:18px;height:18px;accent-color:#7fffd4;cursor:pointer;">
           <span style="font-size:16px;font-weight:700;color:var(--text);">주휴수당 별도 표시</span>
         </label>

@@ -53,9 +53,11 @@ function getSmartAlert(){
     }
 
     // 4️⃣ 이번 달 예상 실수령액이 지난달보다 많이 줄었을 때 (10% 이상)
+    // ★ Income Gateway: 직장인이 아니면 d.finalPay(직장인 전용 계산값)로 알림을 만들지 않음
+    const _selJobs4 = (typeof loadSelectedJobs==='function') ? loadSelectedJobs() : [];
     const prevPayKey = `pay_prev_${curY}_${curM}`;
     const prevPay = parseInt(localStorage.getItem(prevPayKey) || '0');
-    if(prevPay > 0 && d.finalPay > 0){
+    if(_selJobs4.indexOf('employee')>=0 && prevPay > 0 && d.finalPay > 0){
       const diff = d.finalPay - prevPay;
       const ratio = Math.abs(diff) / prevPay;
       if(diff < 0 && ratio >= 0.1){
@@ -87,9 +89,12 @@ function getSmartAlert(){
       if(nextPay < today) nextPay.setMonth(nextPay.getMonth()+1);
       const daysLeft = Math.ceil((nextPay - today)/(1000*60*60*24));
       if(daysLeft >= 1 && daysLeft <= 3){
+        // ★ Income Gateway: 직업유형에 맞는 총수입으로 표시(직장인 전용 d.finalPay 직접 사용 금지)
+        const _summary6 = (typeof getIncomeSummary==='function') ? getIncomeSummary(curY, curM) : null;
+        const _payAmt6 = _summary6 ? _summary6.total : d.finalPay;
         alerts.push({
           priority: 5,
-          msg: `급여일까지 ${daysLeft}일 남았어요! 💰\n이번 달 예상 실수령액은 ${fmt(d.finalPay)}이에요.\n설레는 날이 다가오고 있어요~ 😄`,
+          msg: `급여일까지 ${daysLeft}일 남았어요! 💰\n이번 달 예상 실수령액은 ${fmt(_payAmt6)}이에요.\n설레는 날이 다가오고 있어요~ 😄`,
           action: null
         });
       }
@@ -219,10 +224,16 @@ function getGreeting(){
   const d = getPayData();
   const h = new Date().getHours();
   const greet = h<12?'좋은 아침이에요 ☀️': h<18?'안녕하세요 😊':'수고 많으셨어요 🌙';
+  // ★ Income Gateway: 직업유형과 무관하게 직장인 급여(d.grossPay/finalPay)를 보여주던 버그 수정
+  const _selJobsG = (typeof loadSelectedJobs==='function') ? loadSelectedJobs() : [];
+  const _isEmpG = _selJobsG.indexOf('employee')>=0;
+  const _summaryG = (typeof getIncomeSummary==='function') ? getIncomeSummary(curY, curM) : null;
+  const payLine = _isEmpG
+    ? `• 예상 세전급여: ${fmt(d.grossPay)}\n• 예상 실수령액: ${fmt(d.finalPay)}\n\n`
+    : (_summaryG ? `• 이번 달 예상 수입: ${fmt(_summaryG.total)}\n\n` : '');
   return `${greet} 저는 머니냥이에요! 🐱\n\n이번 달(${curY}년 ${curM+1}월) 현황을 보니,\n` +
     `• 근무일: ${d.wDays}일 / ${d.twd}일\n` +
-    `• 예상 세전급여: ${fmt(d.grossPay)}\n` +
-    `• 예상 실수령액: ${fmt(d.finalPay)}\n\n` +
+    payLine +
     `궁금한 점을 질문하거나 아래 버튼을 눌러보세요! 💬`;
 }
 
@@ -230,6 +241,19 @@ function getGreeting(){
 function buildContext(){
   const d = getPayData();
   const mo = `${curY}년 ${curM+1}월`;
+  // ★ Income Gateway: 직장인이 아니면 직장인 전용 상세항목(기본급/수당/4대보험/세금) 대신
+  //   직업유형에 맞는 총수입만 컨텍스트에 포함 — 직업유형과 무관하게 직장인 데이터가
+  //   AI 응답 컨텍스트에 항상 들어가던 버그 수정
+  const _selJobsC = (typeof loadSelectedJobs==='function') ? loadSelectedJobs() : [];
+  const _isEmpC = _selJobsC.indexOf('employee')>=0;
+  if(!_isEmpC){
+    const _summaryC = (typeof getIncomeSummary==='function') ? getIncomeSummary(curY, curM) : null;
+    return `[현재 데이터 - ${mo}]
+선택된 직업유형: ${_selJobsC.join(', ') || '미선택'}
+근무일수: ${d.wDays}일 / 총 ${d.twd}일
+연차: ${d.lDays}일 | 반차: ${d.halfDays}회 | 결근: ${d.absDays}일
+이번 달 예상 수입(직업유형 합산): ${_summaryC ? fmt(_summaryC.total) : '0원'}`;
+  }
   return `[현재 데이터 - ${mo}]
 근무형태: ${wt==='day'?'주간근무':wt==='night'?'야간근무':wt==='2shift'?'2교대':'3교대'}
 기본시급: ${hourlyRate.toLocaleString()}원
@@ -251,6 +275,14 @@ function buildContext(){
 // 머니냥 Q&A 데이터베이스 (100개)
 // ══════════════════════════════════════════
 const ALBA_QA = [
+  // ★ Fix #64: "~가 뭐야" 설명형 질문 전용 FAQ 6개 추가(2026-06-21).
+  //   매칭 알고리즘/데이터 응답 로직은 전혀 건드리지 않고 콘텐츠만 추가함.
+  {q:"연차가 뭐야",a:"연차는 1년 이상 일하면 매년 주어지는 유급 휴가야. 쉬어도 급여가 그대로 나와. 보통 1년차에 15일이 기본이고, 입사일 기준으로 자동 계산돼. 설정 탭에 입사일을 입력하면 달력 통계 카드에서 연차 현황을 바로 확인할 수 있어.",cat:"근태"},
+  {q:"반차가 뭐야",a:"반차는 하루 8시간 중 4시간만 쉬는 거야. 연차처럼 유급이라 급여에서 안 빠져. 오전 반차는 늦게 출근, 오후 반차는 일찍 퇴근하는 식으로 시간을 잡으면 돼. 회사 규정에 따라 다를 수 있으니 사용 전에 미리 확인해보는 게 좋아.",cat:"근태"},
+  {q:"조퇴가 뭐야",a:"조퇴는 출근은 했는데 정해진 퇴근 시간보다 일찍 나가는 거야. 반차랑 다르게 미리 계획 안 하고 갑자기 몸이 안 좋거나 급한 일이 생겼을 때 주로 써. 못 채운 시간만큼 급여에서 공제돼.",cat:"근태"},
+  {q:"야간수당이 뭐야",a:"밤 10시(22시)부터 새벽 6시 사이에 일한 시간에 추가로 붙는 수당이야. 시급의 0.5배가 더 붙어서, 예를 들어 시급 10,000원이면 야간엔 15,000원이 되는 거야. 앱이 근무시간만 입력하면 자동으로 계산해줘.",cat:"근태"},
+  {q:"휴일근무가 뭐야",a:"휴일(주휴일·법정휴일 등)에 일한 걸 휴일근무라고 해. 8시간까지는 시급의 1.5배, 8시간을 넘긴 시간은 2.0배가 적용되는 계단식 계산이야. 날짜 눌러서 '🌙 휴일근무' 선택하면 자동으로 반영돼.",cat:"근태"},
+  {q:"특근이 뭐야",a:"특근은 원래 쉬는 날인 토요일·일요일에 추가로 나와서 일하는 거야. 토요특근은 시급의 1.5배, 일요특근은 2.0배가 적용돼. 달력에서 토요일·일요일 날짜를 누르고 '토요특근'·'일요특근'을 선택하면 자동 계산돼.",cat:"근태"},
   {q:"반차랑 조퇴 차이가 뭐야",a:"반차는 하루 8시간 중 4시간만 쉬는 거고, 조퇴는 출근했다가 정해진 퇴근 시간 전에 일찍 나가는 거야. 반차는 미리 계획해서 쓰고, 조퇴는 갑자기 몸이 안 좋거나 급한 일 생겼을 때 쓰는 경우가 많아. 급여 공제는 둘 다 빠진 시간만큼 계산돼.",cat:"근태"},
   {q:"지각하면 급여에서 얼마나 깎여",a:"이 앱은 30분 단위 올림으로 계산해. 예를 들어 9시 출근인데 9시 6분에 왔으면 30분치 시급이 빠져. 회사마다 기준이 다를 수 있으니까 근로계약서를 한 번 확인해보는 게 좋아. 앱에서 지각 현황이 자동으로 표시되니까 참고해봐.",cat:"근태"},
   {q:"퇴근 시간 기록을 깜빡했어",a:"날짜 칸 눌러서 팝업 열고 메모란에 '퇴근 18:30' 이렇게 입력하면 자동 추출 버튼이 나타나. 눌러주면 바로 입력돼. 너무 늦게 기억났으면 카카오톡 메시지나 사진 찍은 거 보고 찾아서 입력해봐.",cat:"근태"},
@@ -367,6 +399,11 @@ const ALBA_QA = [
 ];
 
 // Q&A 매칭 함수 — 형태소 유사도 기반 점수 산출
+// ★ Fix #59: 짧은 일상 질문이 흔한 조사/어미 2~3글자만 겹쳐도 FAQ로 오매칭되던
+//   문제 수정(2026-06-21). 예: "오늘 점심 뭐 먹지?" ↔ "점심시간은 급여에서 빠지나"가
+//   "점심"이라는 불용어 하나만으로 매칭되던 사례. 이 단어들은 매칭 점수 계산에서 제외.
+const QA_STOP_TOKENS = new Set(['점심','좋아','보여','뭐야','가뭐','가뭐야','해줘','줄래']);
+
 function matchQA(userMsg){
   const norm = s => s.replace(/\s/g,'').replace(/[?？!！~～]/g,'').toLowerCase();
   const um = norm(userMsg);
@@ -384,10 +421,10 @@ function matchQA(userMsg){
   ALBA_QA.forEach(item => {
     const qn = norm(item.q);
     const qTokens = tokens(qn);
-    // 공통 토큰 비율
+    // 공통 토큰 비율 (불용어는 점수에서 제외)
     let hit = 0;
-    umTokens.forEach(t => { if(qn.includes(t)) hit += t.length; });
-    qTokens.forEach(t => { if(um.includes(t)) hit += t.length; });
+    umTokens.forEach(t => { if(!QA_STOP_TOKENS.has(t) && qn.includes(t)) hit += t.length; });
+    qTokens.forEach(t => { if(!QA_STOP_TOKENS.has(t) && um.includes(t)) hit += t.length; });
     const score = hit / (um.length + qn.length + 1);
     if(score > bestScore){ bestScore = score; best = item; }
   });
@@ -399,25 +436,17 @@ function matchQA(userMsg){
 function callClaude(userMsg){
   // 순수 JS 계산식 기반 머니냥 응답 (API 없음)
   const d = getPayData();
+  // ★ Income Gateway: 아래 응답 블록들이 d.finalPay/d.grossPay(직장인 전용 계산값)를
+  //   직업유형과 무관하게 그대로 답변하던 버그 수정용 — 직장인이 아니면 게이트웨이의
+  //   직업유형 합산 총수입을 답한다.
+  const _selJobsCC = (typeof loadSelectedJobs==='function') ? loadSelectedJobs() : [];
+  const _isEmpCC = _selJobsCC.indexOf('employee')>=0;
+  const _summaryCC = (typeof getIncomeSummary==='function') ? getIncomeSummary(curY, curM) : null;
   const msg = userMsg.replace(/\s/g,'').toLowerCase();
 
   // ── 채팅 히스토리에 사용자 메시지 추가 ──
   chatHistory.push({ role: 'user', text: userMsg });
   if(chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
-
-  // ── Q&A 데이터베이스 우선 매칭 ──
-  // 온보딩/기억 감지가 아닌 일반 질문일 때만 적용
-  if(onboardingStep !== 1 && !userMsg.match(/(?:나\s*는?|내\s*이름\s*은?|저\s*는?)\s*([가-힣a-zA-Z]{1,6})(?:이야|야|이에요|예요|입니다|이라고불러|라고불러)/) && !userMsg.match(/시급\s*(?:이|은|가)?\s*(\d[\d,]+)\s*원/) && !userMsg.match(/(?:급여일|월급날|월급|급여)[^0-9]*\d{1,2}\s*일|\d{1,2}\s*일[^0-9]*(?:급여일|월급날)/) ){
-    const qaHit = matchQA(userMsg);
-    if(qaHit){
-      // 이름 접두사 붙이기
-      const prefix = memName ? `${memName}님! ` : '';
-      // 카테고리 이모지
-      const catIcon = {근태:'📋',급여:'💰',세금:'💸',가계부:'💳',현실고민:'💬',앱사용법:'📱'}[qaHit.cat] || '🐱';
-      const r = `${prefix}${qaHit.a}\n\n${catIcon} _(더 궁금한 게 있으면 언제든지 물어봐!)_`;
-      chatHistory.push({ role: 'bot', text: r }); lsSave(); return r;
-    }
-  }
 
   // ── 온보딩: 처음 이용 시 이름 질문 ──
   if(onboardingStep === 1){
@@ -462,7 +491,7 @@ function callClaude(userMsg){
       // ── 3곳 동시 동기화 ──
       budgetState.paydayDay = day;
       budgetSave();
-      localStorage.setItem('payDay_setting', String(day));
+      if(typeof savePayDaySetting==='function') savePayDaySetting(day); else localStorage.setItem('payDay_setting', String(day));
       // atm2_memory도 즉시 갱신 (lsSave 전에 memPayday 이미 위에서 세팅됨)
       // 사이드바 입력창 + 상태 표시까지 갱신
       const pdInput  = document.getElementById('payday-input');
@@ -549,6 +578,11 @@ function callClaude(userMsg){
   // ── 호칭 적용 헬퍼 ──
   const greeting = memName ? `${memName}님, ` : '';
 
+  // ★ Fix #54: "연차가 뭐야?"처럼 설명을 원하는 질문은 데이터 응답이 아니라
+  //   FAQ 설명으로 보내고, "연차 몇 개야?"처럼 내 데이터를 묻는 질문만 아래
+  //   데이터 응답 블록이 처리하도록 구분(2026-06-20).
+  const isExplanationQuestion = /(뭐야|뭐임|뭔가요|무엇|이란|란무엇|정의|설명해|설명좀|이게뭐|란뭐)/.test(msg);
+
   // ── 연차 override 초기화 ──
   if((msg.includes('연차') || msg.includes('월차')) &&
      (msg.includes('초기화') || msg.includes('자동') || msg.includes('취소') || msg.includes('리셋'))){
@@ -574,53 +608,86 @@ function callClaude(userMsg){
     }
   }
 
+  // ★ Fix #54: 아래 데이터 응답 블록 전체는 "설명형 질문"(~이 뭐야 등)이 아닐 때만
+  //   동작 — 설명형 질문은 이 블록을 건너뛰고 아래 FAQ 매칭으로 넘어감.
+  if(!isExplanationQuestion){
   // ── 실수령액 관련 ──
   if(msg.includes('실수령') || msg.includes('최종급여') || msg.includes('받는돈') || msg.includes('얼마받')){
+    if(!_isEmpCC){
+      return `${greeting}이번 달 예상 수입은 💰 ${fmt(_summaryCC?_summaryCC.total:0)} 이에요! 🐱\n(현재 선택된 직업유형 기준으로 합산한 금액이에요)`;
+    }
     return `${greeting}이번 달 최종 실수령액은 💰 ${fmt(d.finalPay)} 이에요! 🐱\n\n• 세전총급여: ${fmt(d.grossPay)}\n• 4대보험: -${fmt(d.ins.total)}\n• 소득세+지방세: -${fmt(d.tax.total)}\n• 실수령: = ${fmt(d.finalPay)}`;
   }
 
   // ── 기본급 관련 ──
   if(msg.includes('기본급') || msg.includes('기본급여')){
+    if(!_isEmpCC){
+      return `기본급(법정시급×209h) 계산은 직장인 근로소득 기준이라, 직업유형에 "직장인"이 없으면 적용되지 않아요! 🐱\n현재 이번 달 예상 수입은 ${fmt(_summaryCC?_summaryCC.total:0)} 이에요.`;
+    }
     return `기본급은 ${fmt(d.basePay)} 이에요! 🐱\n계산식: 법정 최저시급 ${hourlyRate.toLocaleString()}원 × 209시간(소정근로 월 기준)\n= ${hourlyRate.toLocaleString()} × 209 = ${fmt(d.basePay)}`;
   }
 
   // ── OT/연장수당 관련 ──
   if(msg.includes('ot') || msg.includes('연장') || msg.includes('초과근무') || msg.includes('overtime')){
+    if(!_isEmpCC){
+      return `OT(연장근무) 수당 계산은 직장인 근로소득 기준이라, 직업유형에 "직장인"이 없으면 적용되지 않아요! 🐱\n현재 이번 달 예상 수입은 ${fmt(_summaryCC?_summaryCC.total:0)} 이에요.`;
+    }
     return `이번 달 OT(연장근무) 현황이에요! 🐱\n• OT 시간: ${d.totOT}h\n• 연장수당: ${fmt(d.aOT)} (회사시급 ${companyRate.toLocaleString()}원 × ${d.totOT}h × 1.5배)\n※ 10원 단위 반올림 적용`;
   }
 
   // ── 야간수당 관련 ──
   if(msg.includes('야간') || msg.includes('야간수당')){
+    if(!_isEmpCC){
+      return `야간수당 계산은 직장인 근로소득 기준이라, 직업유형에 "직장인"이 없으면 적용되지 않아요! 🐱\n현재 이번 달 예상 수입은 ${fmt(_summaryCC?_summaryCC.total:0)} 이에요.`;
+    }
     return `야간근무 수당 계산이에요! 🐱\n• 야간시간: ${d.nightH}h (22:00~06:00)\n• 야간수당: ${fmt(d.aNight)} (시급 × 야간시간 × 0.5배 추가)\n※ 야간수당은 기본급에 추가로 지급됩니다.`;
   }
 
   // ── 4대보험 관련 ──
   if(msg.includes('4대보험') || msg.includes('보험') || msg.includes('국민연금') || msg.includes('건강보험') || msg.includes('고용보험')){
+    if(!_isEmpCC){
+      return `4대보험 공제 내역은 직장인 근로소득 기준이라, 직업유형에 "직장인"이 없으면 적용되지 않아요! 🐱\n현재 이번 달 예상 수입은 ${fmt(_summaryCC?_summaryCC.total:0)} 이에요.`;
+    }
     return `4대보험 공제 내역이에요! 🐱\n• 국민연금: ${fmt(d.ins.np)} (과세표준 × 4.5%)\n• 건강보험: ${fmt(d.ins.hi)} (과세표준 × 3.545%)\n• 장기요양: ${fmt(d.ins.ltc)} (건강보험료 × 12.95%)\n• 고용보험: ${fmt(d.ins.ei)} (과세표준 × 0.9%)\n합계: ${fmt(d.ins.total)}`;
   }
 
   // ── 세금 관련 ──
   if(msg.includes('세금') || msg.includes('소득세') || msg.includes('근로소득세') || msg.includes('지방세')){
+    if(!_isEmpCC){
+      return `근로소득세 내역은 직장인 근로소득 기준이라, 직업유형에 "직장인"이 없으면 적용되지 않아요! 🐱\n프리랜서·N잡 수입은 보통 3.3% 사업소득세가 적용돼요.`;
+    }
     return `소득세 내역이에요! 🐱\n• 근로소득세: ${fmt(d.tax.income)}\n• 지방소득세: ${fmt(d.tax.local)} (소득세 × 10%)\n• 합계: ${fmt(d.tax.total)}\n※ 간이세액표 기준 적용`;
   }
 
   // ── 근무시간 관련 ──
   if(msg.includes('근무시간') || msg.includes('일한시간') || msg.includes('근로시간')){
+    if(!_isEmpCC){
+      return `OT·야간·휴일시간 구분 계산은 직장인 근로소득 기준이라, 직업유형에 "직장인"이 없으면 적용되지 않아요! 🐱\n근무일수는 근태관리 탭에서 확인할 수 있어요.`;
+    }
     return `이번 달 근무 현황이에요! 🐱\n• 근무일수: ${d.wDays}일\n• 정규시간: ${d.normalH}h\n• OT: ${d.totOT}h\n• 야간: ${d.nightH}h\n• 휴일: ${d.holidayH}h\n• 토요특근: ${d.satH}h / 일요특근: ${d.sunH}h`;
   }
 
   // ── 수당 합계 ──
   if(msg.includes('수당') || msg.includes('총수당')){
+    if(!_isEmpCC){
+      return `OT·야간·휴일 수당 계산은 직장인 근로소득 기준이라, 직업유형에 "직장인"이 없으면 적용되지 않아요! 🐱\n현재 이번 달 예상 수입은 ${fmt(_summaryCC?_summaryCC.total:0)} 이에요.`;
+    }
     return `이번 달 수당 합계: ${fmt(d.totAllow)} 이에요! 🐱\n• OT수당: ${fmt(d.aOT)}\n• 야간수당: ${fmt(d.aNight)}\n• 휴일수당: ${fmt(d.aHoliday)}\n• 토요특근: ${fmt(d.aSat)}\n• 일요특근: ${fmt(d.aSun)}\n• 기타수당: ${fmt(d.totAllow - d.aOT - d.aNight - d.aHoliday - d.aSat - d.aSun)}`;
   }
 
   // ── 공제 관련 ──
   if(msg.includes('공제') || msg.includes('차감') || msg.includes('결근') || msg.includes('지각')){
+    if(!_isEmpCC){
+      return `근태공제(결근·지각 공제) 계산은 직장인 근로소득 기준이라, 직업유형에 "직장인"이 없으면 적용되지 않아요! 🐱`;
+    }
     return `이번 달 근태공제 내역이에요! 🐱\n• 근태공제 합계: ${fmt(d.totDeduct)}\n• 결근일수: ${d.absDays}일\n• 연차사용: ${d.lDays}일\n• 반차사용: ${d.halfDays}회\n※ 결근·지각은 해당 시간만큼 기본급에서 공제됩니다.`;
   }
 
   // ── 연차·월차 관련 ──
   if(msg.includes('연차') || msg.includes('반차') || msg.includes('휴가') || msg.includes('월차')){
+    if(!_isEmpCC){
+      return `연차·월차 자동계산은 직장인(입사일 기준) 근로기준법을 따르고 있어, 직업유형에 "직장인"이 없으면 적용되지 않아요! 🐱\n알바·프리랜서로 일하면서 연차가 있다면, 직업유형에 "직장인"을 추가하면 자동 계산을 사용할 수 있어요.`;
+    }
     // 월차/연차 구분 정보 주입
     const alResult = calcAnnualLeave(hireDate);
     const alType = alResult ? (alResult.isMonthly ? '월차(1년 미만)' : '연차(1년 이상)') : '연차/월차';
@@ -644,6 +711,9 @@ function callClaude(userMsg){
 
   // ── 세전 총급여 ──
   if(msg.includes('세전') || msg.includes('총급여') || msg.includes('그로스')){
+    if(!_isEmpCC){
+      return `세전·세후 구분은 직장인 근로소득 기준이라, 직업유형에 "직장인"이 없으면 적용되지 않아요! 🐱\n현재 이번 달 예상 수입은 ${fmt(_summaryCC?_summaryCC.total:0)} 이에요.`;
+    }
     return `세전 총급여는 ${fmt(d.grossPay)} 이에요! 🐱\n계산: 기본급 ${fmt(d.basePay)} + 수당 ${fmt(d.totAllow)} - 공제 ${fmt(d.totDeduct)}\n= ${fmt(d.grossPay)}`;
   }
 
@@ -654,6 +724,9 @@ function callClaude(userMsg){
 
   // ── 휴일·토요·일요 특근 ──
   if(msg.includes('휴일') || msg.includes('특근') || msg.includes('토요') || msg.includes('일요')){
+    if(!_isEmpCC){
+      return `휴일·토요·일요 특근 수당 계산은 직장인 근로소득 기준이라, 직업유형에 "직장인"이 없으면 적용되지 않아요! 🐱`;
+    }
     return `특근 수당 내역이에요! 🐱\n• 휴일근무: ${d.holidayH}h → ${fmt(d.aHoliday)} (시급 × 2배)\n• 토요특근: ${d.satH}h → ${fmt(d.aSat)} (시급 × 1.5배)\n• 일요특근: ${d.sunH}h → ${fmt(d.aSun)} (시급 × 2배)\n※ 모두 10원 단위 반올림 적용`;
   }
 
@@ -667,15 +740,37 @@ function callClaude(userMsg){
     return `한국 근로기준법 주요 기준이에요! 🐱\n• 법정 근로시간: 주 40시간 (1일 8시간)\n• OT 한도: 주 12시간 이내\n• OT 수당: 통상임금 × 1.5배\n• 야간(22~06시): 통상임금 × 0.5배 추가\n• 휴일근무: 통상임금 × 2배`;
   }
 
+  // ★ Fix #58: "급여"/"수입"/"월급" 단독 질문이 데이터 응답 블록에 한 번도 안 걸려
+  //   바로 FAQ로 새던 문제 수정 — 더 구체적인 블록(실수령/기본급/세전 등)이 모두 위에서
+  //   먼저 처리되므로, 여기는 그 어떤 블록에도 안 걸린 경우에만 동작하는 캐치올(2026-06-21).
+  if(msg.includes('급여') || msg.includes('수입') || msg.includes('월급')){
+    if(!_isEmpCC){
+      return `${greeting}이번 달 수입 요약이에요! 🐱\n• 이번 달 예상 수입(직업유형 합산): ${fmt(_summaryCC?_summaryCC.total:0)}`;
+    }
+    return `${greeting}이번 달 급여 요약이에요! 🐱\n• 세전총급여: ${fmt(d.grossPay)}\n• 공제 합계: ${fmt(d.ins.total + d.tax.total)}\n• 최종 실수령: ${fmt(d.finalPay)}`;
+  }
+
   // ── 도움말 ──
   if(msg.includes('도움말') || msg.includes('뭐물어') || msg.includes('뭘물어') || msg.includes('help')){
     return `안녕하세요! 머니냥이에요 🐱\n아래 내용을 물어보세요!\n\n💰 실수령액·기본급·세전급여\n📊 OT수당·야간수당·특근수당\n🏥 4대보험·소득세 내역\n⏰ 근무시간·근태 현황\n📅 연차·반차·공제 내역\n📜 근로기준법 기준\n\n🟢🔴 채팅창 하단 출근/퇴근 버튼으로 오늘 출퇴근 기록도 바로 할 수 있어요!`;
   }
+  } // ← isExplanationQuestion 가드 종료
 
-  // ── 기본 응답 ──
-  const grossPay = d.grossPay;
-  const finalPay = d.finalPay;
-  return `이번 달 급여 요약이에요! 🐱\n• 세전총급여: ${fmt(grossPay)}\n• 공제 합계: ${fmt(d.ins.total + d.tax.total)}\n• 최종 실수령: ${fmt(finalPay)}\n\n더 자세한 내용은 "수당", "4대보험", "실수령액" 등을 물어보세요! 🐾`;
+  // ★ Fix #54: 데이터 응답 블록에서 매칭되지 않았거나 설명형 질문이면 FAQ 매칭
+  if(onboardingStep !== 1){
+    const qaHit = matchQA(userMsg);
+    if(qaHit){
+      const prefix = memName ? `${memName}님! ` : '';
+      const catIcon = {근태:'📋',급여:'💰',세금:'💸',가계부:'💳',현실고민:'💬',앱사용법:'📱'}[qaHit.cat] || '🐱';
+      const r = `${prefix}${qaHit.a}\n\n${catIcon} _(더 궁금한 게 있으면 언제든지 물어봐!)_`;
+      chatHistory.push({ role: 'bot', text: r }); lsSave(); return r;
+    }
+  }
+
+  // ★ Fix #54: 모든 패턴 매칭에 실패하면 무조건 급여 요약을 보여주던 것을
+  //   "이해하지 못했다"는 명확한 안내로 변경(2026-06-20).
+  const r = `죄송해요. 아직 이해하지 못한 질문이에요.\n급여, 연차, 근무일수, OT, 수입, 지출 관련 질문을 해주세요.`;
+  chatHistory.push({ role: 'bot', text: r }); lsSave(); return r;
 }
 
 function addBotMsg(text){

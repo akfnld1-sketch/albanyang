@@ -143,11 +143,9 @@ function handleLogo(e){
       // PWA manifest 동적 생성
       updateManifest(b64);
 
-      // localStorage 저장 (192px 리사이즈 후 약 30KB)
-      try{
-        localStorage.setItem('companyLogo', b64);
-        if(typeof activeWpId!=='undefined' && activeWpId) wpUpdate(activeWpId,{logo:b64});
-      }catch(err){ showToast('⚠️ 저장 공간 부족으로 로고를 저장하지 못했어요'); }
+      // localStorage 저장 (single writer: saveCompanyLogo in ui.js)
+      if(typeof saveCompanyLogo==='function') saveCompanyLogo(b64);
+      else try{ localStorage.setItem('companyLogo', b64); }catch(err){ showToast('⚠️ 저장 공간 부족으로 로고를 저장하지 못했어요'); }
     };
     img.src=ev.target.result;
   };

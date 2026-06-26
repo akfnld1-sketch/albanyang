@@ -340,8 +340,8 @@ document.getElementById('sp-btn').addEventListener('click', function(){
             try{
               var _obName = (document.getElementById('ob-name-inp')||{}).value || '';
               var _obCo   = (document.getElementById('ob-company-inp')||{}).value || '';
-              if(_obCo)   localStorage.setItem('atm2_companyName', _obCo);
-              if(_obName) localStorage.setItem('atm2_ob_empName',  _obName);
+              if(typeof saveObInfo==='function') saveObInfo(_obCo, _obName);
+              else { if(_obCo) localStorage.setItem('atm2_companyName',_obCo); if(_obName) localStorage.setItem('atm2_ob_empName',_obName); }
               var _awp = localStorage.getItem('atm2_activeWp');
               var _aem = localStorage.getItem('atm2_activeEmp');
               if(_obCo && _awp && typeof wpUpdate==='function')   wpUpdate(_awp, {name:_obCo});
@@ -2197,19 +2197,19 @@ const _origShowPage = typeof showPage === 'function' ? showPage : null;
 
 <!-- 1. 가계부 (budget.js) -->
 <script src="js/storage.js?v=20260625b"></script>      <!-- [1] 상수 + 다중사업장 + STATE + localStorage -->
-<script src="js/leave.js?v=20260626b"></script>        <!-- [2] 전역변수(curY/curM/dayData) + 연차 + lsSave/lsLoad -->
-<script src="js/ui.js?v=20260623"></script>           <!-- [3] pad2/dk/showToast/calcNetHours/countWD -->
+<script src="js/leave.js?v=20260627"></script>        <!-- [2] 전역변수(curY/curM/dayData) + 연차 + lsSave/lsLoad -->
+<script src="js/ui.js?v=20260627"></script>           <!-- [3] pad2/dk/showToast/calcNetHours/countWD -->
 <script src="js/salary.js?v=20260626a"></script>       <!-- [4] fmt/getPayData + 급여계산 + 4대보험 -->
-<script src="js/budget.js?v=20260626e"></script>       <!-- [5] 생존관리 (pad2/fmt/lsSave 의존) -->
+<script src="js/budget.js?v=20260627"></script>       <!-- [5] 생존관리 (pad2/fmt/lsSave 의존) -->
 <script src="js/data-utils.js"></script>   <!-- [6] 드로어/SAO 유틸 -->
 <script src="js/nyang-emoji.js"></script>    <!-- [7-0] 감정 이모지 시스템 -->
-<script src="js/assistant.js?v=20260623b"></script>    <!-- [7] AI 챗봇 (getPayData/fmt/curY 의존) -->
-<script src="js/freelance.js?v=20260623b"></script>    <!-- [8] 프리랜서/알바 수입계산기 -->
-<script src="js/render-salary.js?v=20260626b"></script><!-- [9] 급여 렌더링 함수들 -->
+<script src="js/assistant.js?v=20260627"></script>    <!-- [7] AI 챗봇 (getPayData/fmt/curY 의존) -->
+<script src="js/freelance.js?v=20260627"></script>    <!-- [8] 프리랜서/알바 수입계산기 -->
+<script src="js/render-salary.js?v=20260627"></script><!-- [9] 급여 렌더링 함수들 -->
 <script src="js/jobtype.js?v=20260623"></script>      <!-- [10] 직업유형 선택 + 모드전환 -->
-<script src="js/calendar-modes.js?v=20260614-fix2"></script><!-- [11] 달력 렌더링 (프리랜서/알바 모드) -->
+<script src="js/calendar-modes.js?v=20260627"></script><!-- [11] 달력 렌더링 (프리랜서/알바 모드) -->
 <script src="js/notifications.js?v=20260626a"></script><!-- [12] 알람 + 스마트 알림 (최종 초기화 포함) -->
-<script src="js/init.js?v=20260626b"></script>         <!-- [13] 배경색 + 출퇴근 + 온보딩 (마지막) -->
+<script src="js/init.js?v=20260627"></script>         <!-- [13] 배경색 + 출퇴근 + 온보딩 (마지막) -->
 <script src="js/tutorial.js?v=20260626a"></script>   <!-- [14] 9단계 튜토리얼 시스템 -->
 
 

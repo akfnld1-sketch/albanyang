@@ -1032,7 +1032,7 @@ function addNjobAlba(){
   // 시급 저장
   const selectedJobs = loadSelectedJobs?loadSelectedJobs():[];
   const j = selectedJobs.find(j=>['convenience','shortAlba'].includes(j));
-  if(j){ const wk='atm2_jobWages';let wages={};try{const r=localStorage.getItem(wk);if(r)wages=JSON.parse(r);}catch(e){} wages[j]=wage; try{localStorage.setItem(wk,JSON.stringify(wages));}catch(e){} }
+  if(j){ let wages={};try{const r=localStorage.getItem('atm2_jobWages');if(r)wages=JSON.parse(r);}catch(e){} wages[j]=wage; if(typeof saveJobWages==='function') saveJobWages(wages); else try{localStorage.setItem('atm2_jobWages',JSON.stringify(wages));}catch(e){} }
   document.getElementById('njob-alba-name').value='';
   document.getElementById('njob-alba-hours').value='';
   document.getElementById('njob-alba-preview').style.display='none';
@@ -1326,7 +1326,7 @@ function saveNjobAll(){
     const wk='atm2_jobWages'; let wages={};
     try{const r=localStorage.getItem(wk);if(r)wages=JSON.parse(r);}catch(e){}
     wages['convenience'] = albaWage;
-    try{localStorage.setItem(wk,JSON.stringify(wages));}catch(e){}
+    if(typeof saveJobWages==='function') saveJobWages(wages); else try{localStorage.setItem('atm2_jobWages',JSON.stringify(wages));}catch(e){}
   }
 
   // ── 배달 저장 ──
@@ -1595,7 +1595,7 @@ function addNjobAlba(){
   const wk='atm2_jobWages'; let wages={};
   try{const r=localStorage.getItem(wk);if(r)wages=JSON.parse(r);}catch(e){}
   wages['convenience']=wage;
-  try{localStorage.setItem(wk,JSON.stringify(wages));}catch(e){}
+  if(typeof saveJobWages==='function') saveJobWages(wages); else try{localStorage.setItem('atm2_jobWages',JSON.stringify(wages));}catch(e){}
 
   // 입력 초기화
   document.getElementById('njob-alba-name').value='';

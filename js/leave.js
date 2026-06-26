@@ -424,8 +424,7 @@ function lsSave(){
     else localStorage.removeItem('atm2_leaveOverride');
     // 채팅 히스토리 (전역)
     localStorage.setItem('atm2_chatHistory', JSON.stringify(chatHistory.slice(-5)));
-    // 직업유형 + 프리랜서/알바 데이터
-    if(jobType) localStorage.setItem('atm2_jobType', jobType);
+    // 직업유형 + 프리랜서/알바 데이터 (jobType 저장은 jobtype.js 단독 담당)
     // ★ Fix #17: flData 초기화 여부 확인
     try{ if(typeof flData !== 'undefined') localStorage.setItem('atm2_flData', JSON.stringify(flData)); }catch(e2){}
     try{ localStorage.setItem('atm2_albaData', JSON.stringify(albaData)); }catch(e2){}
@@ -513,7 +512,7 @@ function lsLoad(){
           memPayday = _pdSetting || _pdBudget || _pdMem || null;
           if(memPayday){
             if(typeof budgetState !== 'undefined') budgetState.paydayDay = memPayday;
-            localStorage.setItem('payDay_setting', String(memPayday));
+            if(typeof savePayDaySetting==='function') savePayDaySetting(memPayday); else localStorage.setItem('payDay_setting', String(memPayday));
           }
         }
       }catch(e2){}
