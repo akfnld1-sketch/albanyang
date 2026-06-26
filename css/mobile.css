@@ -67,7 +67,7 @@ html { -webkit-overflow-scrolling: touch; }
     gap: 8px;
     height: 48px;
   }
-  #banner-logo { width: 30px; height: 30px; border-radius: 7px; flex-shrink: 0; font-size: 14px; }
+  #banner-logo { width: 44px; height: 44px; border-radius: 8px; flex-shrink: 0; font-size: 16px; }
 
   /* 회사명: 남은 공간 전부 차지 */
   #company-input {
@@ -98,7 +98,7 @@ html { -webkit-overflow-scrolling: touch; }
   /* ── 월 네비게이션 */
   .month-nav { margin-bottom: 10px; }
   .month-nav h2 { font-size: 20px; }
-  .month-nav button { width: 36px; height: 36px; font-size: 16px; border-radius: 7px; }
+  .month-nav button { width: 44px; height: 44px; font-size: 16px; border-radius: 8px; }
 
   /* ── 히어로 통계 카드 모바일 대응 */
   .stats-row { gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
@@ -358,6 +358,13 @@ html { -webkit-overflow-scrolling: touch; }
     z-index: 1000;
     align-items: stretch;
     box-shadow: 0 -4px 20px rgba(0,0,0,.3);
+    /* ★ Fix #60: 안드로이드 스크롤 시 떨림 완화 — fixed+box-shadow 요소를
+       별도 GPU 합성 레이어로 승격(시각적 변화 없음, 2026-06-21) */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
   }
 
   .mob-nav-btn {
@@ -415,9 +422,9 @@ html { -webkit-overflow-scrolling: touch; }
     display: flex !important;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
     border: 1px solid var(--border);
     background: var(--surface2);
     color: var(--text);
@@ -465,6 +472,7 @@ html { -webkit-overflow-scrolling: touch; }
     inset: 0;
     background: rgba(0,0,0,.55);
     z-index: 590;
+    -webkit-backdrop-filter: blur(2px);
     backdrop-filter: blur(2px);
   }
   #drawer-overlay.show { display: block; }
@@ -571,6 +579,9 @@ html { -webkit-overflow-scrolling: touch; }
     border-radius: 3px 0 0 3px;
     cursor: pointer;
     transition: background 0.2s, height 0.2s;
+    /* 시각은 5px 유지, 터치 영역을 왼쪽으로 확장 (총 44px) */
+    padding-left: 39px;
+    box-sizing: content-box;
   }
   #sao-handle.active {
     background: rgba(79,124,255,0.7);
