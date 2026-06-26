@@ -501,7 +501,9 @@ function lsLoad(){
           if(m.jobTitle)    memJobTitle   = m.jobTitle;
           if(m.hourlyRate)  memHourlyRate = m.hourlyRate;
           if(m.onboardingDone) onboardingDone = m.onboardingDone;
-          const _pdSetting = parseInt(localStorage.getItem('payDay_setting') || '0');
+          // ★ Migration: payDay_setting 없으면 atm2_payday에서 자동 복원 (기존 사용자 호환)
+          const _pdRaw = localStorage.getItem('payDay_setting') || localStorage.getItem('atm2_payday') || '0';
+          const _pdSetting = parseInt(_pdRaw);
           // ★ Fix #20: budgetLoad()가 이미 실행됐는지 확인 후 budgetState 참조
           if(typeof budgetLoad === 'function' && typeof budgetState !== 'undefined' && !budgetState._loaded){
             try{ budgetLoad(); }catch(e3){}
@@ -589,11 +591,16 @@ function resetAllData(skipConfirm){
   // ★ Fix #8: skipConfirm=true 전달 시 내부 confirm 생략 (외부에서 이미 확인한 경우)
   if(!skipConfirm && !confirm('⚠️ 모든 데이터를 초기화할까요?\n\n• 근태 기록 (전체 월)\n• 급여 설정 (시급·수당 등)\n• 회사명 및 로고\n• 저장된 모든 설정\n\n이 작업은 되돌릴 수 없습니다.')) return;
 
-  // localStorage에서 atm2_ 관련 키 전체 삭제
+  // localStorage에서 앱 관련 키 전체 삭제
   const keysToDelete = [];
   for(let i=0; i<localStorage.length; i++){
     const k = localStorage.key(i);
-    if(k && (k.startsWith('atm2_') || k === 'companyLogo')) keysToDelete.push(k);
+    if(k && (
+      k.startsWith('atm2_') ||
+      k.startsWith('pay_prev_') ||  // 전월 급여 캐시 키
+      k === 'companyLogo' ||
+      k === 'payDay_setting'         // 급여일 레거시 키
+    )) keysToDelete.push(k);
   }
   keysToDelete.forEach(k => localStorage.removeItem(k));
 

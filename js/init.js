@@ -358,8 +358,9 @@ function renderSettingsPage(){
   const page = document.getElementById('settings-page');
   if(!page){ console.error('settings-page not found'); return; }
 
-  const savedName = localStorage.getItem('atm2_companyName') || '';
-  const savedWage = localStorage.getItem('atm2_baseWage') || '10320';
+  const savedName    = localStorage.getItem('atm2_companyName') || '';
+  const savedEmpName = localStorage.getItem('atm2_ob_empName')  || '';
+  const savedWage    = localStorage.getItem('atm2_baseWage') || '10320';
   // ★ Fix #2: 전역 변수명은 'wt' (leave.js:4), 'workType'은 미정의
   const currentWT = typeof wt !== 'undefined' ? wt : localStorage.getItem('atm2_workType') || 'day';
   const currentAlarm = localStorage.getItem('atm2_alarmSound') || 'beep';
@@ -518,19 +519,33 @@ function renderSettingsPage(){
     }
   }
 
+  const _roStyle = 'width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text3);border-radius:8px;padding:9px 12px;font-size:18px;font-family:\'Noto Sans KR\';outline:none;box-sizing:border-box;cursor:default;';
+  const _rwStyle = 'width:100%;background:var(--surface2);border:1px solid var(--accent);color:var(--text);border-radius:8px;padding:9px 12px;font-size:18px;font-family:\'Noto Sans KR\';outline:none;box-sizing:border-box;';
+
   html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:12px;">
-    <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:14px;">📋 기본 정보</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div style="font-size:17px;font-weight:700;color:var(--text);">📋 기본 정보</div>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px;color:var(--accent);font-weight:600;">
+        <input type="checkbox" id="set-basic-edit-toggle"
+          onchange="toggleSettingsEdit(this.checked)"
+          style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;">
+        ✏️ 수정하기
+      </label>
+    </div>
     <div style="margin-bottom:10px;">
       <div style="font-size:16px;color:var(--text3);margin-bottom:5px;">사업장/회사명</div>
       <input id="set-company-name" type="text" value="${savedName}" placeholder="예: 주식회사 머니냥"
-        style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);
-               border-radius:8px;padding:9px 12px;font-size:18px;font-family:'Noto Sans KR';outline:none;box-sizing:border-box;">
+        readonly style="${_roStyle}">
+    </div>
+    <div style="margin-bottom:10px;">
+      <div style="font-size:16px;color:var(--text3);margin-bottom:5px;">이름 (내 정보)</div>
+      <input id="set-emp-name" type="text" value="${savedEmpName}" placeholder="예: 홍길동"
+        readonly style="${_roStyle}">
     </div>
     <div style="margin-bottom:12px;">
       <div style="font-size:16px;color:var(--text3);margin-bottom:5px;">기본 시급 (원)</div>
       <input id="set-base-wage" type="number" value="${savedWage}" min="9860" step="10"
-        style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);
-               border-radius:8px;padding:9px 12px;font-size:18px;font-family:'JetBrains Mono';font-weight:700;outline:none;box-sizing:border-box;">
+        readonly style="${_roStyle.replace('Noto Sans KR','JetBrains Mono')}">
       <div style="font-size:15px;color:var(--text3);margin-top:3px;">2026년 최저시급 10,320원</div>
     </div>
     <div style="margin-bottom:14px;">
@@ -1066,9 +1081,10 @@ function saveAllPaydaySettings(){
     }
   });
   try{ localStorage.setItem('atm2_payday_settings', JSON.stringify(settings)); }catch(e){}
-  // 기존 직장인 급여일 호환성 유지
+  // 기존 직장인 급여일 호환성 유지 — atm2_payday + payDay_setting 동시 기록
   if(settings.employee?.day){
-    localStorage.setItem('atm2_payday', String(settings.employee.day));
+    localStorage.setItem('atm2_payday',     String(settings.employee.day));
+    localStorage.setItem('payDay_setting',  String(settings.employee.day));
     const el = document.getElementById('payday-input');
     if(el){ el.value = settings.employee.day; if(typeof savePayday==='function') savePayday(); }
   }
@@ -1081,11 +1097,11 @@ function savePaydayFromSettings(){
   if(!val){ showToast('⚠️ 급여일을 입력해주세요'); return; }
   const paydayInp = document.getElementById('payday-input');
   if(paydayInp) paydayInp.value = val;
+  // atm2_payday + payDay_setting 동시 기록 (leave.js 알림 계산 호환)
+  localStorage.setItem('atm2_payday',    val);
+  localStorage.setItem('payDay_setting', val);
   if(typeof savePayday === 'function') savePayday();
-  else {
-    localStorage.setItem('atm2_payday', val);
-    showToast('✅ 급여일 ' + val + '일 저장됨');
-  }
+  else showToast('✅ 급여일 ' + val + '일 저장됨');
 }
 
 
@@ -1102,17 +1118,36 @@ function saveNjobWages(){
   showToast('✅ N잡 단가 설정 저장됨');
 }
 
-// ── 기본 설정 저장 (회사명 + 시급 + 입사일) ──
+// ── 기본정보 ReadOnly 토글 ──
+function toggleSettingsEdit(checked){
+  const ids = ['set-company-name','set-emp-name','set-base-wage'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.readOnly = !checked;
+    el.style.color  = checked ? 'var(--text)'  : 'var(--text3)';
+    el.style.cursor = checked ? 'text' : 'default';
+    el.style.borderColor = checked ? 'var(--accent)' : 'var(--border)';
+  });
+}
+
+// ── 기본 설정 저장 (회사명 + 이름 + 시급 + 입사일) ──
 function saveBasicSettings(){
-  const name  = (document.getElementById('set-company-name')?.value||'').trim();
-  const wage  = parseFloat(document.getElementById('set-base-wage')?.value||'10320');
-  const hire  = document.getElementById('set-hire-date')?.value||'';
+  const name    = (document.getElementById('set-company-name')?.value||'').trim();
+  const empName = (document.getElementById('set-emp-name')?.value||'').trim();
+  const wage    = parseFloat(document.getElementById('set-base-wage')?.value||'10320');
+  const hire    = document.getElementById('set-hire-date')?.value||'';
 
   // 회사명 저장
   if(name){
     localStorage.setItem('atm2_companyName', name);
     const compEl = document.getElementById('company-name');
     if(compEl) compEl.textContent = name;
+  }
+
+  // 사용자 이름 저장 (온보딩 키와 동기화)
+  if(empName){
+    localStorage.setItem('atm2_ob_empName', empName);
   }
 
   // 시급 저장
@@ -1143,7 +1178,7 @@ function saveBasicSettings(){
 
   lsSave();
   showToast('✅ 설정이 저장됐습니다!');
-  // 연차 현황 갱신
+  // 저장 후 ReadOnly로 복원 (renderSettingsPage가 재렌더링하므로 체크박스 자동 초기화됨)
   renderSettingsPage();
 }
 
