@@ -1507,7 +1507,8 @@ function importData(event){
         let count = 0;
         Object.keys(data).forEach(k => {
           if(k.startsWith('atm2_')){
-            localStorage.setItem(k, data[k]);
+            const v = data[k];
+            localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
             count++;
           }
         });
