@@ -1305,7 +1305,7 @@ function askAlbayang(question){
 }
 
 function saveDay(){
-  if(pSt==='none'){ delete dayData[editKey]; closePopup(); renderCalendar(); lsSave(); return; }
+  if(pSt==='none'){ delete dayData[editKey]; closePopup(); renderCalendar(); lsSave(); updateTodayPanel(); return; }
   const note=document.getElementById('p-note').value;
   const se=document.getElementById('t-start');
   const ee=document.getElementById('t-end');
@@ -1317,6 +1317,7 @@ function saveDay(){
   dayData[editKey]=entry;
   closePopup(); renderCalendar(); lsSave();
   if(document.getElementById('salary-page').style.display!=='none') renderSalary();
+  updateTodayPanel();
 }
 
 // ── 팝업 퀵 저장 함수들 ──
@@ -1351,6 +1352,7 @@ function quickSave(type){
   }
   closePopup(); renderCalendar(); lsSave();
   if(document.getElementById('salary-page').style.display!=='none') renderSalary();
+  updateTodayPanel();
 }
 
 // 반차·조퇴·휴일근무·토요특근·일요특근: 현재시각 출근으로, end=+반차4h/나머지8h
@@ -1364,6 +1366,7 @@ function quickSaveTime(type){
   dayData[editKey]=entry;
   closePopup(); renderCalendar(); lsSave();
   if(document.getElementById('salary-page').style.display!=='none') renderSalary();
+  updateTodayPanel();
   showToast(`✅ ${type==='half'?'반차':type==='early'?'조퇴':'근무'} 기록 완료 (${kstNowStr()})`);
 }
 
@@ -1379,6 +1382,7 @@ function quickCheckIn(){
   dayData[editKey]=entry;
   closePopup(); renderCalendar(); lsSave();
   if(document.getElementById('salary-page').style.display!=='none') renderSalary();
+  updateTodayPanel();
   showToast(`✅ 출근 기록 완료 (${kstNowStr()})`);
 }
 
@@ -1396,6 +1400,7 @@ function quickCheckOut(){
   dayData[editKey]=saved;
   closePopup(); renderCalendar(); lsSave();
   if(document.getElementById('salary-page').style.display!=='none') renderSalary();
+  updateTodayPanel();
   showToast(`🔴 퇴근 기록 완료 (${kstNowStr()})`);
 }
 
