@@ -498,9 +498,13 @@ function renderStats(wDays,lDays,absDays,totOT,satH,sunH){
     <div style="width:100%;display:flex;gap:10px;flex-wrap:wrap;">
 
       <!-- 히어로: 예상 실수령 -->
-      <div style="flex:2;min-width:200px;align-self:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 20px;position:relative;">
-        <div style="font-size:11px;color:var(--text3);font-weight:600;letter-spacing:.5px;margin-bottom:6px;">${wDays > 0 ? '예상 실수령액' : (netPay > 0 ? '기록 전 예상 실수령액' : '예상 실수령액')}
-          <span style="font-weight:400;opacity:.85;">· 기록할수록 더 정확해져요</span>
+      <div style="flex:2;min-width:200px;align-self:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 20px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;">
+          <div style="font-size:11px;color:var(--text3);font-weight:600;letter-spacing:.5px;line-height:1.5;">${wDays > 0 ? '예상 실수령액' : (netPay > 0 ? '기록 전 예상 실수령액' : '예상 실수령액')}<br><span style="font-weight:400;opacity:.85;">· 기록할수록 더 정확해져요</span></div>
+          <div style="font-size:10px;color:var(--text3);text-align:right;line-height:1.6;flex-shrink:0;">
+            <div>기본급 <b style="color:var(--text2);font-family:'JetBrains Mono';">${basePay > 0 ? (basePay).toLocaleString() : '—'}</b></div>
+            <div>공제 <b style="color:var(--red);font-family:'JetBrains Mono';">${totDeduct > 0 ? '-'+totDeduct.toLocaleString() : '—'}</b></div>
+          </div>
         </div>
         <div style="font-size:28px;font-weight:900;font-family:'JetBrains Mono';color:var(--green);line-height:1.1;">
           ${netPay > 0 ? netPay.toLocaleString() + '<span style="font-size:14px;font-weight:600;margin-left:2px;">원</span>' : '<span style="font-size:15px;color:var(--text3);">아직 기록이 없어요</span>'}
@@ -516,10 +520,6 @@ function renderStats(wDays,lDays,absDays,totOT,satH,sunH){
           </div>
         </div>
         ${netPay > 0 ? `<div style="font-size:12px;font-weight:700;color:var(--accent);margin-top:10px;">이 돈으로 다음 월급날까지 버틸 수 있을까요?</div>` : ''}
-        <div style="position:absolute;top:12px;right:14px;font-size:10px;color:var(--text3);text-align:right;line-height:1.6;">
-          <div>기본급 <b style="color:var(--text2);font-family:'JetBrains Mono';">${basePay > 0 ? (basePay).toLocaleString() : '—'}</b></div>
-          <div>공제 <b style="color:var(--red);font-family:'JetBrains Mono';">${totDeduct > 0 ? '-'+totDeduct.toLocaleString() : '—'}</b></div>
-        </div>
       </div>
 
       <!-- 서브 카드들 -->
