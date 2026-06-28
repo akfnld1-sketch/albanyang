@@ -1469,75 +1469,11 @@ function uigSkip(){
 // 데이터 백업 / 복원 / 전체 초기화
 // ══════════════════════════════════════════
 
-function exportData(){
-  try {
-    const backup = {};
-    for(let i = 0; i < localStorage.length; i++){
-      const k = localStorage.key(i);
-      if(k && k.startsWith('atm2_')){
-        backup[k] = localStorage.getItem(k);
-      }
-    }
-    const json = JSON.stringify(backup, null, 2);
-    const blob = new Blob([json], {type:'application/json'});
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    const date = new Date().toISOString().slice(0,10);
-    a.href     = url;
-    a.download = `moneynyang_backup_${date}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    if(typeof showToast === 'function') showToast('💾 백업 파일이 다운로드되었습니다!');
-  } catch(e) {
-    alert('백업 중 오류가 발생했습니다: ' + e.message);
-  }
-}
+// exportData: leave.js에 iOS/Android 분기 처리된 버전이 정의되어 있으므로 여기서는 생략
+// (init.js가 leave.js보다 나중에 로드되어 덮어쓰는 문제 방지)
 
-function importData(event){
-  const file = event.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e){
-    try {
-      const data = JSON.parse(e.target.result);
-      showCustomConfirm('현재 데이터를 덮어쓰고 복원할까요?\n백업 파일의 데이터로 교체됩니다!', function(){
-        // [S3 버그 수정] v11_migrated 플래그를 먼저 제거해 구버전 백업도 마이그레이션이 재실행되도록 보장
-        localStorage.removeItem('atm2_v11_migrated');
-
-        let count = 0;
-        Object.keys(data).forEach(k => {
-          if(k.startsWith('atm2_')){
-            const v = data[k];
-            localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
-            count++;
-          }
-        });
-
-        // [v10 하위호환] atm2_selectedJobs 없고 atm2_jobType 있으면 자동 변환
-        if(!data['atm2_selectedJobs'] && data['atm2_jobType']){
-          var jt = data['atm2_jobType'];
-          var jobs = jt === 'employee' ? ['employee']
-                   : jt === 'multi'    ? []
-                   : (jt ? [jt] : []);
-          if(jobs.length > 0){
-            localStorage.setItem('atm2_selectedJobs', JSON.stringify(jobs));
-          }
-        }
-
-        // [atm2_ 외 키] 로고·급여일 설정 별도 복원
-        if(data['companyLogo']) localStorage.setItem('companyLogo', data['companyLogo']);
-        if(data['payDay_setting']) localStorage.setItem('payDay_setting', data['payDay_setting']);
-
-        if(typeof showToast === 'function') showToast(`✅ ${count}개 항목 복원 완료! 앱을 새로고침합니다.`);
-        setTimeout(() => location.reload(), 1200);
-      });
-    } catch(err) {
-      alert('복원 실패: 올바른 백업 파일인지 확인해주세요.\n' + err.message);
-    }
-    event.target.value = '';
-  };
-  reader.readAsText(file);
-}
+// importData: leave.js에 완전한 버전이 정의되어 있으므로 여기서는 생략
+// (init.js가 leave.js보다 나중에 로드되어 덮어쓰는 문제 방지)
 
 function resetAllData(){
   showCustomConfirm('⚠️ 모든 데이터를 초기화할까요?\n\n근태 기록, 급여 설정 등 저장된 모든 데이터가 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.', function(){

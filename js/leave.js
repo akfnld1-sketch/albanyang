@@ -799,39 +799,13 @@ function openImportDialog(){
 function importFromPaste(){
   const ta = document.getElementById('import-paste-area');
   if(!ta || !ta.value.trim()){ showToast('⚠️ 붙여넣을 데이터가 없습니다.'); return; }
-  const fakeEvent = {
-    target: {
-      files: [new Blob([ta.value], {type:'application/json'})],
-      value: ''
-    }
-  };
-  // Blob을 File처럼 다루기 위해 직접 파싱
   const text = ta.value.trim();
   document.getElementById('import-paste-overlay').style.display = 'none';
-  // importData 로직 재사용
   try{
     const fakeFile = new File([text], 'restore.json', {type:'application/json'});
-    const dt = new DataTransfer();
-    dt.items.add(fakeFile);
-    const inp = document.getElementById('import-inp');
-    inp.files = dt.files;
     importData({target:{files:[fakeFile], value:''}});
   }catch(e){
-    // DataTransfer 미지원 시 직접 처리
-    const reader = new FileReader();
-    reader.onload = ev => importData({target:{files:[{...ev}], result:text, value:''}});
-    // 직접 텍스트로 파싱
-    try{
-      const allData = JSON.parse(text);
-      const fakeEv = { target: { result: text, files: [], value:'' } };
-      // FileReader.onload 흉내
-      (function(){
-        const ev = { target: { result: text } };
-        importData({ target: { files: [{ name:'paste.json' }], value:'' } });
-        // 실제로는 아래 직접 호출
-      })();
-    }catch(e2){}
-    // 가장 단순한 방법으로 직접 처리
+    // File 생성 실패(구형 iOS 등) → directImport로 직접 처리
     directImport(text);
   }
 }
@@ -866,7 +840,8 @@ function directImport(text){
     try{ updateLegend(); }catch(e2){}
     try{ renderCalendar(); }catch(e2){}
     try{ renderLeaveInfo(); }catch(e2){}
-    showToast('✅ 복원 완료!');
+    showToast('✅ 복원 완료! 앱을 새로고침합니다.');
+    setTimeout(() => location.reload(), 1200);
   }catch(err){ showToast('❌ 복원 실패: '+err.message); }
 }
 
@@ -890,14 +865,22 @@ function importData(e){
       }
 
       // ── 1. localStorage에 atm2_ 키 전체 직접 복원 (가장 중요) ──
+      // 구버전 백업도 마이그레이션이 재실행되도록 플래그 제거
+      localStorage.removeItem('atm2_v11_migrated');
       Object.keys(allData).forEach(k => {
-        if(k.startsWith('atm2_') || k.startsWith('pay_prev_') || k.startsWith('companyLogo')){
+        if(k.startsWith('atm2_') || k.startsWith('pay_prev_') || k === 'companyLogo' || k === 'payDay_setting'){
           try{
             const v = allData[k];
             localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
           }catch(e2){}
         }
       });
+      // v10 하위호환: atm2_selectedJobs 없고 atm2_jobType 있으면 자동 변환
+      if(!allData['atm2_selectedJobs'] && allData['atm2_jobType']){
+        const jt = allData['atm2_jobType'];
+        const jobs = jt === 'employee' ? ['employee'] : jt === 'multi' ? [] : (jt ? [jt] : []);
+        if(jobs.length > 0) localStorage.setItem('atm2_selectedJobs', JSON.stringify(jobs));
+      }
 
       // ── 2. dayData 메모리 복원 ──
       dayData = {};
@@ -987,7 +970,8 @@ function importData(e){
       try{ renderCalendar(); }catch(e2){}
       try{ renderLeaveInfo(); }catch(e2){}
 
-      showToast('✅ 복원 완료! 모든 데이터가 불러와졌습니다.');
+      showToast('✅ 복원 완료! 앱을 새로고침합니다.');
+      setTimeout(() => location.reload(), 1200);
     }catch(err){
       showToast('❌ 복원 실패: ' + err.message);
       console.error('Import error:', err);
