@@ -657,11 +657,12 @@ function resetAllData(skipConfirm){
 }
 
 function exportData(){
+  try{ if(typeof lsSaveAll === 'function') lsSaveAll(); else if(typeof lsSave === 'function') lsSave(); }catch(e){}
   // localStorage 전체 근태 데이터 수집
   const allData = {};
   for(let i=0; i<localStorage.length; i++){
     const k = localStorage.key(i);
-    if(k && k.startsWith('atm2_')){
+    if(k && (k.startsWith('atm2_') || k.startsWith('pay_prev_') || k === 'companyLogo' || k === 'payDay_setting')){
       try{ allData[k] = JSON.parse(localStorage.getItem(k)); }catch(e){ allData[k]=localStorage.getItem(k); }
     }
   }
@@ -743,6 +744,31 @@ function exportData(){
 }
 
 function _fallbackDownload(blob, fileName){
+  try{
+    if(window.showSaveFilePicker){
+      const saveWithPicker = async () => {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: fileName,
+          types: [{ description: 'JSON backup', accept: { 'application/json': ['.json'] } }]
+        });
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        showToast('💾 백업 파일이 저장되었습니다!');
+      };
+      saveWithPicker().catch(err => {
+        if(err && err.name === 'AbortError') return;
+        _anchorDownload(blob, fileName);
+      });
+      return;
+    }
+    _anchorDownload(blob, fileName);
+  }catch(err){
+    showToast('❌ 백업 실패: ' + err.message);
+  }
+}
+
+function _anchorDownload(blob, fileName){
   try{
     const url = URL.createObjectURL(blob);
     const a   = document.createElement('a');
@@ -1045,4 +1071,3 @@ function applyHolidays(){
   renderCalendar();
   showToast(cnt>0 ? `🗓️ ${cnt}개 공휴일을 표시했습니다.` : '이번 달 신규 공휴일 없음 (이미 적용됨)');
 }
-
