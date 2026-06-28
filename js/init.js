@@ -528,6 +528,7 @@ function renderSettingsPage(){
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px;color:var(--accent);font-weight:600;">
         <input type="checkbox" id="set-basic-edit-toggle"
           onchange="toggleSettingsEdit(this.checked)"
+          ${(!savedName && !savedEmpName) ? 'checked' : ''}
           style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;">
         ✏️ 수정하기
       </label>
@@ -811,7 +812,7 @@ function renderSettingsPage(){
         style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border);
                background:var(--surface2);color:var(--text);font-size:17px;font-weight:600;
                cursor:pointer;font-family:'Noto Sans KR';text-align:left;">📤 데이터 백업</button>
-      <button onclick="document.getElementById('import-inp2').click()"
+      <button onclick="openImportDialog()"
         style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border);
                background:var(--surface2);color:var(--text);font-size:17px;font-weight:600;
                cursor:pointer;font-family:'Noto Sans KR';text-align:left;">📥 데이터 복원</button>
@@ -852,6 +853,10 @@ function renderSettingsPage(){
   page.innerHTML = html;
   // 설정 탭 스마트 알림 토글 렌더 (smart-notif-toggles-s)
   setTimeout(_renderSettingsNotifToggles, 0);
+  // 신규 사용자(이름·회사명 미입력)는 바로 편집 모드 활성화
+  if(!savedName && !savedEmpName){
+    setTimeout(() => toggleSettingsEdit(true), 0);
+  }
 }
 
 // 설정 탭 전용 스마트 알림 토글 렌더 (notifications.js const TDZ 우회)
