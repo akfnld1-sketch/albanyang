@@ -7,7 +7,7 @@
 
 // ★ Fix #70: 근태관리 히어로카드에 생존관리로 이어지는 질문형 문구 추가
 //   ("이 돈으로 다음 월급날까지 버틸 수 있을까요?") — 기능 변경 없음 (2026-06-22)
-const CACHE_NAME = 'moneynyang-v1-cache-v106';
+const CACHE_NAME = 'moneynyang-v1-cache-v108';
 
 // ── 로컬 파일 (분리된 CSS/JS 전체) ──
 // ★ index.html의 <script>/<link> 태그와 쿼리스트링이 항상 일치해야 함 (불일치 시 사전 캐시 무의미)
@@ -21,7 +21,7 @@ const LOCAL_RESOURCES = [
   './img/icons/app-icon-512.png',
   './js/sw-init.js',
   './js/storage.js?v=20260628',
-  './js/leave.js?v=20260628d',
+  './js/leave.js?v=20260628f',
   './js/ui.js?v=20260628c',
   './js/salary.js?v=20260627',
   './js/budget.js?v=20260627',

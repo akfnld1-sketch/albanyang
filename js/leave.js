@@ -722,28 +722,38 @@ function exportData(){
     return;
   }
 
-  // Android Chrome / 데스크탑: 파일 직접 다운로드
+  // Android Chrome / 데스크탑
+  const blob = new Blob([json], {type:'application/json;charset=utf-8'});
+
+  // 1순위: Web Share API (Android PWA 설치형에서 가장 확실)
+  if(navigator.canShare){
+    try{
+      const shareFile = new File([blob], fileName, {type:'application/json'});
+      if(navigator.canShare({ files:[shareFile] })){
+        navigator.share({ files:[shareFile], title: fileName })
+          .then(()=> showToast('✅ 백업 완료! 파일을 저장하거나 공유하세요.'))
+          .catch(err=>{ if(err.name !== 'AbortError') _fallbackDownload(blob, fileName); });
+        return;
+      }
+    }catch(e){}
+  }
+
+  // 2순위: <a download> (Desktop Chrome, 일반 Android Chrome)
+  _fallbackDownload(blob, fileName);
+}
+
+function _fallbackDownload(blob, fileName){
   try{
-    const blob = new Blob([json], {type:'application/json;charset=utf-8'});
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href = url;
+    const url = URL.createObjectURL(blob);
+    const a   = document.createElement('a');
+    a.href     = url;
     a.download = fileName;
     document.body.appendChild(a);
     a.click();
-    // revokeObjectURL을 딜레이 후 실행 (모바일 다운로드 보장)
     setTimeout(()=>{ URL.revokeObjectURL(url); document.body.removeChild(a); }, 3000);
-    showToast('💾 백업 파일 다운로드 중...');
+    showToast('💾 백업 파일이 다운로드 폴더에 저장됩니다.');
   }catch(err){
-    // 최후 수단: 데이터 URI
-    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
-    const a = document.createElement('a');
-    a.href = dataUri;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(()=> document.body.removeChild(a), 1000);
-    showToast('💾 백업 파일 저장 중...');
+    showToast('❌ 백업 실패: ' + err.message);
   }
 }
 
