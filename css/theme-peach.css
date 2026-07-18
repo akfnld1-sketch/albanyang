@@ -1,0 +1,64 @@
+/* ══════════════════════════════════════════════════════════════
+   머니냥 피치 테마 (theme-peach.css) — 시안 E
+   웜 피치 톤: 따뜻하고 포근한 느낌. 파스텔(크림)보다 한 톤 더 웜.
+   원칙: add-only 오버라이드 (theme-pastel.css와 동일 패턴).
+   라이트 모드만 재정의 — 다크 모드는 기존 유지.
+   ══════════════════════════════════════════════════════════════ */
+:root {
+  --bg:#fdf4ef;
+  --surface:#ffffff;
+  --surface2:#f8e9df;
+  --surface3:#f2ded0;
+  --border:#f4e3d6;
+
+  --green:#2b9e60;
+  --red:#dd4545;
+  --yellow:#d9920e;
+  --orange:#dd7016;
+
+  --text:#43302a;
+  --text2:#57433c;
+  --text3:#77625a;
+
+  --radius:20px;
+  --shadow:0 4px 24px rgba(170,100,60,.13);
+
+  --mn-att-work:#2b9e60;
+  --mn-att-leave:#3b6fe0;
+  --mn-att-half:#8c52d9;
+  --mn-att-late:#dd7016;
+  --mn-att-early:#d9920e;
+  --mn-att-absent:#dd4545;
+  --mn-shadow-1:0 2px 10px rgba(170,100,60,.08);
+  --mn-shadow-2:0 6px 18px rgba(170,100,60,.12);
+  --mn-shadow-3:0 16px 48px rgba(170,100,60,.17);
+}
+:root:not([data-theme="dark"]) .mn-card,
+:root:not([data-theme="dark"]) .stat-card,
+:root:not([data-theme="dark"]) .budget-card,
+:root:not([data-theme="dark"]) .popup{
+  border-radius:22px;
+  box-shadow:0 2px 10px rgba(170,100,60,.08);
+}
+:root:not([data-theme="dark"]) .cal-day{ border-radius:12px; }
+:root:not([data-theme="dark"]) .mn-btn,
+:root:not([data-theme="dark"]) .btn{ border-radius:16px; }
+:root:not([data-theme="dark"]) #banner{ background:#ffffff; }
+:root:not([data-theme="dark"]) #sidebar{ background:#ffffff; }
+:root:not([data-theme="dark"]) #ob-next,
+:root:not([data-theme="dark"]) #ob-progress-fill{
+  background:linear-gradient(135deg,#ff8a5c,#ffab7c);
+}
+:root:not([data-theme="dark"]) #mob-nav{
+  background:#ffffff;
+  border-top:1px solid #f4e3d6;
+  box-shadow:0 -4px 16px rgba(170,100,60,.06);
+}
+:root:not([data-theme="dark"]) .cal-day.today{ background:rgba(255,138,92,.14); }
+:root:not([data-theme="dark"]) .mn-char-bubble{
+  border:2px dashed #eed3bd;
+  border-radius:20px;
+}
+:root:not([data-theme="dark"]) .mn-char-bubble::before{
+  border-left:2px dashed #eed3bd; border-top:2px dashed #eed3bd;
+}

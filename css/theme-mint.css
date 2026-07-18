@@ -1,0 +1,64 @@
+/* ══════════════════════════════════════════════════════════════
+   머니냥 민트 테마 (theme-mint.css) — 시안 C
+   민트 그린 톤: 산뜻하고 건강한 느낌. 저축·성장 이미지.
+   원칙: add-only 오버라이드 (theme-pastel.css와 동일 패턴).
+   라이트 모드만 재정의 — 다크 모드는 기존 유지.
+   ══════════════════════════════════════════════════════════════ */
+:root {
+  --bg:#f2faf5;
+  --surface:#ffffff;
+  --surface2:#e6f4ec;
+  --surface3:#daeee2;
+  --border:#deefe4;
+
+  --green:#1f9e63;
+  --red:#dd4a4a;
+  --yellow:#d99a14;
+  --orange:#dd7c22;
+
+  --text:#1e3a30;
+  --text2:#315044;
+  --text3:#557064;
+
+  --radius:18px;
+  --shadow:0 4px 24px rgba(40,120,80,.12);
+
+  --mn-att-work:#1f9e63;
+  --mn-att-leave:#3b6fe0;
+  --mn-att-half:#8c52d9;
+  --mn-att-late:#dd7c22;
+  --mn-att-early:#d99a14;
+  --mn-att-absent:#dd4a4a;
+  --mn-shadow-1:0 2px 10px rgba(40,120,80,.07);
+  --mn-shadow-2:0 6px 18px rgba(40,120,80,.11);
+  --mn-shadow-3:0 16px 48px rgba(40,120,80,.16);
+}
+:root:not([data-theme="dark"]) .mn-card,
+:root:not([data-theme="dark"]) .stat-card,
+:root:not([data-theme="dark"]) .budget-card,
+:root:not([data-theme="dark"]) .popup{
+  border-radius:20px;
+  box-shadow:0 2px 10px rgba(40,120,80,.07);
+}
+:root:not([data-theme="dark"]) .cal-day{ border-radius:12px; }
+:root:not([data-theme="dark"]) .mn-btn,
+:root:not([data-theme="dark"]) .btn{ border-radius:14px; }
+:root:not([data-theme="dark"]) #banner{ background:#ffffff; }
+:root:not([data-theme="dark"]) #sidebar{ background:#ffffff; }
+:root:not([data-theme="dark"]) #ob-next,
+:root:not([data-theme="dark"]) #ob-progress-fill{
+  background:linear-gradient(135deg,#4f7cff,#6b9fff);
+}
+:root:not([data-theme="dark"]) #mob-nav{
+  background:#ffffff;
+  border-top:1px solid #deefe4;
+  box-shadow:0 -4px 16px rgba(40,120,80,.06);
+}
+:root:not([data-theme="dark"]) .cal-day.today{ background:rgba(31,158,99,.12); }
+:root:not([data-theme="dark"]) .mn-char-bubble{
+  border:2px dashed #c8e6d4;
+  border-radius:18px;
+}
+:root:not([data-theme="dark"]) .mn-char-bubble::before{
+  border-left:2px dashed #c8e6d4; border-top:2px dashed #c8e6d4;
+}

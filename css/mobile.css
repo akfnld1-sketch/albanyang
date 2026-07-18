@@ -8,7 +8,11 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left:   env(safe-area-inset-left, 0px);
   --safe-right:  env(safe-area-inset-right, 0px);
-  --mob-nav-h:   60px;
+  /* --mob-nav-h은 main.css :root의 --ui-scale에 연동 */
+  /* AI FAB(#asst-btn)가 차지하는 수직/수평 공간 — 데스크톱은 영향 없도록 기본 0,
+     모바일 미디어쿼리에서만 실제 값으로 override (index.html #asst-btn과 함께 관리) */
+  --fab-h: 0px;
+  --fab-w: 0px;
 }
 
 /* ── 전체 스크롤 관성 (iOS 모멘텀) */
@@ -18,6 +22,10 @@ html { -webkit-overflow-scrolling: touch; }
    768px 이하 — 태블릿/중간 화면
 ══════════════════════════════════ */
 @media (max-width: 768px) {
+  /* AI FAB 버튼 52px + 자체 bottom 오프셋 20px + 여유 12px — 스크롤 콘텐츠가 FAB에 가려지지 않도록 */
+  /* FAB 버튼 52px + 우측 오프셋 20px + 여유 8px — 스크롤 중에도 카드 우측 콘텐츠가 FAB와 겹치지 않도록 */
+  :root { --fab-h: 84px; --fab-w: 80px; }
+
   /* 사이드바 숨김 */
   #sidebar { display: none; }
 
@@ -25,7 +33,7 @@ html { -webkit-overflow-scrolling: touch; }
   #app { height: auto; }
   #main {
     padding: 12px 10px;
-    padding-bottom: calc(var(--mob-nav-h) + var(--safe-bottom) + 12px);
+    padding-bottom: calc(var(--mob-nav-h) + var(--safe-bottom) + var(--fab-h, 0px) + 12px);
   }
 
   /* 배너 컴팩트 */
@@ -92,7 +100,7 @@ html { -webkit-overflow-scrolling: touch; }
   #app { flex-direction: column; height: auto; }
   #main {
     padding: 10px 8px;
-    padding-bottom: calc(var(--mob-nav-h) + var(--safe-bottom) + 10px);
+    padding-bottom: calc(var(--mob-nav-h) + var(--safe-bottom) + var(--fab-h, 0px) + 10px);
   }
 
   /* ── 월 네비게이션 */
@@ -108,9 +116,9 @@ html { -webkit-overflow-scrolling: touch; }
     min-width: 0 !important;
     grid-template-columns: repeat(3,1fr) !important;
   }
-  .stat-card { min-width: 0; padding: 10px 12px; flex: 1; border-radius: 10px; }
-  .stat-card .lbl { font-size: 11px; }
-  .stat-card .val { font-size: 16px; }
+  .stat-card { min-width: 0; padding: var(--card-pad, 10px) 12px; flex: 1; border-radius: 10px; }
+  .stat-card .lbl { font-size: var(--font-sm, 11px); }
+  .stat-card .val { font-size: var(--font-md, 16px); }
 
   /* ── 주차 토/일 토글 */
   .week-toggle-wrap { margin-bottom: 10px; }
@@ -128,13 +136,13 @@ html { -webkit-overflow-scrolling: touch; }
   .cal-grid { gap: 2px; }
   .cal-hdr { padding: 7px 2px; font-size: 11px; }
   .cal-day {
-    min-height: 90px;
+    min-height: var(--cal-cell-h, 72px);
     padding: 5px 4px;
     border-radius: 8px;
   }
-  .dn { font-size: 12px; margin-bottom: 2px; }
+  .dn { font-size: var(--font-sm, 11px); margin-bottom: 2px; }
   .ds {
-    font-size: 9px;
+    font-size: var(--font-xs, 9px);
     padding: 1px 3px;
     border-radius: 3px;
     margin-bottom: 1px;
@@ -173,7 +181,7 @@ html { -webkit-overflow-scrolling: touch; }
   .t-sel { padding: 9px 10px; font-size: 14px; }
   .note-inp { padding: 10px; font-size: 13px; height: 56px; margin-bottom: 12px; }
   .p-btns { gap: 7px; }
-  .btn { padding: 11px 20px; font-size: 13px; border-radius: 7px; }
+  .btn { padding: 11px 20px; font-size: var(--font-base, 13px); border-radius: 7px; min-height: var(--btn-h, 44px); }
   .sh-btn { padding: 9px; font-size: 13px; }
   .calc-prev { padding: 10px 12px; font-size: 12px; }
 
@@ -293,11 +301,12 @@ html { -webkit-overflow-scrolling: touch; }
 
   /* ── AI 어시스턴트 패널 */
   #asst-btn {
-    /* 모바일에서 플로팅 버튼 숨김 — 탭바에 통합 */
-    display: none !important;
+    /* 모바일: 크기 축소 (위치는 index.html 인라인 CSS의 calc로 처리) */
+    width: 52px !important;
+    height: 52px !important;
   }
   #asst-bubble {
-    bottom: calc(var(--mob-nav-h) + var(--safe-bottom) + 8px);
+    bottom: calc(var(--mob-nav-h) + var(--safe-bottom) + 74px);
     right: 14px;
     font-size: 12px;
     padding: 8px 12px;
@@ -377,7 +386,7 @@ html { -webkit-overflow-scrolling: touch; }
     background: transparent;
     border: none;
     color: var(--text3);
-    font-size: 10px;
+    font-size: var(--mob-label, 10px);
     font-weight: 700;
     font-family: 'Noto Sans KR', sans-serif;
     cursor: pointer;
@@ -388,7 +397,7 @@ html { -webkit-overflow-scrolling: touch; }
   }
 
   .mob-nav-btn .icon {
-    font-size: 20px;
+    font-size: var(--mob-icon, 22px);
     line-height: 1;
     transition: transform .2s;
   }
@@ -696,3 +705,271 @@ html { -webkit-overflow-scrolling: touch; }
 @media (min-width: 481px) {
   .btn-txt { display: inline; }
 }
+
+/* ══════════════════════════════════
+   Home 대시보드 — #home-page
+══════════════════════════════════ */
+#home-page {
+  padding-bottom: calc(var(--mob-nav-h, 60px) + var(--safe-bottom, 0px) + var(--fab-h, 0px) + 12px);
+  min-height: 100vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.home-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  /* ★ 좌우 대칭 패딩 — 이전엔 우측에 --fab-w(80px)를 예약해 카드 전체가 왼쪽으로
+     치우쳐 보였음. SAO 핸들은 44px 폭의 가장자리 오버레이형이고 다른 탭들도 예약 없이
+     겹침을 허용하므로 Home도 동일하게 대칭 정렬(하단 여백은 #home-page의 --fab-h가 담당) */
+  padding: 10px 12px 0 12px;
+}
+
+.home-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 12px);
+  padding: 12px 14px;
+}
+
+/* 섹션 레이블 */
+.home-lbl {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text3);
+  letter-spacing: .4px;
+  margin-bottom: 8px;
+}
+
+/* ── 오늘의 명언 ── */
+.home-quote {
+  background: linear-gradient(135deg, rgba(79,124,255,.10), rgba(79,124,255,.03));
+}
+.home-quote-cat {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent, #4f7cff);
+  letter-spacing: .3px;
+  margin-bottom: 6px;
+}
+.home-quote-txt {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text1);
+  font-style: italic;
+}
+
+/* ── 날씨 래퍼 ── */
+.home-wx-wrap {
+  padding: 0;
+  overflow: hidden;
+  border: none !important;
+  background: transparent !important;
+}
+.home-wx-state {
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--text3);
+  text-align: center;
+  background: linear-gradient(135deg, #1a3050, #0d2040);
+  border-radius: var(--radius, 12px);
+}
+/* 위치 권한 거부 상태 */
+.home-wx-unavail {
+  background: linear-gradient(135deg, #1a3050, #0d2040);
+  border-radius: var(--radius, 12px);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+.hwx-unavail-ico  { font-size: 22px; line-height: 1; }
+.hwx-unavail-txt  { font-size: 12px; color: #8eb4d8; line-height: 1.55; }
+.hwx-unavail-btn  {
+  margin-top: 4px;
+  background: rgba(79,124,255,.22);
+  border: 1px solid rgba(79,124,255,.4);
+  border-radius: 14px;
+  padding: 5px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #93c5fd;
+  cursor: pointer;
+}
+
+/* compact 날씨 (Stage 0-2) */
+.home-wx-compact {
+  background: linear-gradient(135deg, #1a3050, #0d2040);
+  border-radius: var(--radius, 12px);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+}
+.hwx-ci   { font-size: 26px; line-height: 1; flex-shrink: 0; }
+.hwx-meta { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.hwx-ct   { font-size: 15px; font-weight: 700; color: #e8f4ff; }
+.hwx-cd   { font-size: 12px; color: #8eb4d8; }
+.hwx-loc  { font-size: 10px; color: #6a94b8; }
+.hwx-side { display: flex; flex-direction: column; gap: 3px; align-items: flex-end; flex-shrink: 0; }
+.hwx-chip {
+  background: rgba(255,255,255,.1);
+  border-radius: 10px;
+  padding: 2px 7px;
+  font-size: 10px;
+  color: #b8d8f8;
+  white-space: nowrap;
+}
+.hwx-pm { font-weight: 700; }
+
+/* full 날씨 (Stage 3) */
+.home-wx-full {
+  background: linear-gradient(135deg, #1a3a5a, #0d2040);
+  border-radius: var(--radius, 12px);
+  padding: 14px 16px 12px;
+}
+.hwx-row  { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+.hwx-bi   { font-size: 38px; line-height: 1; }
+.hwx-rhs  { flex: 1; }
+.hwx-bt   { font-size: 30px; font-weight: 700; color: #e8f4ff; line-height: 1; }
+.hwx-bu   { font-size: 18px; }
+.hwx-bd   { font-size: 13px; color: #8eb4d8; margin-top: 3px; }
+.hwx-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+
+/* ── 환영 카드 ── */
+.home-welcome-cat   { font-size: 28px; margin-bottom: 6px; }
+.home-welcome-title { font-size: 16px; font-weight: 700; color: var(--text1); margin-bottom: 4px; }
+.home-welcome-sub   { font-size: 13px; color: var(--text2); line-height: 1.6; }
+
+/* ── 체크리스트 ── */
+.home-steps { display: flex; flex-direction: column; gap: 6px; }
+.home-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  transition: background .15s;
+}
+.home-step-done   { background: rgba(79,200,120,.1); }
+.home-step-active { background: rgba(79,124,255,.14); border: 1px solid rgba(79,124,255,.3); }
+.home-step-locked { background: transparent; opacity: .5; }
+.home-step-num {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: var(--text2);
+  flex-shrink: 0;
+}
+.hstep-done   { background: rgba(79,200,120,.3); color: #7ad5a0; }
+.hstep-active { background: rgba(79,124,255,.35); color: var(--accent); }
+.home-step-info { flex: 1; }
+.home-step-t  { font-size: 13px; font-weight: 600; color: var(--text1); }
+.hstep-ta     { color: var(--accent); }
+.home-step-d  { font-size: 11px; color: var(--text3); margin-top: 1px; }
+.home-step-ok { font-size: 11px; color: #7ad5a0; }
+.home-step-lk { font-size: 12px; }
+.home-step-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* ── AI 기능 태그 ── */
+.home-ai-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.home-ai-tag {
+  background: rgba(79,124,255,.1);
+  border: 1px solid rgba(79,124,255,.2);
+  border-radius: 14px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--text2);
+}
+
+/* ── AI 브리핑 ── */
+.home-briefing-txt { font-size: 14px; line-height: 1.7; color: var(--text1); }
+
+/* ── 오늘의 목표 ── */
+.home-goal { border-left: 3px solid #f59e0b; }
+.home-goal-lbl { color: #f59e0b !important; }
+.home-goal-txt { font-size: 14px; font-weight: 600; color: var(--text1); line-height: 1.5; margin-bottom: 8px; }
+.home-goal-btn {
+  background: transparent;
+  border: 1px solid rgba(245,158,11,.4);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: #f59e0b;
+  cursor: pointer;
+}
+
+/* ── 금융 요약 ── */
+.hfin-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-top: 4px;
+}
+.hfin-cell {
+  background: rgba(255,255,255,.04);
+  border-radius: 8px;
+  padding: 9px 10px;
+}
+.hfin-lbl { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+.hfin-val { font-size: 15px; font-weight: 700; }
+.hfin-g { color: #7ad5a0; }
+.hfin-y { color: #f59e0b; }
+.hfin-r { color: #ff8fab; }
+.hfin-b { color: var(--accent); }
+.hfin-w { color: var(--text1); }
+
+/* ── 빠른 실행 ── */
+.home-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-top: 4px;
+}
+.home-quick-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 4px 8px;
+  cursor: pointer;
+  transition: background .15s;
+}
+.home-quick-btn:active { background: rgba(79,124,255,.15); }
+.home-qi { font-size: 20px; line-height: 1; }
+.home-ql { font-size: 11px; color: var(--text2); font-weight: 600; }
+
+/* ── AI 추천 칩 ── */
+.home-act-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.home-act-chip {
+  background: rgba(79,124,255,.12);
+  border: 1px solid rgba(79,124,255,.25);
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s;
+  white-space: nowrap;
+}
+.home-act-chip:active { background: rgba(79,124,255,.28); }

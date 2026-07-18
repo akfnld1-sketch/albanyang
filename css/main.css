@@ -4,15 +4,40 @@
   --border:#e8ecf4; --accent:#4f7cff; --accent2:#7c5cff;
   --green:#1a9e5c; --red:#e03455; --yellow:#d4900a; --orange:#e06010; --cyan:#1a9e9e;
   --sat:#2266cc; --sun:#cc2244;
-  --text:#1a1e2e; --text2:#4a5268; --text3:#8892aa;
+  /* v4.2.2-beta.2 접근성: 회색 보조 텍스트가 고령 사용자에게 잘 안 보인다는 피드백
+     → text2/text3를 검정에 가깝게 (전 화면 일괄 적용) */
+  --text:#111420; --text2:#252b3d; --text3:#3f465c;
   --radius:12px; --shadow:0 4px 24px rgba(0,0,0,.12);
+
+  /* ── UI 스케일: v2.1부터 큰글자(구 시니어) 크기로 고정 — 선택 팝업·설정 슬라이더 제거 ── */
+  --ui-scale: 1.2;
+  /* v4.2.2-beta.2 접근성: 작은 글자 기준값 상향 (9→11, 11→13, 14→15, 16→17, 18→19) */
+  --font-xs:    calc(11px * var(--ui-scale));
+  --font-sm:    calc(13px * var(--ui-scale));
+  --font-base:  calc(15px * var(--ui-scale));
+  --font-md:    calc(17px * var(--ui-scale));
+  --font-lg:    calc(19px * var(--ui-scale));
+  --font-xl:    calc(22px * var(--ui-scale));
+  --btn-h:      calc(44px * var(--ui-scale));
+  --input-h:    calc(42px * var(--ui-scale));
+  --card-pad:   calc(12px * var(--ui-scale));
+  --gap-sm:     calc(6px  * var(--ui-scale));
+  --gap-md:     calc(10px * var(--ui-scale));
+  --icon-size:  calc(22px * var(--ui-scale));
+  --mob-nav-h:  calc(60px * var(--ui-scale));
+  --mob-icon:   calc(22px * var(--ui-scale));
+  --mob-label:  calc(10px * var(--ui-scale));
+  --cal-cell-h: calc(72px * var(--ui-scale));
+  --sao-size:   calc(52px * var(--ui-scale));
+  --touch-min:  calc(44px * var(--ui-scale));
 }
 [data-theme="dark"] {
   --bg:#0f1117; --surface:#1a1e2a; --surface2:#22273a; --surface3:#2a3045;
   --border:#2e3450; --accent:#6b9fff; --accent2:#9b7cff;
   --green:#3dd68c; --red:#ff6b6b; --yellow:#ffd166; --orange:#ff8c42; --cyan:#3dd6d6;
   --sat:#4488ff; --sun:#ff6688;
-  --text:#e8ecf8; --text2:#9aa5c4; --text3:#5a6480;
+  /* 다크: 대비 강화 (보조 텍스트 밝게) */
+  --text:#f2f5ff; --text2:#c9d1e6; --text3:#9aa4c0;
   --radius:12px; --shadow:0 4px 24px rgba(0,0,0,.4);
 }
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -48,12 +73,12 @@ body.sidebar-disabled #mob-sidebar-btn { display: none !important; }
 .budget-grid { display: block; }
 .budget-card {
   background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 12px; padding: 14px; margin-bottom: 14px;
+  border-radius: 12px; padding: var(--card-pad, 14px); margin-bottom: var(--gap-md, 14px);
 }
 .budget-input {
   width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--text);
-  border-radius: 8px; padding: 10px 12px; font-size: 16px; font-family: 'JetBrains Mono';
-  box-sizing: border-box; min-height: 46px;
+  border-radius: 8px; padding: 10px 12px; font-size: var(--font-md, 16px); font-family: 'JetBrains Mono';
+  box-sizing: border-box; min-height: var(--input-h, 46px);
 }
 /* 1025px 이상(노트북/데스크탑)에서는 컨테이너를 넓히고 카드 2단 그리드로 공간 활용 개선 */
 @media (min-width: 1025px) {
@@ -210,6 +235,7 @@ body.sidebar-disabled #mob-sidebar-btn { display: none !important; }
   cursor:pointer;transition:all .2s;font-family:'Noto Sans KR';
   display:flex;align-items:center;gap:4px;white-space:nowrap;
 }
+.nav-btn-lbl{font-size:11px;font-weight:600;}
 .nav-btn:hover{background:var(--surface2);color:var(--text);}
 .nav-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
 
@@ -367,8 +393,22 @@ body.sidebar-disabled #mob-sidebar-btn { display: none !important; }
 }
 .cal-day:hover{border-color:var(--accent);background:var(--surface2);}
 .cal-day.empty{cursor:default;background:transparent;border-color:transparent;}
-.cal-day.today{border-color:var(--accent);border-width:2px;}
-.cal-day.today .dn{color:var(--accent);}
+.cal-day.today{
+  border-color:var(--accent);border-width:2px;
+  background:rgba(79,124,255,.13);
+  box-shadow:0 0 0 1px rgba(79,124,255,.25);
+}
+.cal-day.today .dn{color:var(--accent);font-weight:900;}
+.cal-day.today::before{
+  content:'오늘';
+  display:block;
+  font-size:9px;
+  font-weight:700;
+  color:var(--accent);
+  letter-spacing:.5px;
+  line-height:1;
+  margin-bottom:1px;
+}
 
 /* 주말 셀 — 흐리게 */
 .cal-day.is-sat{background:rgba(34,102,204,.03);}
@@ -829,6 +869,12 @@ body.sidebar-disabled #mob-sidebar-btn { display: none !important; }
   }
   .nav-btn .btn-txt { display: inline !important; }
 
+  /* ── 1280~1795px 헤더 컴팩트 (승인된 A안) ──
+     #banner 내용 고유폭 합계(좌측 ~530 + 탭바 887 + header-right 449 + 패딩 ≈ 1,790px)가
+     뷰포트를 넘어 가로 스크롤이 생기던 문제. #main-tabbar와 .header-right만 축소해
+     1280/1366/1440에서 스크롤 0 + 버튼 5개 전부 표시 (브라우저 실측으로 수치 확정).
+     1796px 이상은 기존 디자인 그대로. */
+
   /* ── 햄버거 버튼 — PC에서 표시 ── */
   #mob-sidebar-btn {
     display: flex !important;
@@ -900,7 +946,9 @@ body.sidebar-disabled #mob-sidebar-btn { display: none !important; }
   }
 
   /* ── 페이지 중앙 고정 (display는 JS가 제어) ── */
-  #att-page, #salary-page, #dash-page, #budget-page, #settings-page {
+  /* #home-page도 포함 — 누락 시 #main의 align-items:center + width:auto 조합으로
+     컨텐츠 고유 폭(약 366px)만 차지해 PC에서 양옆이 비던 문제 */
+  #home-page, #att-page, #salary-page, #dash-page, #budget-page, #settings-page {
     width: 100% !important;
     max-width: 900px !important;
   }
@@ -998,7 +1046,7 @@ body.sidebar-disabled #mob-sidebar-btn { display: none !important; }
 /* ★ 기존에는 이 구간이 어떤 미디어쿼리에도 안 걸려 PC 기본값(900px, #main은 1600px대)을
    그대로 받아 캘린더·생존관리 등 페이지 콘텐츠 주변에 여백이 과도하게 남던 문제를 보정 */
 @media (min-width: 1025px) and (max-width: 1439px) {
-  #att-page, #salary-page, #dash-page, #budget-page, #settings-page { max-width: 1100px !important; }
+  #home-page, #att-page, #salary-page, #dash-page, #budget-page, #settings-page { max-width: 1100px !important; }
 }
 
 /* ── PC 전용 통계카드 가로형 레이아웃 (1366px+) ──
@@ -1034,7 +1082,7 @@ body.sidebar-disabled #mob-sidebar-btn { display: none !important; }
 
 /* ── 대형 (1440px+) ── */
 @media (min-width: 1440px) {
-  #att-page, #salary-page, #dash-page, #budget-page, #settings-page { max-width: 1320px !important; }
+  #home-page, #att-page, #salary-page, #dash-page, #budget-page, #settings-page { max-width: 1320px !important; }
   .cal-day { height: 150px !important; max-height: 150px !important; }
   .dn { font-size: 22px !important; }
   .stat-card .val { font-size: 30px !important; }
@@ -1046,6 +1094,119 @@ body.sidebar-disabled #mob-sidebar-btn { display: none !important; }
    남던 문제 보정. 새 콘텐츠 추가 없이 기존 컨테이너 폭만 확장(회귀 위험 최소) */
 @media (min-width: 1800px) {
   #app { max-width: 1880px; }
-  #att-page, #salary-page, #dash-page, #budget-page, #settings-page { max-width: 1500px !important; }
+  #home-page, #att-page, #salary-page, #dash-page, #budget-page, #settings-page { max-width: 1500px !important; }
 }
 
+
+/* ══════════════════════════════════════════
+   헤더 컴팩트 (1280~1795px) — 승인된 A안
+   #main-tabbar + .header-right만 수정. 수치는 브라우저 실측으로 확정.
+   반드시 파일 끝에 위치해야 함(위 PC 규칙과 동일 특이성+!important라 후순위가 승리).
+══════════════════════════════════════════ */
+/* 1280~1439px: 탭 텍스트 전용(14px) + 헤더 버튼 아이콘 전용 */
+@media (min-width: 1280px) and (max-width: 1439px) {
+  .header-right {
+    flex-shrink: 1 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    justify-content: flex-start;
+    gap: 2px;
+    margin-left: 0 !important;
+  }
+  .main-tab { padding: 0 7px !important; font-size: 14px !important; }
+  .main-tab .tab-icon { display: none !important; }
+  .header-right .nav-btn-lbl { display: none !important; }
+  .header-right .nav-btn { padding: 8px 4px !important; min-height: 38px; }
+}
+/* 1440~1795px: 탭 텍스트 전용(17px 유지) + 헤더 버튼 아이콘 전용 */
+@media (min-width: 1440px) and (max-width: 1795px) {
+  .header-right {
+    flex-shrink: 1 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    justify-content: flex-start;
+    gap: 4px;
+    margin-left: 0 !important;
+  }
+  .main-tab { padding: 0 12px !important; }
+  .main-tab .tab-icon { display: none !important; }
+  .header-right .nav-btn-lbl { display: none !important; }
+  .header-right .nav-btn { padding: 9px 5px !important; }
+}
+
+/* ══════════════════════════════════════════
+   PC 콘텐츠 폭 일관성 (1025px+) — 승인된 수정
+   생존관리(.budget-container)·설정(#settings-page > div)의 내부 max-width를
+   해제하여 Home/근태/수입/연간요약과 동일하게 페이지 전체 폭을 사용.
+   태블릿(769~1024px)·모바일 기존 규칙(520px 등)은 그대로 유지.
+══════════════════════════════════════════ */
+@media (min-width: 1025px) {
+  .budget-container { max-width: none !important; }
+  #settings-page > div { max-width: none !important; }
+}
+
+/* ── 근태관리 v3: 모바일 기본 ── */
+.attv3-wrap { max-width: 720px; }
+.attv3-body { display: flex; flex-direction: column; }
+.attv3-cal-col { order: 2; }
+.attv3-cards-col { order: 1; }
+/* 모바일: 미니 달력 숨기고 전체 달력 버튼만 (잘림·가독성 문제) */
+@media (max-width: 767px) {
+  .attv3-cal-col #attv3-minicalpanel { display: none; }
+  .attv3-cal-col .attv3-fullcal-btn { display: block !important; }
+  .attv3-cal-col { background: none !important; border: none !important; padding: 0 !important; }
+
+  /* 모바일 Typography: 안내 문구 최소 14px + 회색 대비 개선 (WCAG) */
+  #att-v3 [style*="font-size:12px"] { font-size: 14px !important; }
+  #att-v3 [style*="font-size:13px"] { font-size: 15px !important; }
+  #att-v3 [style*="color:var(--text3"] { color: var(--text2, #9aa3c0) !important; }
+}
+
+/* ── 근태관리 v3 PC 사이드바 레이아웃 (768px 이상) ── */
+@media (min-width: 768px) {
+  .attv3-wrap { max-width: none; padding: 0 24px !important; }
+  .attv3-hero {
+    padding: 28px 0 24px !important;
+    font-size: 115%;
+    margin-bottom: 14px !important;
+  }
+  .attv3-body {
+    display: grid;
+    grid-template-columns: 35% 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+  .attv3-cal-col {
+    order: 0;
+    position: sticky;
+    top: 12px;
+    padding: 14px 16px 10px !important;
+  }
+  .attv3-cards-col {
+    order: 0;
+  }
+  .attv3-cal-col #attv3-minicalpanel { cursor: default; }
+  .attv3-cal-col .attv3-mcday {
+    font-size: 13px !important;
+    width: 32px !important;
+    height: 32px !important;
+  }
+  .attv3-cal-col .attv3-mcdot {
+    width: 5px !important;
+    height: 5px !important;
+  }
+  .attv3-cal-col [data-attv3-calday] {
+    padding: 3px 0 !important;
+  }
+  .attv3-cal-col [data-attv3-calday]:hover .attv3-mcday {
+    background: rgba(79,124,255,.18) !important;
+  }
+  .attv3-cards-col #attv3-brief {
+    background: var(--surface, #1e2235);
+    border: 1px solid var(--border, rgba(255,255,255,.1));
+    border-radius: var(--radius, 12px);
+    padding: 14px 16px !important;
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+}

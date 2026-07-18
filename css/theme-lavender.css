@@ -1,0 +1,64 @@
+/* ══════════════════════════════════════════════════════════════
+   머니냥 라벤더 테마 (theme-lavender.css) — 시안 D
+   라벤더 퍼플 톤: 부드럽고 아늑한 느낌. 보조 퍼플(--accent2)과 조화.
+   원칙: add-only 오버라이드 (theme-pastel.css와 동일 패턴).
+   라이트 모드만 재정의 — 다크 모드는 기존 유지.
+   ══════════════════════════════════════════════════════════════ */
+:root {
+  --bg:#f7f5fc;
+  --surface:#ffffff;
+  --surface2:#efeaf8;
+  --surface3:#e6def3;
+  --border:#e9e2f4;
+
+  --green:#26a066;
+  --red:#dd4260;
+  --yellow:#d6920e;
+  --orange:#dd7016;
+
+  --text:#2b2450;
+  --text2:#3e3a5c;
+  --text3:#5c5878;
+
+  --radius:18px;
+  --shadow:0 4px 24px rgba(90,70,150,.13);
+
+  --mn-att-work:#26a066;
+  --mn-att-leave:#3b6fe0;
+  --mn-att-half:#8c52d9;
+  --mn-att-late:#dd7016;
+  --mn-att-early:#d6920e;
+  --mn-att-absent:#dd4260;
+  --mn-shadow-1:0 2px 10px rgba(90,70,150,.08);
+  --mn-shadow-2:0 6px 18px rgba(90,70,150,.12);
+  --mn-shadow-3:0 16px 48px rgba(90,70,150,.17);
+}
+:root:not([data-theme="dark"]) .mn-card,
+:root:not([data-theme="dark"]) .stat-card,
+:root:not([data-theme="dark"]) .budget-card,
+:root:not([data-theme="dark"]) .popup{
+  border-radius:20px;
+  box-shadow:0 2px 10px rgba(90,70,150,.08);
+}
+:root:not([data-theme="dark"]) .cal-day{ border-radius:12px; }
+:root:not([data-theme="dark"]) .mn-btn,
+:root:not([data-theme="dark"]) .btn{ border-radius:14px; }
+:root:not([data-theme="dark"]) #banner{ background:#ffffff; }
+:root:not([data-theme="dark"]) #sidebar{ background:#ffffff; }
+:root:not([data-theme="dark"]) #ob-next,
+:root:not([data-theme="dark"]) #ob-progress-fill{
+  background:linear-gradient(135deg,#7c5cff,#9b7cff);
+}
+:root:not([data-theme="dark"]) #mob-nav{
+  background:#ffffff;
+  border-top:1px solid #e9e2f4;
+  box-shadow:0 -4px 16px rgba(90,70,150,.06);
+}
+:root:not([data-theme="dark"]) .cal-day.today{ background:rgba(124,92,255,.12); }
+:root:not([data-theme="dark"]) .mn-char-bubble{
+  border:2px dashed #d9cdf0;
+  border-radius:18px;
+}
+:root:not([data-theme="dark"]) .mn-char-bubble::before{
+  border-left:2px dashed #d9cdf0; border-top:2px dashed #d9cdf0;
+}

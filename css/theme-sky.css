@@ -1,0 +1,64 @@
+/* ══════════════════════════════════════════════════════════════
+   머니냥 스카이 테마 (theme-sky.css) — 시안 B
+   쿨 블루 톤: 차분하고 깨끗한 금융앱 느낌. 브랜드 블루 전면.
+   원칙: add-only 오버라이드 (theme-pastel.css와 동일 패턴).
+   라이트 모드만 재정의 — 다크 모드는 기존 유지.
+   ══════════════════════════════════════════════════════════════ */
+:root {
+  --bg:#f4f7fd;
+  --surface:#ffffff;
+  --surface2:#eaf0fa;
+  --surface3:#dfe8f6;
+  --border:#e3eaf6;
+
+  --green:#1f9e63;
+  --red:#dd3b55;
+  --yellow:#d6920e;
+  --orange:#dd7016;
+
+  --text:#1c2b4a;
+  --text2:#33405c;
+  --text3:#556080;
+
+  --radius:16px;
+  --shadow:0 4px 24px rgba(40,70,150,.12);
+
+  --mn-att-work:#1f9e63;
+  --mn-att-leave:#3b6fe0;
+  --mn-att-half:#8c52d9;
+  --mn-att-late:#dd7016;
+  --mn-att-early:#d6920e;
+  --mn-att-absent:#dd3b55;
+  --mn-shadow-1:0 2px 10px rgba(40,70,150,.07);
+  --mn-shadow-2:0 6px 18px rgba(40,70,150,.11);
+  --mn-shadow-3:0 16px 48px rgba(40,70,150,.16);
+}
+:root:not([data-theme="dark"]) .mn-card,
+:root:not([data-theme="dark"]) .stat-card,
+:root:not([data-theme="dark"]) .budget-card,
+:root:not([data-theme="dark"]) .popup{
+  border-radius:18px;
+  box-shadow:0 2px 10px rgba(40,70,150,.07);
+}
+:root:not([data-theme="dark"]) .cal-day{ border-radius:10px; }
+:root:not([data-theme="dark"]) .mn-btn,
+:root:not([data-theme="dark"]) .btn{ border-radius:12px; }
+:root:not([data-theme="dark"]) #banner{ background:#ffffff; }
+:root:not([data-theme="dark"]) #sidebar{ background:#ffffff; }
+:root:not([data-theme="dark"]) #ob-next,
+:root:not([data-theme="dark"]) #ob-progress-fill{
+  background:linear-gradient(135deg,#4f7cff,#6b9fff);
+}
+:root:not([data-theme="dark"]) #mob-nav{
+  background:#ffffff;
+  border-top:1px solid #e3eaf6;
+  box-shadow:0 -4px 16px rgba(40,70,150,.06);
+}
+:root:not([data-theme="dark"]) .cal-day.today{ background:rgba(79,124,255,.12); }
+:root:not([data-theme="dark"]) .mn-char-bubble{
+  border:2px dashed #cdd9f0;
+  border-radius:16px;
+}
+:root:not([data-theme="dark"]) .mn-char-bubble::before{
+  border-left:2px dashed #cdd9f0; border-top:2px dashed #cdd9f0;
+}

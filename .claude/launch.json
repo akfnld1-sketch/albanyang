@@ -4,8 +4,8 @@
     {
       "name": "albanyang-static",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8923"],
-      "port": 8923
+      "runtimeArgs": ["-m", "http.server", "10999"],
+      "port": 10999
     }
   ]
 }

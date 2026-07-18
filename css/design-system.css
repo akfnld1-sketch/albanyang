@@ -1,0 +1,275 @@
+/* ══════════════════════════════════════════════════════════════
+   머니냥 디자인 시스템 v1.0  (design-system.css)
+
+   원칙
+   1. 추가 전용(add-only): 기존 변수(--accent, --surface…)를 재정의하지 않는다.
+      → 이 파일을 로드해도 기존 화면은 변하지 않으며, 화면별 리디자인 때
+        .mn-* 클래스를 "입히는" 방식으로 점진 적용한다.
+   2. 라이트/다크는 기존 main.css 토큰을 참조하므로 자동 대응.
+   3. 모바일 우선: 터치 최소 44px, 카드 간격/여백은 스케일 변수 사용.
+   4. 기능·마크업 구조 변경 없이 클래스만 부여해 적용 가능해야 한다.
+
+   ── 사용 규칙 요약 ──
+   카드      .mn-card            (강조 카드 .mn-card--accent / 성공 .mn-card--good)
+   버튼      .mn-btn + .mn-btn--primary | --secondary | --ghost | --danger
+             크기 보조 .mn-btn--sm | --lg | --block
+   입력창    .mn-input  /  .mn-select
+   배지      .mn-badge + .mn-badge--main | --sub | --good | --warn | --bad
+   섹션제목  .mn-h  (아이콘+제목 행)
+   금액표기  .mn-amount (큰 숫자) / .mn-amount--good | --bad
+   구분선    .mn-divider
+   애니메이션 .mn-fade-in / .mn-pop-in  (환영·등장 연출)
+   ══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Brand ── */
+  --mn-brand:        var(--accent);      /* 머니냥 블루 */
+  --mn-brand-soft:   rgba(79,124,255,.12);
+  --mn-brand-2:      var(--accent2);     /* 보조 퍼플 */
+
+  /* ── Semantic colors (상태 색 규칙: 완료=success · 미완/주의=warning · 오류=error · 안내=info) ── */
+  --mn-success: var(--green);
+  --mn-warning: var(--orange);
+  --mn-error:   var(--red);
+  --mn-info:    var(--accent);
+
+  /* ── Semantic soft backgrounds (칩/배지/알림 배경) ── */
+  --mn-good-soft:    rgba(61,214,140,.14);
+  --mn-warn-soft:    rgba(255,209,102,.16);
+  --mn-bad-soft:     rgba(255,107,107,.14);
+  --mn-info-soft:    var(--mn-brand-soft);
+
+  /* ── 근태 상태 색상 v1.0 (달력·카드·통계·브리핑 공통 — 색만 보고 상태 인식) ──
+     정상근무=초록 · 연차=파랑 · 반차=보라 · 지각=주황 · 조퇴=노랑
+     결근=빨강 · 휴일근무=청록 · 야간=남색                                   */
+  --mn-att-work:    var(--green);
+  --mn-att-leave:   #3b82f6;
+  --mn-att-half:    var(--accent2);
+  --mn-att-late:    var(--orange);
+  --mn-att-early:   var(--yellow);
+  --mn-att-absent:  var(--red);
+  --mn-att-holiday: var(--cyan);
+  --mn-att-night:   #3f51b5;
+  --mn-att-work-soft:    rgba(61,214,140,.22);
+  --mn-att-leave-soft:   rgba(59,130,246,.22);
+  --mn-att-half-soft:    rgba(124,92,255,.22);
+  --mn-att-late-soft:    rgba(255,140,66,.25);
+  --mn-att-early-soft:   rgba(255,209,102,.28);
+  --mn-att-absent-soft:  rgba(255,92,122,.26);
+  --mn-att-holiday-soft: rgba(61,214,214,.22);
+  --mn-att-night-soft:   rgba(92,107,192,.25);
+
+  /* ── Motion tokens (앱 전체 동일 속도/이징) ── */
+  --mn-duration-fast:   .12s;
+  --mn-duration-normal: .3s;
+  --mn-duration-slow:   .5s;
+  --mn-ease:        cubic-bezier(.4, 0, .2, 1);
+  --mn-ease-bounce: cubic-bezier(.34, 1.56, .64, 1);
+
+  /* ── Spacing scale (4px 기반) ── */
+  --mn-sp-1: 4px;  --mn-sp-2: 8px;  --mn-sp-3: 12px;
+  --mn-sp-4: 16px; --mn-sp-5: 20px; --mn-sp-6: 24px; --mn-sp-8: 32px;
+
+  /* ── Radius scale ── */
+  --mn-r-sm: 8px;  --mn-r-md: 12px;  --mn-r-lg: 16px;
+  --mn-r-xl: 20px; --mn-r-full: 999px;
+
+  /* ── Shadow scale ── */
+  --mn-shadow-1: 0 1px 4px rgba(16,24,64,.08);
+  --mn-shadow-2: 0 4px 14px rgba(16,24,64,.10);
+  --mn-shadow-3: 0 10px 34px rgba(16,24,64,.16);
+
+  /* ── Typography scale (기존 --ui-scale 연동) ── */
+  --mn-fs-caption: var(--font-xs);   /* 라벨·캡션 */
+  --mn-fs-body:    var(--font-base); /* 본문 */
+  --mn-fs-title:   var(--font-md);   /* 카드 제목 */
+  --mn-fs-head:    var(--font-lg);   /* 섹션 헤드 */
+  --mn-fs-hero:    var(--font-xl);   /* 히어로 숫자 */
+  --mn-fw-bold: 700; --mn-fw-heavy: 800;
+}
+[data-theme="dark"] {
+  --mn-att-leave: #6ba3ff;
+  --mn-att-night: #8c9eff;
+  --mn-brand-soft: rgba(107,159,255,.16);
+  --mn-shadow-1: 0 1px 4px rgba(0,0,0,.30);
+  --mn-shadow-2: 0 4px 14px rgba(0,0,0,.36);
+  --mn-shadow-3: 0 10px 34px rgba(0,0,0,.50);
+}
+
+/* ══════════ 카드 ══════════ */
+.mn-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--mn-r-md);
+  padding:var(--card-pad);
+  box-shadow:var(--mn-shadow-1);
+  margin-bottom:var(--mn-sp-3);
+}
+.mn-card--accent{ border-left:3px solid var(--mn-brand); }
+.mn-card--good{   border-left:3px solid var(--green); }
+.mn-card--warn{   border-left:3px solid var(--yellow); }
+.mn-card--flat{   box-shadow:none; }
+
+/* ══════════ 버튼 ══════════ */
+.mn-btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  min-height:var(--touch-min);
+  padding:0 var(--mn-sp-4);
+  border:none; border-radius:var(--mn-r-md);
+  font-family:'Noto Sans KR',sans-serif;
+  font-size:var(--mn-fs-body); font-weight:var(--mn-fw-bold);
+  cursor:pointer; user-select:none;
+  transition:transform .08s ease, filter .12s ease, opacity .12s ease;
+}
+.mn-btn:active{ transform:scale(.97); }
+.mn-btn:disabled, .mn-btn[aria-disabled="true"]{ opacity:.35; pointer-events:none; }
+.mn-btn--primary{ background:var(--mn-brand); color:#fff; }
+.mn-btn--primary:hover{ filter:brightness(1.06); }
+.mn-btn--secondary{
+  background:var(--surface2); color:var(--text);
+  border:1px solid var(--border);
+}
+.mn-btn--ghost{ background:none; color:var(--mn-brand); }
+.mn-btn--danger{ background:var(--mn-bad-soft); color:var(--red); }
+.mn-btn--sm{ min-height:36px; padding:0 var(--mn-sp-3); font-size:var(--mn-fs-caption); }
+.mn-btn--lg{ min-height:52px; font-size:var(--mn-fs-title); font-weight:var(--mn-fw-heavy); border-radius:var(--mn-r-lg); }
+.mn-btn--block{ display:flex; width:100%; }
+
+/* ══════════ 입력창 ══════════ */
+.mn-input, .mn-select{
+  width:100%; box-sizing:border-box;
+  min-height:var(--input-h);
+  padding:0 var(--mn-sp-3);
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:var(--mn-r-sm);
+  color:var(--text);
+  font-family:'Noto Sans KR',sans-serif;
+  font-size:var(--mn-fs-body);
+}
+.mn-input:focus, .mn-select:focus{
+  outline:none; border-color:var(--mn-brand);
+  box-shadow:0 0 0 3px var(--mn-brand-soft);
+}
+.mn-label{
+  display:block;
+  font-size:var(--mn-fs-caption); font-weight:var(--mn-fw-bold);
+  color:var(--text2);
+  margin:var(--mn-sp-3) 0 var(--mn-sp-1);
+}
+
+/* ══════════ 배지 ══════════ */
+.mn-badge{
+  display:inline-block;
+  font-size:10px; font-weight:var(--mn-fw-heavy);
+  border-radius:5px; padding:2px 7px;
+  vertical-align:2px;
+}
+.mn-badge--main{ background:var(--mn-brand); color:#fff; }
+.mn-badge--sub{  background:var(--surface2); color:var(--text2); border:1px solid var(--border); }
+.mn-badge--good{ background:var(--mn-good-soft); color:var(--green); }
+.mn-badge--warn{ background:var(--mn-warn-soft); color:var(--yellow); }
+.mn-badge--bad{  background:var(--mn-bad-soft);  color:var(--red); }
+
+/* ══════════ 섹션 제목 · 금액 · 구분선 ══════════ */
+.mn-h{
+  display:flex; align-items:center; gap:var(--mn-sp-2);
+  font-size:var(--mn-fs-title); font-weight:var(--mn-fw-heavy);
+  color:var(--text);
+  margin-bottom:var(--mn-sp-2);
+}
+.mn-h img{ width:22px; height:22px; object-fit:cover; border-radius:50%; }
+.mn-amount{
+  font-family:'JetBrains Mono',monospace;
+  font-size:var(--mn-fs-hero); font-weight:var(--mn-fw-heavy);
+  color:var(--text); letter-spacing:-.5px;
+}
+.mn-amount--good{ color:var(--green); }
+.mn-amount--bad{  color:var(--red); }
+.mn-caption{ font-size:var(--mn-fs-caption); color:var(--text3); }
+.mn-divider{ height:1px; background:var(--border); border:none; margin:var(--mn-sp-3) 0; }
+
+/* ══════════ 진행 바 (생존관리 등) ══════════ */
+.mn-bar{ height:8px; border-radius:4px; background:var(--border); overflow:hidden; }
+.mn-bar > i{ display:block; height:100%; border-radius:4px; background:var(--mn-brand); transition:width .4s ease; }
+.mn-bar--good > i{ background:var(--green); }
+.mn-bar--warn > i{ background:var(--yellow); }
+.mn-bar--bad  > i{ background:var(--red); }
+
+/* ══════════ 애니메이션 (환영·카드 등장) ══════════ */
+@keyframes mn-fade-in{ from{ opacity:0; transform:translateY(8px);} to{ opacity:1; transform:none;} }
+@keyframes mn-pop-in{ 0%{ opacity:0; transform:scale(.92);} 70%{ transform:scale(1.02);} 100%{ opacity:1; transform:scale(1);} }
+.mn-fade-in{ animation:mn-fade-in var(--mn-duration-normal) var(--mn-ease) both; }
+.mn-pop-in{  animation:mn-pop-in var(--mn-duration-slow) var(--mn-ease-bounce) both; }
+/* 순차 등장(스태거): 부모에 .mn-stagger, 자식들이 80ms 간격으로 fade-in */
+.mn-stagger > *{ animation:mn-fade-in var(--mn-duration-normal) var(--mn-ease) both; }
+.mn-stagger > *:nth-child(1){ animation-delay:.05s; }
+.mn-stagger > *:nth-child(2){ animation-delay:.13s; }
+.mn-stagger > *:nth-child(3){ animation-delay:.21s; }
+.mn-stagger > *:nth-child(4){ animation-delay:.29s; }
+.mn-stagger > *:nth-child(5){ animation-delay:.37s; }
+.mn-stagger > *:nth-child(6){ animation-delay:.45s; }
+@media (prefers-reduced-motion: reduce){
+  .mn-fade-in, .mn-pop-in{ animation:none; }
+  .mn-btn{ transition:none; }
+}
+
+/* ══════════ 근태 상태 색상 v1.0 — 기존 달력 상태 클래스 재정의 ══════════
+   (main.css의 .s-* 를 상태 색 규칙으로 통일 — 큰 달력/기록 라벨 전 화면 적용) */
+.s-work    { background:var(--mn-att-work-soft)    !important; color:var(--mn-att-work)    !important; }
+.s-leave   { background:var(--mn-att-leave-soft)   !important; color:var(--mn-att-leave)   !important; }
+.s-half    { background:var(--mn-att-half-soft)    !important; color:var(--mn-att-half)    !important; }
+.s-early   { background:var(--mn-att-early-soft)   !important; color:var(--mn-att-early)   !important; }
+.s-absent  { background:var(--mn-att-absent-soft)  !important; color:var(--mn-att-absent)  !important; }
+.s-holiday, .s-public, .s-sat_work, .s-sun_work
+           { background:var(--mn-att-holiday-soft) !important; color:var(--mn-att-holiday) !important; border-color:var(--mn-att-holiday) !important; }
+
+/* v1.1: 달력 셀 상태 텍스트 — PC는 아이콘+텍스트, 모바일은 아이콘 중심 */
+@media (max-width:767px){ .mn-att-cell-txt{ display:none; } }
+
+/* ══════════ 홈 대시보드 v3.8 — 빠른 실행 확대 (모바일 터치 강화) ══════════ */
+.home-quick-grid > *{
+  min-height:calc(64px * var(--ui-scale)) !important;
+  border-radius:var(--mn-r-md);
+}
+
+/* ══════════ 머니냥 캐릭터 시스템 v1.0 (mn-character.js와 세트) ══════════
+   크기·링·말풍선을 여기서만 관리 — 수정하면 로그인/홈/근태/챗봇/온보딩 전체 반영 */
+.mn-char{
+  object-fit:cover; border-radius:50%; display:inline-block;
+  background:#fff;
+}
+.mn-char--hero{
+  width:clamp(140px, 40vw, 190px); height:clamp(140px, 40vw, 190px);
+  border:5px solid rgba(255,255,255,.95);
+  box-shadow:var(--mn-shadow-3);
+}
+.mn-char--lg{ width:84px; height:84px; box-shadow:var(--mn-shadow-2); }
+.mn-char--md{ width:64px; height:64px; box-shadow:var(--mn-shadow-1); }
+.mn-char--sm{ width:40px; height:40px; }
+.mn-char--avatar{ width:28px; height:28px; }
+.mn-char-wrap{ text-align:center; }
+.mn-char-bubble{
+  display:inline-block; position:relative;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:16px; padding:10px 16px; margin-top:10px;
+  box-shadow:var(--mn-shadow-1);
+  font-size:var(--mn-fs-body); color:var(--text); line-height:1.55;
+}
+.mn-char-bubble::before{
+  content:''; position:absolute; top:-6px; left:50%;
+  transform:translateX(-50%) rotate(45deg);
+  width:12px; height:12px;
+  background:var(--surface);
+  border-left:1px solid var(--border); border-top:1px solid var(--border);
+}
+/* 손 흔들기 (로그인 전환 등) — 컴포넌트 공통 */
+@keyframes mn-wave{0%,100%{transform:rotate(0)}20%{transform:rotate(-8deg)}40%{transform:rotate(10deg)}60%{transform:rotate(-6deg)}80%{transform:rotate(6deg)}}
+.mn-waving{ animation:mn-wave .9s ease-in-out infinite; transform-origin:70% 90%; }
+@media (prefers-reduced-motion: reduce){ .mn-waving{ animation:none; } }
+
+/* ══════════ 아이콘 규칙 ══════════
+   - 머니냥 캐릭터(img/emoji/*.png): 아바타 자리 전용, 원형(border-radius:50%)
+     환영인사=인사/휴식 · 생각중=진행중 · 수입돈=돈 · 걱정경고=주의 · 칭찬축하=성과 · 모를때=미기록/안내
+   - 텍스트 이모지: 문장 안 보조 장식만. 아바타 자리엔 사용하지 않는다.
+   - 사업장: 메인 🏢 / 보조 📦 고정.                                    */

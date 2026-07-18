@@ -1,0 +1,84 @@
+/* ══════════════════════════════════════════════════════════════
+   머니냥 파스텔 테마 v1.0 (theme-pastel.css)
+   — 2026-07 디자인 리뉴얼 (머니냥 홈 v2 시안 기반)
+   원칙: add-only 오버라이드. main.css/design-system.css 뒤에 로드.
+   라이트 모드 토큰만 재정의 — 다크 모드([data-theme="dark"])는 기존 유지.
+   제거하려면 index.html에서 이 <link> 한 줄만 삭제하면 원상복구.
+   ══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* 크림 배경 + 화이트 카드 (시안: #fdf8f0 배경, 흰 카드, 따뜻한 테두리) */
+  --bg:#fdf8f0;
+  --surface:#ffffff;
+  --surface2:#f6f0e4;
+  --surface3:#efe7d6;
+  --border:#f2e9da;
+
+  /* 브랜드 블루는 유지, 상태색은 시안의 진한 팔레트로 */
+  --green:#2eaf6e;
+  --red:#e04545;
+  --yellow:#e8a020;
+  --orange:#e0862e;
+
+  /* 텍스트: 남색 계열 (시안 #22315c/#3a3f55/#5a6478) */
+  --text:#22315c;
+  --text2:#3a3f55;
+  --text3:#5a6478;
+
+  --radius:18px;
+  --shadow:0 4px 24px rgba(120,90,40,.12);
+
+  /* 근태 상태색 — 시안의 진한 색 (한눈에 구분) */
+  --mn-att-work:#2eaf6e;
+  --mn-att-leave:#3b6fe0;
+  --mn-att-half:#8c52d9;
+  --mn-att-late:#e0862e;
+  --mn-att-early:#e8a020;
+  --mn-att-absent:#e04545;
+  --mn-shadow-1:0 2px 10px rgba(120,90,40,.08);
+  --mn-shadow-2:0 6px 18px rgba(120,90,40,.12);
+  --mn-shadow-3:0 16px 48px rgba(120,90,40,.18);
+}
+
+/* ── 카드류: 더 둥글고 부드럽게 ── */
+:root:not([data-theme="dark"]) .mn-card,
+:root:not([data-theme="dark"]) .stat-card,
+:root:not([data-theme="dark"]) .budget-card,
+:root:not([data-theme="dark"]) .popup{
+  border-radius:20px;
+  box-shadow:0 2px 10px rgba(120,90,40,.08);
+}
+:root:not([data-theme="dark"]) .cal-day{ border-radius:12px; }
+:root:not([data-theme="dark"]) .mn-btn,
+:root:not([data-theme="dark"]) .btn{ border-radius:14px; }
+
+/* ── 헤더/사이드바: 흰 배경 + 크림 테두리 ── */
+:root:not([data-theme="dark"]) #banner{ background:#ffffff; }
+:root:not([data-theme="dark"]) #sidebar{ background:#ffffff; }
+
+/* ── 히어로/그라디언트: 파스텔 블루 (시안 cfe0ff→e8f0ff) ── */
+:root:not([data-theme="dark"]) #ob-next,
+:root:not([data-theme="dark"]) #ob-progress-fill{
+  background:linear-gradient(135deg,#4f7cff,#6b9fff);
+}
+
+/* ── 모바일 하단 탭: 흰 배경 + 진한 라벨 (시니어 가독성) ── */
+:root:not([data-theme="dark"]) #mob-nav{
+  background:#ffffff;
+  border-top:1px solid #f2e9da;
+  box-shadow:0 -4px 16px rgba(120,90,40,.06);
+}
+
+/* ── 오늘 날짜 강조: 시안의 남색 칩 ── */
+:root:not([data-theme="dark"]) .cal-day.today{
+  background:rgba(79,124,255,.10);
+}
+
+/* ── 캐릭터 말풍선: 점선 크림 테두리 (시안 브리핑 카드) ── */
+:root:not([data-theme="dark"]) .mn-char-bubble{
+  border:2px dashed #e3d7c3;
+  border-radius:18px;
+}
+:root:not([data-theme="dark"]) .mn-char-bubble::before{
+  border-left:2px dashed #e3d7c3; border-top:2px dashed #e3d7c3;
+}
