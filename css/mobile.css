@@ -582,14 +582,18 @@ html { -webkit-overflow-scrolling: touch; }
     top: 50%;
     transform: translateY(-50%);
     z-index: 1050;
-    width: 5px;
+    width: 6px;
     height: 48px;
-    background: rgba(255,255,255,0.15);
+    /* v4.2.2-beta.10: 흰색 15%는 라이트 테마·밝은 배경에서 사실상 보이지 않아
+       스와이프 메뉴가 숨은 기능이 되던 문제 — 오른쪽 끝에 살짝 삐져나온
+       파란 탭처럼 항상 보이게 (기능 변경 없음, 색·두께만 조정) */
+    background: rgba(79,124,255,0.55);
+    box-shadow: 0 0 6px rgba(79,124,255,0.35);
     border-radius: 3px 0 0 3px;
     cursor: pointer;
     transition: background 0.2s, height 0.2s;
-    /* 시각은 5px 유지, 터치 영역을 왼쪽으로 확장 (총 44px) */
-    padding-left: 39px;
+    /* 시각은 6px 유지, 터치 영역을 왼쪽으로 확장 (총 44px) */
+    padding-left: 38px;
     box-sizing: content-box;
   }
   #sao-handle.active {
