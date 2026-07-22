@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#4f6ef7">
+<title>AI MVP 가상검증 시스템</title>
+<link rel="stylesheet" href="css/style.css?v=20260719b">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="app-head">
+    <h1>🧪 AI MVP 가상검증 시스템</h1>
+    <p>배포된 MVP URL을 입력하면 가상 사용자 페르소나가 화면 구조를 기반으로 사용 경험을 검증합니다</p>
+  </header>
+
+  <div class="stepbar">
+    <div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div>
+    <div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div>
+  </div>
+  <div class="step-label" id="step-label">STEP 1 · MVP URL 입력</div>
+
+  <!-- STEP 1: MVP URL 입력 -->
+  <section class="screen" id="screen-url">
+    <div class="card">
+      <h2>🔗 MVP URL 입력</h2>
+      <p class="hint" style="margin-bottom:12px">MVP 주소만 입력하면 공개 화면(HTML)을 자동으로 수집해 분석합니다. 별도 설정이 필요 없습니다. (로그인이 필요한 화면이나 봇 차단 사이트 등 자동 수집이 안 되는 경우에만 고급 설정의 수동 방법을 안내합니다.)</p>
+      <div class="field"><label for="f-url">MVP URL</label>
+        <input type="text" id="f-url" inputmode="url" placeholder="https://example-mvp.com"></div>
+      <button class="btn" id="btn-fetch">🔍 자동 수집 및 분석 시작</button>
+
+      <div class="url-status hidden" id="url-status"></div>
+
+      <details class="section" id="advanced-zone">
+        <summary>⚙️ 고급 설정 · 자동 수집이 안 될 때</summary>
+
+        <div class="hidden" id="manual-zone">
+          <h3>수동 방법 1 · 페이지 소스 붙여넣기</h3>
+          <p class="hint">MVP 페이지에서 우클릭 → "페이지 소스 보기" → 전체 복사 → 아래에 붙여넣기. (React/Vue 등 SPA는 DevTools에서 렌더링된 HTML을 복사하면 더 정확합니다)</p>
+          <textarea id="f-paste" style="min-height:100px" placeholder="&lt;!DOCTYPE html&gt;... 페이지 소스 전체를 붙여넣으세요"></textarea>
+          <button class="btn" id="btn-paste-analyze">붙여넣은 HTML 분석</button>
+          <h3>수동 방법 2 · 저장한 HTML 파일 업로드 (여러 페이지 가능)</h3>
+          <p class="hint">브라우저에서 Ctrl+S로 "웹페이지(HTML만)" 저장 후 업로드. 로그인 뒤 화면도 로그인 상태에서 저장하면 분석할 수 있습니다.</p>
+          <input type="file" id="f-files" accept=".html,.htm,.txt" multiple>
+        </div>
+
+        <div class="hidden" id="iframe-zone">
+          <h3>참고 · 화면 미리보기 (표시 전용)</h3>
+          <p class="hint" id="iframe-note-static">보안 정책상 미리보기 화면 내부를 시스템이 읽거나 조작할 수는 없습니다. 눈으로 확인하는 용도입니다. (사이트가 iframe을 차단하면 표시되지 않습니다)</p>
+          <button class="btn ghost" id="btn-iframe-preview">🖥️ 미리보기 열기</button>
+          <iframe id="preview-frame" class="hidden" sandbox="allow-scripts allow-same-origin" referrerpolicy="no-referrer" style="width:100%;height:360px;border:1px solid var(--line);border-radius:10px;margin-top:8px"></iframe>
+          <p class="hint hidden" id="iframe-note">위 화면은 참고용 미리보기입니다 — 검증 엔진은 확보된 HTML 구조만 분석합니다.</p>
+        </div>
+
+        <details class="section" id="dev-proxy-zone" style="margin-top:6px">
+          <summary>🛠️ 개발자 설정 · 프록시 (일반 사용자는 건드릴 필요 없음)</summary>
+          <p class="hint">자동 수집용 프록시는 앱에 <b>기본 내장</b>되어 있어 일반 사용자는 설정이 필요 없습니다. 아래는 개발자가 기본 프록시를 임시로 다른 주소로 덮어쓸 때만 사용합니다. (배포 방법: 프로젝트의 <b>proxy/README.md</b>)</p>
+          <div class="field"><input type="text" id="f-proxy" inputmode="url" placeholder="비워두면 기본 내장 프록시 사용"></div>
+          <div class="btn-row">
+            <button class="btn ghost" id="btn-proxy-save">오버라이드 저장</button>
+            <button class="btn ghost" id="btn-proxy-reset">기본값으로 초기화</button>
+          </div>
+          <p class="hint" id="proxy-state"></p>
+        </details>
+      </details>
+
+      <div class="btn-row">
+        <button class="btn ghost" id="btn-skip-url">화면 분석 없이 진행</button>
+        <button class="btn" id="btn-url-next">다음 — 정보 확인</button>
+      </div>
+      <p class="hint" style="margin-top:8px">ℹ️ 이 시스템은 실제 브라우저 자동 조작(버튼 클릭·페이지 이동)을 수행하지 않습니다. 확보된 화면 구조를 기반으로 한 <b>사용 시뮬레이션</b>이며, 결과에도 그렇게 표시됩니다.</p>
+    </div>
+  </section>
+
+  <!-- STEP 2: MVP 정보 확인·보완 -->
+  <section class="screen hidden" id="screen-1">
+    <div class="card">
+      <h2>📋 MVP 정보 확인·보완</h2>
+      <p class="hint" style="margin-bottom:12px">화면 구조에서 자동 추출된 값이 미리 채워집니다(확보 시). 모든 항목은 선택 입력이며, 입력이 적을수록 <b>검증 신뢰도</b>가 낮아집니다.</p>
+
+      <div class="field"><label for="f-name">MVP / 서비스 이름</label>
+        <input type="text" id="f-name" placeholder="예: 우리동네 반찬구독"></div>
+      <div class="field"><label for="f-tagline">한 줄 소개</label>
+        <input type="text" id="f-tagline" placeholder="예: 1인 가구를 위한 주 2회 반찬 정기배송"></div>
+      <div class="field"><label for="f-problem">해결하려는 문제</label>
+        <textarea id="f-problem" placeholder="누가, 언제, 얼마나 자주 겪는 문제인지 구체적으로 적을수록 정확해집니다"></textarea></div>
+      <div class="field"><label for="f-coreFeatures">핵심 기능 <span class="opt">(쉼표 또는 줄바꿈으로 구분)</span></label>
+        <textarea id="f-coreFeatures" placeholder="예: 주간 식단 자동 추천, 정기배송 일정 관리, 알레르기 필터"></textarea></div>
+      <div class="field"><label for="f-userFlow">사용 방법 / 사용자 흐름</label>
+        <textarea id="f-userFlow" placeholder="예: 가입 → 취향 설문 → 주간 반찬 선택 → 배송 수령"></textarea></div>
+      <div class="field"><label for="f-price">가격 또는 예상 가격</label>
+        <input type="text" id="f-price" placeholder="예: 월 39,000원 / 무료 / 건당 5,000원"></div>
+      <div class="field"><label for="f-competitors">경쟁 서비스 또는 현재 대안</label>
+        <input type="text" id="f-competitors" placeholder="예: 마켓컬리, 동네 반찬가게, 직접 요리"></div>
+      <div class="field"><label for="f-stage">현재 개발 단계</label>
+        <select id="f-stage">
+          <option value="">선택 안 함</option>
+          <option value="idea">아이디어</option>
+          <option value="prototype">프로토타입</option>
+          <option value="mvp">MVP</option>
+          <option value="beta">베타</option>
+          <option value="prelaunch">출시 전</option>
+        </select></div>
+      <div class="field"><label for="f-keyQuestion">검증하고 싶은 핵심 질문</label>
+        <input type="text" id="f-keyQuestion" placeholder="예: 사람들이 이 서비스에 월 4만 원을 낼까?"></div>
+      <div class="field"><label for="f-extraNotes">추가 설명</label>
+        <textarea id="f-extraNotes" placeholder="기타 참고할 내용"></textarea></div>
+
+      <div class="btn-row">
+        <button class="btn ghost" id="btn-to-url">이전</button>
+        <button class="btn" id="btn-to-2">다음 — 타깃 고객 설정</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 3: 타깃 고객 설정 -->
+  <section class="screen hidden" id="screen-2">
+    <div class="card">
+      <h2>🎯 타깃 고객 설정</h2>
+      <div class="field"><label for="f-targetUsers">주요 타깃 사용자</label>
+        <textarea id="f-targetUsers" placeholder="예: 요리할 시간이 없는 20~30대 1인 가구 직장인"></textarea>
+        <p class="hint">연령대·직업·상황을 적으면 페르소나 생성에 우선 반영됩니다.</p></div>
+      <div class="field"><label>빠른 선택 <span class="opt">(복수 선택 가능)</span></label>
+        <div class="chips" id="target-chips">
+          <span class="chip" data-v="10대">10대</span>
+          <span class="chip" data-v="20대">20대</span>
+          <span class="chip" data-v="30대">30대</span>
+          <span class="chip" data-v="40대">40대</span>
+          <span class="chip" data-v="50대 이상">50대+</span>
+          <span class="chip" data-v="대학생">대학생</span>
+          <span class="chip" data-v="직장인">직장인</span>
+          <span class="chip" data-v="주부">주부</span>
+          <span class="chip" data-v="자영업자">자영업자</span>
+          <span class="chip" data-v="프리랜서">프리랜서</span>
+          <span class="chip" data-v="알바생">알바생</span>
+          <span class="chip" data-v="시니어">시니어</span>
+        </div></div>
+      <div class="btn-row">
+        <button class="btn ghost" id="btn-to-1">이전</button>
+        <button class="btn" id="btn-to-3">다음 — 검증 인원 선택</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 4: 인원 + 모드 선택 -->
+  <section class="screen hidden" id="screen-3">
+    <div class="card">
+      <h2>👥 검증 인원 선택</h2>
+      <div class="count-grid">
+        <div class="count-card" data-n="1"><div class="num">1명</div><div class="desc">빠른 스팟 체크</div></div>
+        <div class="count-card" data-n="3"><div class="num">3명</div><div class="desc">긍정·중립·회의</div></div>
+        <div class="count-card on" data-n="5"><div class="num">5명</div><div class="desc">균형 검증 (권장)</div></div>
+        <div class="count-card" data-n="10"><div class="num">10명</div><div class="desc">상세 검증</div></div>
+        <div class="count-card" data-n="100"><div class="num">100명</div><div class="desc">통계 시뮬레이션</div></div>
+      </div>
+      <p class="hint" style="margin-top:8px">1~10명: 페르소나별 상세 사용자 여정 · 100명: 경량 페르소나 전체 통계 + 대표 8명 상세 여정</p>
+    </div>
+
+    <div class="card">
+      <h2>⚙️ 실행 모드</h2>
+      <div class="mode-box on" id="mode-standard">
+        <div class="m-title">🧮 로컬 표준 검증 모드</div>
+        <div class="m-desc">규칙 기반 페르소나 + 화면 구조 분석 + 여정 시뮬레이션 + 템플릿 자연어 의견. 모든 기기에서 즉시 실행됩니다.</div>
+      </div>
+      <div class="mode-box" id="mode-ai">
+        <div class="m-title">🤖 AI 심층 검증 모드 <span class="opt" style="font-size:11px;color:var(--sub)">(WebGPU 필요)</span></div>
+        <div class="m-desc">점수 계산은 동일하고, 대표 페르소나의 의견을 브라우저 내 로컬 AI가 자연어로 재작성합니다. 최초 1회 모델 다운로드(약 400~500MB)가 필요하며 외부 AI API는 사용하지 않습니다.</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn ghost" id="btn-back-2">이전</button>
+        <button class="btn" id="btn-run">🚀 가상 검증 시작</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 5~7: 진행률 -->
+  <section class="screen hidden" id="screen-4">
+    <div class="card progress-wrap">
+      <div class="progress-emoji" id="progress-emoji">🧩</div>
+      <div class="progress-text" id="progress-text">준비 중</div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-pct" id="progress-pct">0%</div>
+    </div>
+  </section>
+
+  <!-- 결과 분석 -->
+  <section class="screen hidden" id="screen-6">
+    <div class="card">
+      <div style="text-align:center;margin-bottom:8px">
+        <span class="mode-badge" id="analysis-badge">🧩 화면 구조 기반 사용 시뮬레이션</span>
+        <span class="mode-badge" id="result-mode-badge">🧮 로컬 표준 검증 모드</span>
+        <span class="mode-badge" id="result-n">가상 사용자 시뮬레이션</span>
+      </div>
+      <div class="disclaimer"><strong>⚠️ 안내</strong> — 본 결과는 <strong>가상 페르소나 기반 시뮬레이션</strong>이며 실제 사용자 조사 결과를 대체하지 않습니다. 이 시스템은 실제 브라우저 자동 조작을 수행하지 않으며, 확보된 화면 구조와 입력 정보를 기반으로 사용 경험을 <strong>추정</strong>합니다. MVP 초기 가설 설정과 실제 사용자 검증 전 사전 점검 목적으로 활용하세요.</div>
+      <div class="conf-warn hidden" id="conf-warning"></div>
+      <div class="overall-box">
+        <div class="overall-num" id="overall-num">–</div>
+        <div class="overall-sub">MVP 종합점수 (100점 만점)</div>
+        <div><span class="verdict-pill" id="verdict-pill">–</span></div>
+        <p class="hint" id="verdict-desc" style="margin-top:8px"></p>
+      </div>
+    </div>
+
+    <div class="card" id="structure-card"></div>
+
+    <div class="card">
+      <h2>📊 항목별 평균 점수</h2>
+      <div id="main-scores"></div>
+      <div class="stat-grid" style="margin-top:12px" id="churn-conf"></div>
+    </div>
+
+    <div class="card hidden" id="journey-stats">
+      <h2>🧭 사용 여정 통계 (구조 기반 추정)</h2>
+      <div class="stat-grid" id="journey-grid"></div>
+      <div style="margin-top:12px" id="journey-drop"></div>
+    </div>
+
+    <div class="card">
+      <h2>🎭 반응 분포</h2>
+      <div class="stat-grid" id="sentiment-grid"></div>
+    </div>
+
+    <div class="card hidden" id="bulk-stats">
+      <h2>📈 100명 시뮬레이션 통계</h2>
+      <div class="stat-grid" id="bulk-grid"></div>
+      <div style="margin-top:12px" id="bulk-opinions"></div>
+    </div>
+
+    <div class="card">
+      <h2>🧑‍🤝‍🧑 가상 사용자별 사용 경험</h2>
+      <div id="persona-list"></div>
+    </div>
+
+    <div class="card">
+      <h2>🗂️ 사용자 세그먼트 분석</h2>
+      <div id="segment-list"></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn ghost" id="btn-reshuffle">🎲 다시 섞기</button>
+      <button class="btn" id="btn-to-report">📝 검증 보고서 보기</button>
+    </div>
+  </section>
+
+  <!-- STEP 8: 보고서 -->
+  <section class="screen hidden" id="screen-7">
+    <div class="card">
+      <h2>📝 최종 MVP 개선 보고서</h2>
+      <div class="disclaimer"><strong>⚠️ 안내</strong> — 본 보고서는 가상 페르소나 시뮬레이션 기반 자동 생성 문서입니다. 실제 사용자 조사 결과가 아니며, 실제 브라우저 조작 없이 화면 구조를 기반으로 추정한 내용입니다. 가설 점검 용도로만 활용하세요.</div>
+      <div id="report-verdict"></div>
+    </div>
+    <div class="card">
+      <div id="report-body"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn ghost" id="btn-back-result">결과로 돌아가기</button>
+      <button class="btn" id="btn-restart">새 MVP 검증하기</button>
+    </div>
+  </section>
+
+  <footer class="app-foot">
+    AI MVP 가상검증 시스템 v2.1.0 · 외부 AI API 미사용 · 모든 데이터는 이 브라우저에만 저장됩니다
+  </footer>
+</div>
+
+<script src="js/seed.js?v=20260719a"></script>
+<script src="js/mvp-parser.js?v=20260719d"></script>
+<script src="js/url-fetcher.js?v=20260719c"></script>
+<script src="js/structure-analyzer.js?v=20260719a"></script>
+<script src="js/persona-engine.js?v=20260719b"></script>
+<script src="js/eval-engine.js?v=20260719d"></script>
+<script src="js/journey-engine.js?v=20260719b"></script>
+<script src="js/opinion-engine.js?v=20260719b"></script>
+<script src="js/stats-engine.js?v=20260719d"></script>
+<script src="js/report-engine.js?v=20260719e"></script>
+<script src="js/ai-engine.js?v=20260719a"></script>
+<script src="js/app.js?v=20260719e"></script>
+</body>
+</html>

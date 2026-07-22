@@ -137,7 +137,8 @@
       "mcp__visualize__show_widget",
       "Bash(findstr /n \"var AsstContextBuilders\\\\|var AsstContextFormatters\\\\|var AsstActionHandler\" \"D:\\\\c다운로드\\\\albanyang\\\\js\\\\assistant.js\")",
       "PowerShell(\\(Get-Item \"D:\\\\c다운로드\\\\albanyang\\\\js\\\\assistant.js\"\\).Length; \\(Get-Content \"D:\\\\c다운로드\\\\albanyang\\\\js\\\\assistant.js\" | Measure-Object -Line\\).Lines)",
-      "Bash(curl -s \"http://localhost:10999/js/weather.js?v=20260701b\")"
+      "Bash(curl -s \"http://localhost:10999/js/weather.js?v=20260701b\")",
+      "PowerShell(Get-ChildItem -Force | Select-Object Mode, Length, Name; Write-Output \"---\"; Get-ChildItem -Directory | ForEach-Object { Write-Output $_.Name; Get-ChildItem $_.FullName | Select-Object -First 20 Name })"
     ]
   }
 }
