@@ -1343,9 +1343,7 @@ html { -webkit-overflow-scrolling: touch; }
   .mn-pc-2col { grid-template-columns: 1.35fr 1fr; }   /* 홈 — 히어로가 넓다 */
   /* 정보 — 좌 날씨·내 소식 / 우 브리핑(긴 목록). 높이 균형을 위해 이렇게 나눈다 */
   .mn-pc-info { grid-template-columns: 1fr 1.15fr; }
-  /* #info-page는 동적 생성이라 main.css의 페이지 폭 규칙(#home-page 등) 목록에 없다.
-     다른 화면과 같은 폭 기준을 갖도록 맞춘다 */
-  body.mn-pc #info-page { max-width: 1100px; }
+  body.mn-pc #info-page { max-width: none; margin: 0; }
   .mn-pc-info .mn-wx-card { margin-bottom: 0; border-radius: 20px; }
   .mn-pc-info .mn-brief,
   .mn-pc-info .mn-card { border-radius: 20px; }
@@ -1414,6 +1412,13 @@ html { -webkit-overflow-scrolling: touch; }
   .mn-pc-sal  .mn-pc-grid { grid-template-columns: 1fr 1.15fr; }
   .mn-pc-bdg  .mn-pc-grid { grid-template-columns: 1fr 1.15fr; }
   .mn-pc-dash .mn-pc-grid { grid-template-columns: 1fr 1.6fr; }
+}
+
+/* #info-page는 동적 생성이라 main.css의 페이지 폭 규칙(#home-page, #att-page …) 목록에
+   빠져 있다. 그 규칙과 **같은 구간에서만** 같은 상한을 갖도록 맞춘다.
+   (조건 없이 걸면 1440px 이상에서 정보만 좁아진다 — 2026-07-27 실화면에서 확인) */
+@media (min-width: 1025px) and (max-width: 1439px) {
+  body.mn-pc #info-page { max-width: 1100px !important; }
 }
 
 /* ── 반응형 경계 (PC_SHELL_V2_SPEC §7) ── */
