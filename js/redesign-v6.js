@@ -1664,6 +1664,34 @@
     content.appendChild(right);
   }
 
+  // 정보 — 좌 날씨(지금 필요한 것) / 우 브리핑·내 소식·경고 (참고 정보)
+  //  명세 §5 표에는 정보 화면이 없지만, 같은 원칙(좌 결론 / 우 근거·목록)을 그대로 적용한다.
+  //  기존 블록을 옮기기만 하고 새 블록은 만들지 않는다.
+  function _pcLayoutInfo(){
+    var page = document.getElementById('info-page');
+    if(!page || !document.getElementById('mn-pc-nav')) return;
+    var content = page.querySelector('.mn-info');
+    if(!content || content.classList.contains('mn-pc-2col')) return;
+
+    var date = content.querySelector('.mn-info-date');
+    var wx   = content.querySelector('#info-wx-wrap');
+    var rest = [].slice.call(content.children).filter(function(c){
+      return c !== date && c !== wx;
+    });
+    if(!wx) return;
+
+    var left  = document.createElement('div'); left.className  = 'mn-pc-col-l';
+    var right = document.createElement('div'); right.className = 'mn-pc-col-r';
+    if(date) date.remove();                    // 날짜는 상단 바가 이미 보여준다
+    left.appendChild(wx);
+    rest.forEach(function(c){ right.appendChild(c); });
+
+    content.innerHTML = '';
+    content.className = 'home-content mn-info mn-pc-2col mn-pc-info';
+    content.appendChild(left);
+    content.appendChild(right);
+  }
+
   // 근태 — 좌 v3(주간 스트립·기록) / 우 전체 달력 상주
   //  모바일에서 팝업이던 월 달력을 PC에서는 항상 띄워 두고, 좌우가 같은 날짜를 가리키게 한다.
   function _pcLayoutAtt(){
@@ -1859,6 +1887,7 @@
     if(!document.getElementById('mn-pc-nav')) return;
     try{
       if(p === 'home') _pcLayoutHome();
+      if(p === 'info') _pcLayoutInfo();
       if(p === 'att'){ _pcLayoutAtt(); _pcBindCalClicks(); }
       if(p === 'sal')    _pcSplit('salary-page');
       if(p === 'budget') _pcSplit('budget-page');
@@ -1903,6 +1932,7 @@
         var db = document.getElementById('btn-info');
         if(db) db.classList.add('active');
         try{ syncPcShell('info'); }catch(e){}
+        try{ applyPcLayout('info'); }catch(e){}
         return;
       }
       var info = document.getElementById('info-page');

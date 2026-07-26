@@ -1341,6 +1341,11 @@ html { -webkit-overflow-scrolling: touch; }
     display: grid; gap: 20px; align-items: start;
   }
   .mn-pc-2col { grid-template-columns: 1.35fr 1fr; }   /* 홈 — 히어로가 넓다 */
+  /* 정보 — 좌 날씨 / 우 브리핑·내 소식 (수입·생존과 같은 계열) */
+  .mn-pc-info { grid-template-columns: 1fr 1.15fr; }
+  .mn-pc-info .mn-wx-card { margin-bottom: 0; border-radius: 20px; }
+  .mn-pc-info .mn-brief,
+  .mn-pc-info .mn-card { border-radius: 20px; }
   /* 근태 — 우측 달력이 7열 그리드라 폭이 더 필요하다 (PC_SHELL_V2_SPEC §5) */
   #mn-pc-att  { grid-template-columns: 1fr 1.25fr; }
   .mn-pc-col-r { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
