@@ -1685,6 +1685,15 @@
     if(v3 && v3.parentNode !== L) L.appendChild(v3);
     if(cal.parentNode !== R) R.appendChild(cal);
 
+    // ★ 미니 달력 숨김 전 선행 조치 — 상태 색점 범례(mnAttLegendHtml)는 근태 화면에서
+    //   v3 미니 달력에만 있다(#cal-area에는 없음). 우측 달력 위로 먼저 옮긴 뒤 숨긴다.
+    if(!document.getElementById('mn-pc-att-legend') && typeof mnAttLegendHtml === 'function'){
+      var lg = document.createElement('div');
+      lg.id = 'mn-pc-att-legend';
+      try{ lg.innerHTML = mnAttLegendHtml(); }catch(e){}
+      if(lg.innerHTML) R.insertBefore(lg, R.firstChild);
+    }
+
     // v3가 숨겨 둔 달력을 PC에서는 다시 보이게 하고, 레거시 달력을 그려 넣는다
     cal.style.display = 'block';
     _pcRenderCalendar();

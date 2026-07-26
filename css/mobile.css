@@ -1378,6 +1378,11 @@ html { -webkit-overflow-scrolling: touch; }
   /* 좌측 v3가 같은 역할을 하므로 PC 근태에서는 오늘 패널을 숨긴다
      (#today-panel은 #mn-pc-att 바깥에 있어 body 스코프로 지정) */
   body.mn-pc #att-page #today-panel { display: none !important; }
+  /* v3 미니 달력은 우측 전체 달력과 중복이라 PC에서 숨긴다.
+     미니에만 있던 상태 범례는 _pcLayoutAtt가 우측 달력 위로 옮겨 둔다 */
+  body.mn-pc #attv3-minicalpanel { display: none !important; }
+  #mn-pc-att-legend { margin-bottom: 10px; }
+
   /* 좌우 연동 ①: 좌측에서 선택된 날짜를 우측 달력에서 강조 */
   #mn-pc-att .cal-day.mn-pc-sel {
     outline: 2.5px solid var(--mn-primary, #2563EB);
