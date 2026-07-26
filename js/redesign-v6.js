@@ -1683,8 +1683,12 @@
     var left  = document.createElement('div'); left.className  = 'mn-pc-col-l';
     var right = document.createElement('div'); right.className = 'mn-pc-col-r';
     if(date) date.remove();                    // 날짜는 상단 바가 이미 보여준다
+    // 높이 균형: 브리핑(긴 목록)만 우측, 날씨+내 소식+경고는 좌측.
+    // 날씨만 좌측에 두면 좌측이 짧아 아래가 크게 빈다.
     left.appendChild(wx);
-    rest.forEach(function(c){ right.appendChild(c); });
+    rest.forEach(function(c){
+      (c.classList.contains('mn-brief') ? right : left).appendChild(c);
+    });
 
     content.innerHTML = '';
     content.className = 'home-content mn-info mn-pc-2col mn-pc-info';

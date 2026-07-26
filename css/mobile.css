@@ -1341,8 +1341,11 @@ html { -webkit-overflow-scrolling: touch; }
     display: grid; gap: 20px; align-items: start;
   }
   .mn-pc-2col { grid-template-columns: 1.35fr 1fr; }   /* 홈 — 히어로가 넓다 */
-  /* 정보 — 좌 날씨 / 우 브리핑·내 소식 (수입·생존과 같은 계열) */
+  /* 정보 — 좌 날씨·내 소식 / 우 브리핑(긴 목록). 높이 균형을 위해 이렇게 나눈다 */
   .mn-pc-info { grid-template-columns: 1fr 1.15fr; }
+  /* #info-page는 동적 생성이라 main.css의 페이지 폭 규칙(#home-page 등) 목록에 없다.
+     다른 화면과 같은 폭 기준을 갖도록 맞춘다 */
+  body.mn-pc #info-page { max-width: 1100px; }
   .mn-pc-info .mn-wx-card { margin-bottom: 0; border-radius: 20px; }
   .mn-pc-info .mn-brief,
   .mn-pc-info .mn-card { border-radius: 20px; }
