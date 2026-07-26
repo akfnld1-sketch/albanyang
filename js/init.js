@@ -36,7 +36,10 @@ function applyBg(idx, animate){
   root.setAttribute('data-theme', isDark ? 'dark' : 'light');
 
   // 배경색만 직접 설정 (팔레트별 고유 배경)
-  document.body.style.background = c.bg;
+  // 리디자인 v2.0: 기본(흰색, idx 0) 라이트는 인라인 배경을 칠하지 않아
+  // 토큰 --bg(#F8FAFC)가 그대로 보이게 함. 사용자가 직접 고른 다른 배경색과
+  // 다크 팔레트는 기존 동작 유지 (다크 전환 로직도 이 함수가 담당하므로 변경 금지).
+  document.body.style.background = (idx === 0 && !isDark) ? '' : c.bg;
   document.body.style.color = '';  // CSS 변수로 제어
 
   // 기존 inline style 오버라이드 전부 제거 (충돌 방지)

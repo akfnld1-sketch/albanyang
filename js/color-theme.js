@@ -12,10 +12,12 @@
     { id:'sky',      name:'스카이',  file:'css/theme-sky.css',      dot:'#dfe8f6', ring:'#b8cdf0' },
     { id:'mint',     name:'민트',    file:'css/theme-mint.css',     dot:'#daeee2', ring:'#a9d8bd' },
     { id:'lavender', name:'라벤더',  file:'css/theme-lavender.css', dot:'#e6def3', ring:'#c6b5e8' },
-    { id:'peach',    name:'피치',    file:'css/theme-peach.css',    dot:'#f2ded0', ring:'#e8bd9c' }
+    { id:'peach',    name:'피치',    file:'css/theme-peach.css',    dot:'#f2ded0', ring:'#e8bd9c' },
+    // v6 리디자인 기본 테마 (시안 31·34·36 라이트 토큰)
+    { id:'daybreak', name:'데이브레이크', file:'css/theme-daybreak.css', dot:'#f6f7fa', ring:'#e8960c' }
   ];
   var KEY = 'mn.colorTheme';
-  var VER = '20260718a';
+  var VER = '20260724b';
   var link = document.getElementById('theme-css');
   if (!link) return;
 
@@ -47,8 +49,8 @@
   window.renderColorThemeChips = function(){
     var wrap = document.getElementById('color-theme-chips');
     if (!wrap) return;
-    var cur = 'pastel';
-    try { cur = localStorage.getItem(KEY) || 'pastel'; } catch(e){}
+    var cur = 'sky';
+    try { cur = localStorage.getItem(KEY) || 'sky'; } catch(e){}
     wrap.innerHTML = '';
     THEMES.forEach(function(t){
       var btn = document.createElement('button');
@@ -76,7 +78,8 @@
   // 저장된 테마 즉시 복원 (이 스크립트는 link 바로 아래에서 동기 실행 — FOUC 최소화)
   var saved = null;
   try { saved = localStorage.getItem(KEY); } catch(e){}
-  if (saved && saved !== 'pastel') setHref(findTheme(saved));
+  // 기본 테마 = 스카이 (사용자 확정 스크린샷 기준). 데이브레이크는 선택지로 유지
+  setHref(findTheme(saved || 'sky'));
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', renderColorThemeChips);
   else renderColorThemeChips();

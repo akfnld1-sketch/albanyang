@@ -1,13 +1,15 @@
 /* ══════════════════════════════════════════════════════════════
-   머니냥 디자인 시스템 v1.0  (design-system.css)
+   머니냥 디자인 시스템 v2.0  (design-system.css)
+   — 2026-07-25 전면 리디자인 확정 토큰 (design_handoff_moneynyang_redesign/README.md)
+   팔레트: 메인 #2563EB / 포인트 #F59E0B. 라이트(:root) + 다크([data-theme="dark"]).
 
    원칙
-   1. 추가 전용(add-only): 기존 변수(--accent, --surface…)를 재정의하지 않는다.
-      → 이 파일을 로드해도 기존 화면은 변하지 않으며, 화면별 리디자인 때
-        .mn-* 클래스를 "입히는" 방식으로 점진 적용한다.
-   2. 라이트/다크는 기존 main.css 토큰을 참조하므로 자동 대응.
-   3. 모바일 우선: 터치 최소 44px, 카드 간격/여백은 스케일 변수 사용.
-   4. 기능·마크업 구조 변경 없이 클래스만 부여해 적용 가능해야 한다.
+   1. 색은 이 파일 한 곳에서만 정의한다 — 화면 CSS/JS 하드코딩 금지.
+   2. 기존 화면이 쓰는 레거시 변수(--bg, --surface, --accent, --green…)도
+      여기서 새 팔레트 값으로 재정의한다 (main.css보다 뒤에 로드되어 우선).
+   3. 채도 높은 원본색(#F59E0B, #22C55E, #EF4444)은 채움 전용.
+      텍스트는 반드시 파생 다크 값(--mn-point-text, --mn-success-text…)을 쓴다.
+   4. 모바일 우선: 터치 최소 44px, 본문 최소 14px.
 
    ── 사용 규칙 요약 ──
    카드      .mn-card            (강조 카드 .mn-card--accent / 성공 .mn-card--good)
@@ -22,62 +24,126 @@
    ══════════════════════════════════════════════════════════════ */
 
 :root {
-  /* ── Brand ── */
-  --mn-brand:        var(--accent);      /* 머니냥 블루 */
-  --mn-brand-soft:   rgba(79,124,255,.12);
-  --mn-brand-2:      var(--accent2);     /* 보조 퍼플 */
+  /* ══ 색 — 라이트 (확정) ══ */
+  /* 브랜드/포인트 */
+  --mn-primary:     #2563EB;   /* 메인(브랜드/CTA·월 요약 바·활성 탭) */
+  --mn-point:       #F59E0B;   /* 포인트(강조/액션) — 채움 전용 */
+  --mn-point-text:  #B45309;   /* 흰 배경 위 금액·칩 텍스트 (#F59E0B는 대비 2.1:1 텍스트 금지) */
+  --mn-point-soft:  #FEF3C7;   /* 칩·배지 배경 */
 
-  /* ── Semantic colors (상태 색 규칙: 완료=success · 미완/주의=warning · 오류=error · 안내=info) ── */
-  --mn-success: var(--green);
-  --mn-warning: var(--orange);
-  --mn-error:   var(--red);
-  --mn-info:    var(--accent);
+  /* 상태 색 (채움/텍스트/배경 분리) */
+  --mn-success-fill: #22C55E;  --mn-success-text: #15803D;  --mn-success-bg: #DCFCE7;
+  --mn-warn-fill:    #F97316;  --mn-warn-text:    #9A3412;  --mn-warn-bg:    #FFEDD5;
+  --mn-danger-fill:  #EF4444;  --mn-danger-text:  #DC2626;
 
-  /* ── Semantic soft backgrounds (칩/배지/알림 배경) ── */
-  --mn-good-soft:    rgba(61,214,140,.14);
-  --mn-warn-soft:    rgba(255,209,102,.16);
-  --mn-bad-soft:     rgba(255,107,107,.14);
-  --mn-info-soft:    var(--mn-brand-soft);
+  /* 표면 */
+  --mn-bg:          #F8FAFC;   /* 앱 배경 */
+  --mn-outer:       #EAEEF4;   /* body 바깥 (모바일) */
+  --mn-outer-pc:    #EEF2F8;   /* body 바깥 (PC) */
+  --mn-card:        #FFFFFF;
+  --mn-card-border: #E2E8F0;
+  --mn-border-2:    #CBD5E1;   /* 보조 보더 */
+  --mn-divider-c:   #EEF2F7;
+  --mn-bubble:      #F1F5F9;   /* 말풍선·입력바 */
 
-  /* ── 근태 상태 색상 v1.0 (달력·카드·통계·브리핑 공통 — 색만 보고 상태 인식) ──
-     정상근무=초록 · 연차=파랑 · 반차=보라 · 지각=주황 · 조퇴=노랑
-     결근=빨강 · 휴일근무=청록 · 야간=남색                                   */
-  --mn-att-work:    var(--green);
+  /* 텍스트 */
+  --mn-text-1: #1E293B;  --mn-text-2: #475569;
+  --mn-text-3: #64748B;  --mn-text-4: #94A3B8;  /* 4 = placeholder */
+  --mn-sidebar-dim: #A9BCE8;   /* PC 사이드바 비활성 */
+  --mn-on-color:    #FFFFFF;   /* 컬러 배경 위 텍스트 */
+
+  /* 차트 막대 (연간 월별) — 라이트: 이번달 메인 블루 / 지난달 보조 보더 / 미래달 구분선 */
+  --mn-bar-now:    #2563EB;
+  --mn-bar-past:   #CBD5E1;
+  --mn-bar-future: #EEF2F7;
+  --mn-bar-track:  #EEF2F7;
+
+  /* "오늘" 강조 칩 (주 스트립) — 라이트: 잉크 채움 + 배경색 글자 */
+  --mn-today-fill: #1E293B;
+  --mn-today-text: #F8FAFC;
+
+  /* 월 요약 바 (홈 최하단) — HOME_V2_SPEC §4 */
+  --mn-monthbar-bg:   #1E293B;
+  --mn-monthbar-text: #F8FAFC;
+
+  /* 미기록 날짜 표시 (PC 근태 달력) — PC_SHELL_V2_SPEC §5 */
+  --mn-missed-bg:     #FFF7ED;
+  --mn-missed-border: #F97316;
+
+  /* PC 사이드바 (PC_SHELL_V2_SPEC §3·§8) — 활성 항목은 사이드바 색의 반전 관계 */
+  --mn-nav-bg:          #1E3A8A;
+  --mn-nav-active-bg:   #F8FAFC;
+  --mn-nav-active-text: #1E3A8A;
+  --mn-topbar-bg:       #F8FAFC;   /* PC 상단 바 */
+
+  /* 날씨 카드 (정보 화면) */
+  --mn-weather-bg:     linear-gradient(150deg,#e8f1fb,#f5f9fd);
+  --mn-weather-border: #d8e5f2;
+  --mn-weather-text:   #1b3a5c;
+  --mn-weather-sub:    #5d7f9f;
+  --mn-weather-icon:   #4b86c4;
+  --mn-weather-chip:   #FFFFFF;
+  --mn-weather-chip-border: #dfe9f4;
+
+  /* ── 레거시 별칭 (기존 컴포넌트 호환) ── */
+  --mn-brand:      var(--mn-primary);
+  --mn-brand-soft: rgba(37,99,235,.10);
+  --mn-brand-2:    #7c5cff;
+
+  --mn-success: var(--mn-success-text);
+  --mn-warning: var(--mn-warn-text);
+  --mn-error:   var(--mn-danger-text);
+  --mn-info:    var(--mn-primary);
+
+  --mn-good-soft: rgba(34,197,94,.14);
+  --mn-warn-soft: rgba(245,158,11,.16);
+  --mn-bad-soft:  rgba(239,68,68,.12);
+  --mn-info-soft: var(--mn-brand-soft);
+
+  /* ── 근태 상태 색 (확정 — 달력·카드·통계·브리핑 공통) ──
+     정상 · 연차 · 반차 · 지각 · 조퇴 · 결근 · 휴일특근 · 야간 */
+  --mn-att-work:    #15803D;
   --mn-att-leave:   #3b82f6;
-  --mn-att-half:    var(--accent2);
-  --mn-att-late:    var(--orange);
-  --mn-att-early:   var(--yellow);
-  --mn-att-absent:  var(--red);
-  --mn-att-holiday: var(--cyan);
-  --mn-att-night:   #3f51b5;
-  --mn-att-work-soft:    rgba(61,214,140,.22);
-  --mn-att-leave-soft:   rgba(59,130,246,.22);
-  --mn-att-half-soft:    rgba(124,92,255,.22);
-  --mn-att-late-soft:    rgba(255,140,66,.25);
-  --mn-att-early-soft:   rgba(255,209,102,.28);
-  --mn-att-absent-soft:  rgba(255,92,122,.26);
-  --mn-att-holiday-soft: rgba(61,214,214,.22);
-  --mn-att-night-soft:   rgba(92,107,192,.25);
+  --mn-att-half:    #7c5cff;
+  --mn-att-late:    #e07a2e;
+  --mn-att-early:   #d9a514;
+  --mn-att-absent:  #DC2626;
+  --mn-att-holiday: #1f9e9e;
+  --mn-att-night:   #1E40AF;
+  --mn-att-work-soft:    rgba(21,128,61,.14);
+  --mn-att-leave-soft:   rgba(59,130,246,.16);
+  --mn-att-half-soft:    rgba(124,92,255,.16);
+  --mn-att-late-soft:    rgba(224,122,46,.18);
+  --mn-att-early-soft:   rgba(217,165,20,.20);
+  --mn-att-absent-soft:  rgba(220,38,38,.13);
+  --mn-att-holiday-soft: rgba(31,158,158,.16);
+  --mn-att-night-soft:   rgba(30,64,175,.16);
 
-  /* ── Motion tokens (앱 전체 동일 속도/이징) ── */
-  --mn-duration-fast:   .12s;
+  /* ── Motion (확정: 전환 .3s, 색·폭 .25s) ── */
+  --mn-duration-fast:   .25s;
   --mn-duration-normal: .3s;
   --mn-duration-slow:   .5s;
-  --mn-ease:        cubic-bezier(.4, 0, .2, 1);
+  --mn-ease:        cubic-bezier(.25, .8, .35, 1);
   --mn-ease-bounce: cubic-bezier(.34, 1.56, .64, 1);
 
-  /* ── Spacing scale (4px 기반) ── */
+  /* ── Spacing scale ── */
   --mn-sp-1: 4px;  --mn-sp-2: 8px;  --mn-sp-3: 12px;
   --mn-sp-4: 16px; --mn-sp-5: 20px; --mn-sp-6: 24px; --mn-sp-8: 32px;
 
-  /* ── Radius scale ── */
-  --mn-r-sm: 8px;  --mn-r-md: 12px;  --mn-r-lg: 16px;
-  --mn-r-xl: 20px; --mn-r-full: 999px;
+  /* ── Radius scale (확정: 9~12 셀·버튼 / 16 카드 모바일 / 20 카드 PC·패널 / 22 시트 / 999 칩) ── */
+  --mn-r-sm: 10px;  --mn-r-md: 12px;  --mn-r-lg: 16px;
+  --mn-r-xl: 20px;  --mn-r-sheet: 22px;  --mn-r-full: 999px;
 
-  /* ── Shadow scale ── */
-  --mn-shadow-1: 0 1px 4px rgba(16,24,64,.08);
-  --mn-shadow-2: 0 4px 14px rgba(16,24,64,.10);
-  --mn-shadow-3: 0 10px 34px rgba(16,24,64,.16);
+  /* ── Shadow (확정: 카드는 그림자 없음 — 보더로 구분) ── */
+  --mn-shadow-amber: 0 4px 14px rgba(245,158,11,.32);   /* 액션 버튼(앰버) */
+  --mn-shadow-blue:  0 4px 14px rgba(30,41,59,.30);     /* 액션 버튼(블루) */
+  --mn-shadow-panel: 0 14px 34px rgba(30,41,59,.22);    /* 챗봇 패널 */
+  --mn-shadow-sheet: 0 20px 50px rgba(30,41,59,.35);    /* 달력 시트 */
+  --mn-shadow-voice: 0 12px 30px rgba(245,158,11,.40);  /* 음성 바 */
+  --mn-dim:          rgba(30,41,59,.45);                /* 딤 */
+  --mn-shadow-1: none;
+  --mn-shadow-2: var(--mn-shadow-blue);
+  --mn-shadow-3: var(--mn-shadow-panel);
 
   /* ── Typography scale (기존 --ui-scale 연동) ── */
   --mn-fs-caption: var(--font-xs);   /* 라벨·캡션 */
@@ -85,15 +151,146 @@
   --mn-fs-title:   var(--font-md);   /* 카드 제목 */
   --mn-fs-head:    var(--font-lg);   /* 섹션 헤드 */
   --mn-fs-hero:    var(--font-xl);   /* 히어로 숫자 */
-  --mn-fw-bold: 700; --mn-fw-heavy: 800;
+  --mn-fw-bold: 700; --mn-fw-heavy: 900;
+
+  /* 보조 텍스트 스케일 계수 — 명세의 고정 px를 기본 설정(--ui-scale 1.2)에서 그대로 유지하고,
+     글자 크기 설정(보통 1 / 크게 1.2 / 아주 크게 1.35)에만 비례해 커지도록 정규화한다.
+     큰 숫자·CTA 높이 등 레이아웃을 깨는 요소에는 쓰지 않는다. */
+  --mn-text-k: calc(var(--ui-scale, 1.2) / 1.2);
+
+  /* ══ 레거시 기본 토큰 재정의 (main.css 대체 — 전 화면 새 팔레트 적용) ══ */
+  --bg:      var(--mn-bg);
+  --surface: var(--mn-card);
+  --surface2:var(--mn-bubble);
+  --surface3:#E9EEF5;
+  --border:  var(--mn-card-border);
+  --accent:  var(--mn-primary);
+  --accent2: #7c5cff;
+  --green:   var(--mn-success-text);
+  --red:     var(--mn-danger-text);
+  --yellow:  #B45309;
+  --orange:  #C2570C;
+  --cyan:    #1f9e9e;
+  --sat:     #3B82F6;
+  --sun:     #DC2626;
+  --text:    var(--mn-text-1);
+  --text2:   var(--mn-text-2);
+  --text3:   var(--mn-text-3);
+  --radius:  16px;
+  --shadow:  var(--mn-shadow-panel);
 }
+
 [data-theme="dark"] {
-  --mn-att-leave: #6ba3ff;
-  --mn-att-night: #8c9eff;
-  --mn-brand-soft: rgba(107,159,255,.16);
-  --mn-shadow-1: 0 1px 4px rgba(0,0,0,.30);
-  --mn-shadow-2: 0 4px 14px rgba(0,0,0,.36);
-  --mn-shadow-3: 0 10px 34px rgba(0,0,0,.50);
+  /* ══ 색 — 다크 (확정) ══ */
+  --mn-primary:     #1D4ED8;
+  --mn-point-text:  #FBBF24;   /* 다크에서는 밝게 반전 */
+  --mn-point-soft:  #3A2C10;
+
+  --mn-success-fill: #4ADE80;  --mn-success-text: #4ADE80;  --mn-success-bg: #12301F;
+  --mn-warn-text:    #FDBA74;  --mn-warn-bg:      #3A2413;
+  --mn-danger-fill:  #F87171;  --mn-danger-text:  #F87171;
+
+  --mn-bg:          #0F172A;
+  --mn-outer:       #080D18;
+  --mn-outer-pc:    #0B1220;
+  --mn-card:        #1B2536;
+  --mn-card-border: #2E3A4E;
+  --mn-border-2:    #3A4759;
+  --mn-divider-c:   #2A3547;
+  --mn-bubble:      #243044;
+
+  --mn-text-1: #E6EDF7;  --mn-text-2: #B7C2D4;
+  --mn-text-3: #93A1B5;  --mn-text-4: #7A8798;
+  --mn-on-color: #EAF1FB;   /* 컬러 배경 위 텍스트 */
+
+  /* 차트 막대 — 다크 반전: 카드(#1B2536) 위에서 구별되도록 채움을 밝은 쪽으로
+     (라이트의 #CBD5E1 지난달 회색은 다크 카드 위에서 거의 보이지 않음) */
+  --mn-bar-now:    #60A5FA;
+  --mn-bar-past:   #3A4759;
+  --mn-bar-future: #2A3547;
+  --mn-bar-track:  #2A3547;
+
+  /* "오늘" 강조 칩 — 다크: 잉크는 배경과 동색이라 무의미 → 밝은 블루 채움 + 어두운 글자 */
+  --mn-today-fill: #60A5FA;
+  --mn-today-text: #0F172A;
+
+  /* 월 요약 바 — 다크: 카드보다 한 단계 밝은 면 (명세 §8) */
+  --mn-monthbar-bg:   #2E3A4E;
+  --mn-monthbar-text: #E6EDF7;
+
+  /* 미기록 날짜 — 다크: 경고 배경/보더를 다크 값으로 */
+  --mn-missed-bg:     #3A2413;
+  --mn-missed-border: #FB923C;
+
+  /* PC 사이드바 — 다크 (명세 §8). 활성 항목이 사이드바(#16233A)와 반전 관계가 되도록
+     밝은 배경 #E6EDF7 + 어두운 글자 #16233A */
+  --mn-nav-bg:          #16233A;
+  --mn-nav-active-bg:   #E6EDF7;
+  --mn-nav-active-text: #16233A;
+  --mn-topbar-bg:       #1B2536;   /* PC 상단 바 — 다크 */
+
+  --mn-weather-bg:     linear-gradient(150deg,#1B2B44,#16233A);
+  --mn-weather-border: #2C3F5C;
+  --mn-weather-text:   #DCE8F7;
+  --mn-weather-sub:    #9FB4CE;
+  --mn-weather-icon:   #7FA8DC;
+  --mn-weather-chip:   rgba(255,255,255,.06);
+  --mn-weather-chip-border: #2C3F5C;
+
+  --mn-brand-soft: rgba(96,165,250,.14);
+  --mn-good-soft: rgba(74,222,128,.16);
+  --mn-warn-soft: rgba(251,191,36,.16);
+  --mn-bad-soft:  rgba(248,113,113,.15);
+
+  /* 근태 상태 — 다크 반전
+     ※ 반차: README 다크값 #A78BFA는 야간 #818CF8과 ΔE 11.3으로 6px 색점에서 구별이
+       사실상 불가능(라이트 최소 27.1 대비 절반 이하) → 같은 보라 계열 안에서
+       #C084FC로 조정해 최소 ΔE를 22.0까지 확보(카드 대비 5.82:1 유지). 2026-07-25 다크 검수 */
+  --mn-att-work:    #4ADE80;
+  --mn-att-leave:   #60A5FA;
+  --mn-att-half:    #C084FC;
+  --mn-att-late:    #FB923C;
+  --mn-att-early:   #FACC15;
+  --mn-att-absent:  #F87171;
+  --mn-att-holiday: #2DD4BF;
+  --mn-att-night:   #818CF8;
+  --mn-att-work-soft:    rgba(74,222,128,.18);
+  --mn-att-leave-soft:   rgba(96,165,250,.20);
+  --mn-att-half-soft:    rgba(192,132,252,.20);
+  --mn-att-late-soft:    rgba(251,146,60,.20);
+  --mn-att-early-soft:   rgba(250,204,21,.20);
+  --mn-att-absent-soft:  rgba(248,113,113,.18);
+  --mn-att-holiday-soft: rgba(45,212,191,.20);
+  --mn-att-night-soft:   rgba(129,140,248,.20);
+
+  --mn-shadow-blue:  0 4px 14px rgba(0,0,0,.30);
+  --mn-dim:          rgba(0,0,0,.45);
+  --mn-shadow-panel: 0 14px 34px rgba(0,0,0,.40);
+  --mn-shadow-sheet: 0 20px 50px rgba(0,0,0,.55);
+  --mn-shadow-1: none;
+  --mn-shadow-2: var(--mn-shadow-blue);
+  --mn-shadow-3: var(--mn-shadow-panel);
+
+  /* ══ 레거시 기본 토큰 재정의 — 다크 ══ */
+  --bg:      var(--mn-bg);
+  --surface: var(--mn-card);
+  --surface2:var(--mn-bubble);
+  --surface3:#2A3547;
+  --border:  var(--mn-card-border);
+  --accent:  #60A5FA;   /* 다크 텍스트/보더용 밝은 블루 (CTA 채움은 --mn-primary) */
+  --accent2: #A78BFA;
+  --green:   var(--mn-success-text);
+  --red:     var(--mn-danger-text);
+  --yellow:  #FACC15;
+  --orange:  #FB923C;
+  --cyan:    #2DD4BF;
+  --sat:     #60A5FA;
+  --sun:     #F87171;
+  --text:    var(--mn-text-1);
+  --text2:   var(--mn-text-2);
+  --text3:   var(--mn-text-3);
+  --radius:  16px;
+  --shadow:  var(--mn-shadow-panel);
 }
 
 /* ══════════ 카드 ══════════ */
@@ -129,7 +326,7 @@
   background:var(--surface2); color:var(--text);
   border:1px solid var(--border);
 }
-.mn-btn--ghost{ background:none; color:var(--mn-brand); }
+.mn-btn--ghost{ background:none; color:var(--accent); }  /* 다크에서 --mn-brand(#1D4ED8)는 텍스트로 어두움 — 가독용 --accent 사용 */
 .mn-btn--danger{ background:var(--mn-bad-soft); color:var(--red); }
 .mn-btn--sm{ min-height:36px; padding:0 var(--mn-sp-3); font-size:var(--mn-fs-caption); }
 .mn-btn--lg{ min-height:52px; font-size:var(--mn-fs-title); font-weight:var(--mn-fw-heavy); border-radius:var(--mn-r-lg); }
@@ -212,6 +409,20 @@
 @media (prefers-reduced-motion: reduce){
   .mn-fade-in, .mn-pop-in{ animation:none; }
   .mn-btn{ transition:none; }
+}
+
+/* ══════════ 과도기 다크 CTA 채움 보정 (리디자인 1단계, 2026-07-25) ══════════
+   기존 뷰는 --accent를 텍스트와 채움 양쪽에 쓴다. 다크의 --accent는 가독용
+   밝은 블루(#60A5FA)라 CTA 배경으로 쓰면 어색하므로, 채움(버튼 배경)만
+   CTA 블루 --mn-primary(다크 #1D4ED8)로 되돌린다.
+   3단계에서 뷰가 --mn-primary 기반 새 마크업으로 교체되면 이 블록은 제거. */
+[data-theme="dark"] .btn-primary,
+[data-theme="dark"] .nav-btn.active{
+  background:var(--mn-primary); border-color:var(--mn-primary); color:var(--mn-on-color);
+}
+/* JS가 인라인 스타일로 그린 CTA 버튼·토글·게이지 채움 (inline style보다 우선해야 하므로 !important) */
+[data-theme="dark"] [style*="background:var(--accent)"]{
+  background:var(--mn-primary) !important;
 }
 
 /* ══════════ 근태 상태 색상 v1.0 — 기존 달력 상태 클래스 재정의 ══════════

@@ -582,23 +582,25 @@ html { -webkit-overflow-scrolling: touch; }
     top: 50%;
     transform: translateY(-50%);
     z-index: 1050;
-    width: 6px;
-    height: 48px;
+    width: 3px;
+    height: 40px;
     /* v4.2.2-beta.10: 흰색 15%는 라이트 테마·밝은 배경에서 사실상 보이지 않아
        스와이프 메뉴가 숨은 기능이 되던 문제 — 오른쪽 끝에 살짝 삐져나온
-       파란 탭처럼 항상 보이게 (기능 변경 없음, 색·두께만 조정) */
-    background: rgba(79,124,255,0.55);
-    box-shadow: 0 0 6px rgba(79,124,255,0.35);
-    border-radius: 3px 0 0 3px;
+       파란 탭처럼 항상 보이게 (기능 변경 없음, 색·두께만 조정)
+       v4.2.2-beta.11: 소유자 피드백 — 더 얇게(3px), 메뉴 열려 있는 동안은
+       탭을 숨기고 닫으면 다시 얇게 표시 */
+    background: rgba(79,124,255,0.5);
+    border-radius: 2px 0 0 2px;
     cursor: pointer;
-    transition: background 0.2s, height 0.2s;
-    /* 시각은 6px 유지, 터치 영역을 왼쪽으로 확장 (총 44px) */
-    padding-left: 38px;
+    transition: background 0.2s, opacity 0.2s;
+    /* 시각은 3px 유지, 터치 영역을 왼쪽으로 확장 (총 44px) */
+    padding-left: 41px;
     box-sizing: content-box;
   }
   #sao-handle.active {
-    background: rgba(79,124,255,0.7);
-    height: 72px;
+    /* 메뉴 열림: 파란 탭 숨김 (같은 자리 탭/스와이프로 닫기는 그대로 동작) */
+    background: transparent;
+    box-shadow: none;
   }
 
   /* 힌트 텍스트 */
@@ -977,3 +979,724 @@ html { -webkit-overflow-scrolling: touch; }
   white-space: nowrap;
 }
 .home-act-chip:active { background: rgba(79,124,255,.28); }
+
+/* ══════════════════════════════════════════════════════════════
+   리디자인 v2.0 2단계 — 모바일 셸 (js/redesign-v6.js가 DOM 구성)
+   구조: body.mn-shell = 100dvh flex-column
+         #mn-header + #mn-tabs + #app(#main=트랙 래퍼) + #mn-actionbar
+   - 하단 액션 바는 흐름 안(flex:none) — 고정 플로팅이 아니라서
+     어떤 스크롤 위치에서도 금액·CTA를 덮지 않는다
+   - 각 화면(.mn-screen)이 독립 세로 스크롤 컨테이너
+   - 미디어쿼리로 감싸지 않는다: 폰 가로 회전(>768px)에서도 셸을 유지해
+     리로드로 입력이 날아가는 일을 막는다. 모든 규칙이 body.mn-shell /
+     #mn-* 스코프라 셸이 없는 데스크톱에는 영향 없음 (소유자 결정 2026-07-25)
+   ══════════════════════════════════════════════════════════════ */
+  body.mn-shell {
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  /* 구 셸 요소 숨김: 배너/하단탭/플로팅 어시스턴트(액션 바 버튼으로 대체) */
+  body.mn-shell #banner,
+  body.mn-shell #mob-nav,
+  body.mn-shell #asst-btn,
+  body.mn-shell #asst-bubble { display: none !important; }
+
+  body.mn-shell #app  { flex: 1 1 auto; min-height: 0; height: auto; display: flex; flex-direction: column; }
+  body.mn-shell #main {
+    flex: 1 1 auto; min-height: 0;
+    position: relative;
+    overflow: hidden;               /* 트랙 래퍼 — 가로는 트랙 transform으로만 이동 */
+    padding: 0;
+    touch-action: pan-y;            /* 세로 스크롤 충돌 방지 브라우저 측 방어선 */
+    cursor: grab;
+  }
+
+  /* ── 헤더 ── */
+  #mn-header {
+    flex: none;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    padding: calc(10px + var(--safe-top)) 20px 6px 16px;
+    background: var(--bg);
+  }
+  #mn-hd-brand { display: flex; align-items: center; gap: 8px; font-size: 19px; font-weight: 900; letter-spacing: -.02em; color: var(--text); }
+  #mn-hd-right { display: flex; align-items: center; gap: 12px; }
+  #mn-today-chip {
+    background: var(--mn-point-soft, #FEF3C7);
+    color: var(--mn-point-text, #B45309);
+    font-size: 13px; font-weight: 700;
+    padding: 6px 12px; border-radius: 999px;
+    white-space: nowrap;
+  }
+  /* HOME_V2_SPEC §7: 실적 0원이면 중립색 — 예상액이 아니라 누적 실적임을 색으로도 구분 */
+  #mn-today-chip.zero {
+    background: var(--mn-bubble, #F1F5F9);
+    color: var(--text3);
+  }
+  #mn-hd-gear {
+    background: none; border: none; cursor: pointer; padding: 6px;
+    min-width: 44px; min-height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text3);
+  }
+
+  /* ── 6탭 + 인디케이터 ── */
+  #mn-tabs {
+    flex: none;
+    position: relative;
+    display: grid; grid-template-columns: repeat(6, 1fr);
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .mn-tab {
+    background: none; border: none; cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 15px; font-weight: 400; color: var(--text3);
+    padding: 12px 0; min-height: 44px;
+    position: relative;
+  }
+  .mn-tab.active { color: var(--text); font-weight: 700; }
+  #mn-info-dot {
+    display: none;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--mn-danger-text, #DC2626);
+    margin-left: 3px; vertical-align: top;
+  }
+  #mn-tab-ind {
+    position: absolute; left: 0; bottom: 0;
+    width: 16.6667%; height: 3px;
+    background: var(--text); border-radius: 3px;
+    transition: transform .3s cubic-bezier(.25,.8,.35,1), opacity .2s;
+    pointer-events: none;
+  }
+
+  /* ── 스와이프 트랙 (7화면) ── */
+  #mn-track {
+    display: flex; width: 700%; height: 100%;
+    will-change: transform;
+    transition: transform .3s cubic-bezier(.25,.8,.35,1);
+  }
+  #mn-track > .mn-screen {
+    width: 14.2857%; flex: none;
+    height: 100%;
+    overflow-y: auto; overflow-x: hidden;   /* 화면별 독립 세로 스크롤 */
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    padding: 12px 12px calc(20px + var(--safe-bottom));
+  }
+
+  /* ── 하단 액션 바 (흐름 안) ── */
+  #mn-actionbar {
+    flex: none;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px calc(14px + var(--safe-bottom));
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+  }
+  #mn-dots { display: flex; gap: 6px; }
+  .mn-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--mn-border-2, #CBD5E1);
+    transition: background .25s;
+  }
+  .mn-dot.active { background: var(--text); }
+  #mn-ab-btns { display: flex; gap: 12px; }
+  #mn-ab-mic, #mn-ab-chat {
+    width: 48px; height: 48px; border-radius: 50%; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0;
+  }
+  #mn-ab-mic { background: var(--mn-point, #F59E0B); box-shadow: var(--mn-shadow-amber); }
+  #mn-ab-mic.on { background: #D97706; }
+  #mn-ab-chat { background: var(--mn-primary, #2563EB); box-shadow: var(--mn-shadow-blue); }
+
+  /* 챗봇 패널: 하단 액션 바 위로 (README 오버레이 B — 셸에서 액션 바를 덮지 않는다) */
+  body.mn-shell #asst-panel {
+    bottom: calc(78px + var(--safe-bottom, 0px));
+    right: max(16px, calc(50% - 244px));
+    left: auto;
+    width: min(340px, calc(100vw - 32px));
+  }
+
+  /* PWA 설치 배너: 액션 바(마이크·챗봇)를 가리지 않도록 그 위로 (인라인 style보다 우선) */
+  body.mn-shell #pwa-install-nudge {
+    bottom: calc(78px + var(--safe-bottom, 0px)) !important;
+  }
+  body.mn-shell.has-pwa-nudge { padding-bottom: 0; }
+
+/* ══════════════════════════════════════════════════════════════
+   리디자인 v2.0 3단계 — 화면별 뷰
+   ══════════════════════════════════════════════════════════════ */
+
+/* ══════════════════════════════════════════════════════════════
+   HOME v2 — 히어로 카드 (HOME_V2_SPEC §2). 상태별로 카드가 통째로 교체된다.
+   ══════════════════════════════════════════════════════════════ */
+.mn-hero { border-radius: 22px; padding: 20px; margin-bottom: 16px; }
+
+/* 2-A. 근무 중 — 블루 채움 */
+.mn-hero--work {
+  background: var(--mn-primary, #2563EB);
+  color: var(--mn-on-color, #F8FAFC);
+}
+/* 보조 텍스트만 글자 크기 설정에 반응 (--mn-text-k). 44px 숫자·CTA 높이는 고정 —
+   확대하면 카드가 깨지고, 이미 충분히 크다 (소유자 결정 2026-07-26) */
+.mn-hero-status {
+  display: flex; align-items: center; gap: 7px;
+  font-size: calc(13.5px * var(--mn-text-k, 1)); font-weight: 700; opacity: .85;
+}
+.mn-hero-status i {
+  width: 8px; height: 8px; border-radius: 50%; flex: none;
+  background: var(--mn-success-fill, #4ADE80);
+}
+.mn-hero-num {
+  font-size: 44px; font-weight: 900; letter-spacing: -.03em; line-height: 1.05;
+  margin-top: 10px;
+  white-space: nowrap;              /* 검증 5: 375px에서 줄바꿈 금지 */
+}
+.mn-hero-num--amt  { font-size: 32px; }
+/* 숫자가 아닌 문장이 들어가는 상태 — 44px은 375px에서 넘친다 */
+.mn-hero-num--text { font-size: 26px; white-space: normal; line-height: 1.25; }
+.mn-hero-sub  { font-size: calc(15px * var(--mn-text-k, 1)); margin-top: 4px; opacity: .85; }
+.mn-hero-sub b { color: #FDE68A; font-weight: 700; white-space: nowrap; }
+.mn-hero-gauge {
+  height: 7px; border-radius: 999px; margin-top: 16px; overflow: hidden;
+  background: rgba(248,250,252,.25);
+}
+.mn-hero-gauge i {
+  display: block; height: 100%; border-radius: 999px;
+  background: var(--mn-point, #F59E0B); transition: width .25s;
+}
+.mn-hero-gauge-lbl {
+  display: flex; justify-content: space-between; gap: 8px;
+  font-size: calc(12.5px * var(--mn-text-k, 1)); margin-top: 7px; opacity: .8;
+}
+.mn-hero-over { color: #FDE68A; font-weight: 700; white-space: nowrap; }
+
+/* 2-B. 출근 전 / 완료 / 일정 없음 — 흰 카드 */
+.mn-hero--plain {
+  background: var(--surface); border: 1px solid var(--border); color: var(--text);
+}
+.mn-hero-label { font-size: calc(13.5px * var(--mn-text-k, 1)); font-weight: 700; color: var(--text3); }
+.mn-hero--plain .mn-hero-num { margin-top: 8px; color: var(--text); }
+.mn-hero-sub2 { font-size: calc(15px * var(--mn-text-k, 1)); color: var(--text2); margin-top: 4px; }
+.mn-hero-sub2 b { color: var(--mn-point-text, #B45309); font-weight: 700; white-space: nowrap; }
+.mn-hero-wx {
+  display: flex; align-items: center; gap: 8px; margin-top: 14px;
+  padding: 11px 13px; background: var(--mn-bubble, #F1F5F9); border-radius: 14px;
+  font-size: calc(13.5px * var(--mn-text-k, 1)); line-height: 1.45; color: var(--text2);
+}
+.mn-hero-wx .mn-wx-ico { width: 19px; height: 19px; flex: none; }
+.mn-hero-link {
+  display: inline-block; margin-top: 14px; cursor: pointer;
+  font-size: calc(15px * var(--mn-text-k, 1)); font-weight: 700; color: var(--accent); text-decoration: underline;
+  min-height: 44px; line-height: 44px;
+}
+
+/* CTA — 항상 하나 */
+.mn-hero-cta {
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  width: 100%; margin-top: 16px; border: none; cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  border-radius: 16px; white-space: nowrap;
+}
+.mn-hero-cta svg { width: 21px; height: 21px; flex: none; }
+.mn-hero-cta--light {
+  min-height: 52px; background: #F8FAFC; color: #1E3A8A;
+  font-size: 17px; font-weight: 900;
+}
+.mn-hero-cta--blue {
+  min-height: 54px; background: var(--mn-primary, #2563EB); color: var(--mn-on-color, #F8FAFC);
+  font-size: 18px; font-weight: 900; box-shadow: 0 4px 14px rgba(30,41,59,.25);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   HOME v2 ④ — PC 셸 (HOME_V2_SPEC §6, 레퍼런스 6c)
+   좌측 네비 236px + 상단 바. 기존 상단 배너(12버튼)는 숨기고,
+   6탭은 네비로 / 나머지 5개는 설정 화면에 이미 존재하는 경로를 쓴다.
+   ══════════════════════════════════════════════════════════════ */
+@media (min-width: 769px) {
+  body.mn-pc #banner { display: none !important; }
+  body.mn-pc #main-tabbar { display: none !important; }
+  /* 명세 §4: 플로팅 어시스턴트 아바타·상시 음성 바는 PC에서도 숨기고
+     상단 바의 마이크·"냥이 비서"로 대체한다 (중복 방지) */
+  body.mn-pc #asst-btn,
+  body.mn-pc #asst-bubble { display: none !important; }
+  /* 음성 바는 런타임 주입 스타일(ensureVoiceBar)이 더 높은 특이성으로 display:flex를
+     걸 수 있어 !important로 확정한다 — PC에서는 상단 바 마이크로만 여닫는다 */
+  body.mn-pc #mn-voice-bar { display: none !important; }
+  body.mn-pc #mn-voice-bar.open { display: flex !important; }
+
+  body.mn-pc #app { display: flex; align-items: stretch; }
+  /* 본문 컬럼 — 상단 바(전폭) 위, 콘텐츠 아래 (명세 §2) */
+  #mn-pc-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+
+  /* 기존 좌측 설정 패널은 삭제하지 않고 드로어로 전환 ("상세 설정"으로 열림) */
+  body.mn-pc #sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 960;
+    width: 320px; max-width: 88vw; overflow-y: auto;
+    transform: translateX(-100%); transition: transform .25s ease;
+    box-shadow: var(--mn-shadow-panel);
+  }
+  body.mn-pc #sidebar.open { transform: none; }
+  body.mn-pc #drawer-overlay.show { display: block; }
+
+  /* ── 좌측 네비 ── */
+  /* 다크에서 본문 바깥 배경 (명세 §8: #0B1220) */
+  body.mn-pc { background: var(--mn-outer-pc, #EEF2F8); }
+
+  #mn-pc-nav {
+    width: 236px; flex: none; align-self: stretch;
+    background: var(--mn-nav-bg, #1E3A8A); color: #F8FAFC;
+    padding: 20px 16px; display: flex; flex-direction: column; gap: 22px;
+    position: sticky; top: 0; height: 100vh; box-sizing: border-box;
+  }
+  .mn-pc-logo { display: flex; align-items: center; gap: 9px; }
+  .mn-pc-logo span { font-size: 17px; font-weight: 900; letter-spacing: -.02em; }
+  .mn-pc-logo img { width: 32px; height: 32px; border-radius: 50%; flex: none; }
+  .mn-pc-menu, .mn-pc-bottom { display: flex; flex-direction: column; gap: 3px; }
+  .mn-pc-bottom { margin-top: auto; }
+  .mn-pc-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 14px; border-radius: 14px; border: none; cursor: pointer;
+    background: none; color: var(--mn-sidebar-dim, #A9BCE8);
+    font-size: 15px; font-weight: 700; font-family: 'Noto Sans KR', sans-serif;
+    text-align: left; min-height: 44px; width: 100%;
+  }
+  .mn-pc-item svg { width: 19px; height: 19px; flex: none; }
+  .mn-pc-item:hover { background: rgba(248,250,252,.08); }
+  .mn-pc-item.active {
+    background: var(--mn-nav-active-bg, #F8FAFC);
+    color: var(--mn-nav-active-text, #1E3A8A);
+    font-weight: 900;
+  }
+  .mn-pc-dot {
+    width: 7px; height: 7px; border-radius: 50%; margin-left: auto; display: none;
+    background: var(--mn-danger-text, #DC2626);
+  }
+  .mn-pc-income {
+    padding: 13px 14px; border-radius: 14px; background: rgba(248,250,252,.1); margin-bottom: 3px;
+  }
+  .mn-pc-income span { display: block; font-size: 12.5px; color: var(--mn-sidebar-dim, #A9BCE8); }
+  .mn-pc-income b { display: block; font-size: 17px; font-weight: 900; color: #F8FAFC; margin-top: 3px; }
+
+  /* ── 상단 바 ── */
+  /* 상단 바 — 라이트 #F8FAFC / 다크 #1B2536 (명세 §4·§8) */
+  #mn-pc-top {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 28px; background: var(--mn-topbar-bg, #F8FAFC);
+    border-bottom: 1px solid var(--border);
+  }
+  .mn-pc-title #mn-pc-title-t { font-size: 22px; font-weight: 900; letter-spacing: -.02em; color: var(--text); }
+  .mn-pc-title #mn-pc-title-s { font-size: 13.5px; color: var(--text3); margin-top: 1px; }
+  .mn-pc-actions { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  #mn-pc-chip {
+    padding: 7px 13px; border-radius: 999px; white-space: nowrap;
+    background: var(--mn-point-soft, #FEF3C7); color: var(--mn-point-text, #B45309);
+    font-size: 14px; font-weight: 900;
+  }
+  #mn-pc-chip.zero { background: var(--mn-bubble, #F1F5F9); color: var(--text3); }
+  /* 화면별 컨텍스트 요소 (PC_SHELL_V2_SPEC §4) */
+  .mn-pc-ctx-chip, .mn-pc-ctx-btn {
+    min-height: 44px; white-space: nowrap; cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .mn-pc-ctx-chip {                       /* 근태 — 미기록 칩 */
+    padding: 7px 13px; border-radius: 999px; border: none;
+    background: var(--mn-warn-bg, #FFEDD5); color: var(--mn-warn-text, #9A3412);
+    font-size: 14px; font-weight: 900;
+  }
+  .mn-pc-ctx-btn {                        /* 수입 — 명세서 입력 */
+    padding: 9px 16px; border-radius: 12px;
+    border: 1px solid var(--mn-border-2, #CBD5E1);
+    background: var(--surface); color: var(--text);
+    font-size: 14px; font-weight: 700;
+  }
+  .mn-pc-ctx-btn--fill {                  /* 생존 — 지출 기록 (채움) */
+    border-color: var(--mn-primary, #2563EB);
+    background: var(--mn-primary, #2563EB); color: var(--mn-on-color, #F8FAFC);
+  }
+
+  #mn-pc-mic {
+    width: 44px; height: 44px; border-radius: 50%; border: none; cursor: pointer; flex: none;
+    display: flex; align-items: center; justify-content: center; padding: 0;
+    background: var(--mn-point, #F59E0B); box-shadow: var(--mn-shadow-amber);
+  }
+  #mn-pc-mic.on { background: #D97706; }
+  #mn-pc-mic svg { width: 20px; height: 20px; }
+  #mn-pc-asst {
+    display: flex; align-items: center; gap: 8px; cursor: pointer; border: none;
+    padding: 7px 15px 7px 8px; border-radius: 999px; min-height: 44px;
+    background: var(--mn-primary, #2563EB); color: var(--mn-on-color, #F8FAFC);
+    font-size: 14.5px; font-weight: 900; font-family: 'Noto Sans KR', sans-serif; white-space: nowrap;
+  }
+  #mn-pc-asst img { width: 28px; height: 28px; border-radius: 50%; flex: none; }
+
+  /* 셸이 붙으면 본문 여백은 상단 바가 대신한다.
+     ★ 좌우 여백(거터)은 여기 한 곳에서만 준다 — main.css에 화면별 padding 규칙이
+       흩어져 있어 화면마다 시작점이 어긋났다 */
+  body.mn-pc #main { padding: 24px 28px 40px !important; }
+  /* 화면 안쪽 컨테이너는 좌우 여백을 갖지 않는다 (거터는 #main이 담당).
+     홈·정보는 .home-content의 12px 패딩 때문에 근태·수입 등과 12px 어긋나 있었다 */
+  body.mn-pc .home-content { padding-left: 0; padding-right: 0; }
+  body.mn-pc #cal-area,
+  body.mn-pc .budget-container { padding-left: 0; padding-right: 0; }
+
+  /* ── ④-3 화면별 2열 (명세 §6) ── */
+  .mn-pc-2col, #mn-pc-att {
+    display: grid; gap: 20px; align-items: start;
+  }
+  .mn-pc-2col { grid-template-columns: 1.35fr 1fr; }   /* 홈 — 히어로가 넓다 */
+  /* 정보 — 좌 날씨·내 소식 / 우 브리핑(긴 목록). 높이 균형을 위해 이렇게 나눈다 */
+  .mn-pc-info { grid-template-columns: 1fr 1.15fr; }
+  /* ★ PC 셸에서는 모든 화면이 같은 폭을 쓴다.
+     main.css에는 화면마다 다른 폭 규칙이 흩어져 있다 —
+       · #salary-page / #budget-page : max-width 1100px + margin auto (상시)
+       · #home-page 등 6개          : 1025~1439px 구간에서만 1100px
+       · #att-page                  : 넓은 폭에서 무제한
+       · #info-page                 : 동적 생성이라 어느 목록에도 없음
+     화면마다 폭이 달라 "정보만 좁다" 같은 불일치가 생기므로, 셸이 폭을 책임지고
+     (#app이 이미 1600px 상한) 페이지 컨테이너의 개별 상한은 모두 푼다. */
+  /* #main이 flex 컨테이너면 화면 컨테이너가 "내용 폭"만큼 줄어든다.
+     달력처럼 내용이 넓은 근태는 꽉 차고, 카드 2개뿐인 정보는 좁아지는 원인이었다.
+     블록 배치로 못박아 모든 화면이 같은 폭을 쓰게 한다. */
+  body.mn-pc #main { display: block !important; }
+  body.mn-pc #main > div {
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+  }
+  .mn-pc-info .mn-wx-card { margin-bottom: 0; border-radius: 20px; }
+  .mn-pc-info .mn-brief,
+  .mn-pc-info .mn-card { border-radius: 20px; }
+  /* 근태 — 우측 달력이 7열 그리드라 폭이 더 필요하다 (PC_SHELL_V2_SPEC §5) */
+  #mn-pc-att  { grid-template-columns: 1fr 1.25fr; }
+  .mn-pc-col-r { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .mn-pc-col-l { min-width: 0; }
+
+  /* 홈 — 좌측 히어로를 키운다 (숫자 58px, CTA 56px) */
+  .mn-pc-2col .mn-hero { padding: 26px 28px; margin-bottom: 0; }
+  .mn-pc-2col .mn-hero-num { font-size: 58px; }
+  .mn-pc-2col .mn-hero-num--amt  { font-size: 42px; }
+  .mn-pc-2col .mn-hero-num--text { font-size: 32px; }
+  .mn-pc-2col .mn-hero-cta--light,
+  .mn-pc-2col .mn-hero-cta--blue { min-height: 56px; }
+
+  /* 우측 카드 — radius 20, 행 사이 구분선 */
+  .mn-pc-col-r .mn-todo {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 6px 18px 10px; gap: 0; margin-bottom: 0;
+  }
+  .mn-pc-col-r .mn-todo-h { padding: 12px 0 4px; font-size: 15px; }
+  .mn-pc-col-r .mn-todo-row {
+    background: none; border: none; border-radius: 0;
+    border-bottom: 1px solid var(--mn-divider-c, #EEF2F7); padding: 14px 0;
+  }
+  .mn-pc-col-r .mn-todo-row:last-child { border-bottom: none; }
+  .mn-pc-col-r .mn-wx-card { margin-bottom: 0; border-radius: 20px; }
+  .mn-pc-col-r .mn-wx-temp { font-size: 30px; }
+  .mn-pc-col-r .mn-warn-card { margin-bottom: 0; }
+
+  /* 근태 — 우측에 전체 달력 상주 (모바일에서 팝업이던 것) */
+  #mn-pc-att .mn-pc-col-r #cal-area {
+    display: block !important;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 16px;
+  }
+  /* 좌측 v3가 같은 역할을 하므로 PC 근태에서는 오늘 패널을 숨긴다
+     (#today-panel은 #mn-pc-att 바깥에 있어 body 스코프로 지정) */
+  body.mn-pc #att-page #today-panel { display: none !important; }
+  /* v3 미니 달력은 우측 전체 달력과 중복이라 PC에서 숨긴다.
+     미니에만 있던 상태 범례는 _pcLayoutAtt가 우측 달력 위로 옮겨 둔다 */
+  body.mn-pc #attv3-minicalpanel { display: none !important; }
+  #mn-pc-att-legend { margin-bottom: 10px; }
+
+  /* 좌우 연동 ①: 좌측에서 선택된 날짜를 우측 달력에서 강조 */
+  #mn-pc-att .cal-day.mn-pc-sel {
+    outline: 2.5px solid var(--mn-primary, #2563EB);
+    outline-offset: -2px;
+  }
+  /* 좌우 연동 ②: 미기록 날짜를 달력 셀에도 표시 — 좌측 "기록?" 항목과 같은 날짜를 가리킨다
+     (PC_SHELL_V2_SPEC §5). 다크는 토큰이 반전한다. */
+  #mn-pc-att .cal-day.mn-pc-missed {
+    border: 1.5px solid var(--mn-missed-border, #F97316) !important;
+    background: var(--mn-missed-bg, #FFF7ED) !important;
+  }
+
+  /* 수입·생존·연간 — 기존 블록을 좌/우로 옮긴 2열 (PC_SHELL_V2_SPEC §5) */
+  .mn-pc-grid {
+    display: grid; gap: 20px; align-items: start;   /* 높이 균형을 억지로 맞추지 않는다 */
+  }
+  .mn-pc-split .mn-pc-col-l,
+  .mn-pc-split .mn-pc-col-r { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+  .mn-pc-head  { margin-bottom: 16px; }
+  .mn-pc-below { margin-top: 20px; }
+  .mn-pc-sal  .mn-pc-grid { grid-template-columns: 1fr 1.15fr; }
+  .mn-pc-bdg  .mn-pc-grid { grid-template-columns: 1fr 1.15fr; }
+  .mn-pc-dash .mn-pc-grid { grid-template-columns: 1fr 1.6fr; }
+}
+
+/* ── 반응형 경계 (PC_SHELL_V2_SPEC §7) ── */
+@media (min-width: 1024px) and (max-width: 1199px) {
+  /* 2열 유지하되 카드 여백 축소 */
+  body.mn-pc .mn-card,
+  body.mn-pc .mn-pc-col-r .mn-todo,
+  body.mn-pc .mn-pc-2col .mn-hero { padding: 20px; }
+  body.mn-pc #main { padding: 20px 20px 32px; }
+}
+@media (min-width: 769px) and (max-width: 1023px) {
+  /* 사이드바는 유지하고 콘텐츠만 1열로 (우측 열이 아래로 내려온다) */
+  body.mn-pc .mn-pc-2col,
+  body.mn-pc #mn-pc-att,
+  body.mn-pc .mn-pc-grid { grid-template-columns: 1fr !important; }
+  body.mn-pc .mn-pc-2col .mn-hero-num { font-size: 44px; }
+  body.mn-pc #main { padding: 20px 20px 32px; }
+}
+
+/* ══════════ HOME v2 ② "오늘 남은 일" (HOME_V2_SPEC §3) ══════════ */
+.mn-todo { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+.mn-todo-h {
+  font-size: calc(13.5px * var(--mn-text-k, 1)); font-weight: 900; color: var(--text2);
+}
+.mn-todo-row {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 14px 16px; cursor: pointer;
+  min-height: 44px;
+}
+.mn-todo-node {
+  width: 11px; height: 11px; border-radius: 50%; flex: none; box-sizing: border-box;
+  border: 2.5px solid var(--mn-border-2, #CBD5E1); background: var(--bg);
+}
+.mn-todo-node.done { background: var(--mn-success-fill, #22C55E); border-color: var(--mn-success-fill, #22C55E); }
+.mn-todo-txt { flex: 1; min-width: 0; }
+.mn-todo-txt b {
+  display: block; font-size: calc(15.5px * var(--mn-text-k, 1)); font-weight: 700; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.mn-todo-txt i {
+  display: block; font-style: normal; margin-top: 2px;
+  font-size: calc(13px * var(--mn-text-k, 1)); color: var(--text3);
+}
+.mn-todo-chev { width: 18px; height: 18px; flex: none; color: var(--mn-text-4, #94A3B8); }
+
+/* ══════════ HOME v2 ③ 월 요약 바 (HOME_V2_SPEC §4) ══════════ */
+.mn-month-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: var(--mn-monthbar-bg, #1E293B); color: var(--mn-monthbar-text, #F8FAFC);
+  border-radius: 16px; padding: 15px 17px; cursor: pointer;
+}
+.mn-month-lbl { font-size: calc(14px * var(--mn-text-k, 1)); opacity: .8; }
+.mn-month-val { font-size: calc(16px * var(--mn-text-k, 1)); font-weight: 900; flex: none; white-space: nowrap; }
+
+/* ── 홈: 오늘 타임라인 (모바일·데스크톱 공용 — renderTimelineHome) ── */
+.mn-home-date {
+  font-size: 21px; font-weight: 900; letter-spacing: -.02em;
+  color: var(--text); padding: 6px 2px 12px;
+}
+.mn-tl-row  { display: flex; gap: 14px; }
+.mn-tl-rail { display: flex; flex-direction: column; align-items: center; width: 12px; flex: none; }
+.mn-tl-node { width: 12px; height: 12px; border-radius: 50%; flex: none; margin-top: 4px; box-sizing: border-box; }
+.mn-tl-node.done { background: var(--mn-success-fill, #22C55E); }
+.mn-tl-node.todo { background: var(--bg); border: 2.5px solid var(--mn-border-2, #CBD5E1); }
+.mn-tl-line { width: 2px; flex: 1; background: var(--mn-divider-c, #EEF2F7); margin: 4px 0; }
+.mn-tl-body { flex: 1; min-width: 0; padding-bottom: 14px; }
+.mn-tl-time { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+.mn-tl-time.done { color: var(--mn-success-text, #15803D); }
+.mn-tl-time.todo { color: var(--text3); }
+.mn-tl-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; }
+.mn-tl-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.mn-tl-name { font-size: 16px; font-weight: 700; color: var(--text); min-width: 0; }
+.mn-tl-amt  { font-size: 15px; font-weight: 900; color: var(--mn-primary, #2563EB); flex: none; white-space: nowrap; }
+.mn-tl-amt.bad { color: var(--mn-danger-text, #DC2626); }
+.mn-tl-sub  { font-size: 14px; color: var(--text3); margin-top: 2px; }
+.mn-tl-cta {
+  display: block; width: 100%; min-height: 46px; margin-top: 10px;
+  border: none; border-radius: 12px;
+  background: var(--mn-primary, #2563EB); color: var(--mn-on-color, #fff);
+  font-size: 15px; font-weight: 700; font-family: 'Noto Sans KR', sans-serif; cursor: pointer;
+}
+/* 마지막 노드: 이번 달 요약 바 (블루 = 월 요약 바 — 색 역할 규칙) */
+.mn-tl-month {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;
+  background: var(--mn-primary, #2563EB); color: var(--mn-on-color, #fff);
+  border-radius: 16px; padding: 14px 16px; cursor: pointer;
+}
+.mn-tl-month-lbl { font-size: 14px; opacity: .75; }
+.mn-tl-month-val { font-size: 15px; font-weight: 900; white-space: nowrap; }
+
+/* ══════════════════════════════════════════════════════════════
+   정보 화면 (README §1) — 날씨 카드 + 오늘의 브리핑 + 내 소식
+   ══════════════════════════════════════════════════════════════ */
+.mn-info-date { font-size: 13px; color: var(--text3); padding: 2px 2px 10px; }
+
+/* 날씨 카드 */
+.mn-wx-card {
+  background: var(--mn-weather-bg, linear-gradient(150deg,#e8f1fb,#f5f9fd));
+  border: 1px solid var(--mn-weather-border, #d8e5f2);
+  border-radius: 20px; padding: 18px 20px;
+  color: var(--mn-weather-text, #1b3a5c);
+  margin-bottom: 12px;
+}
+.mn-wx-top { display: flex; align-items: flex-start; gap: 12px; }
+.mn-wx-main { flex: 1; min-width: 0; }
+.mn-wx-loc  { font-size: 14px; opacity: .85; }
+.mn-wx-temp { font-size: 36px; font-weight: 900; letter-spacing: -.02em; line-height: 1.15; }
+.mn-wx-sum  { font-size: 14.5px; }
+.mn-wx-ico  { width: 52px; height: 52px; flex: none; color: var(--mn-weather-icon, #4b86c4); }
+.mn-wx-cells { display: flex; gap: 6px; margin-top: 14px; }
+.mn-wx-cell {
+  flex: 1; min-width: 0; text-align: center;
+  background: var(--mn-weather-chip, #fff);
+  border: 1px solid var(--mn-weather-chip-border, #dfe9f4);
+  border-radius: 12px; padding: 9px 4px;
+}
+.mn-wx-cell span { display: block; font-size: 12px; color: var(--mn-weather-sub, #5d7f9f); }
+.mn-wx-cell b    { display: block; font-size: 13px; margin-top: 2px; white-space: nowrap; }
+.mn-wx-advice {
+  display: flex; align-items: center; gap: 8px; margin-top: 12px;
+  background: var(--mn-weather-chip, #fff);
+  border: 1px solid var(--mn-weather-chip-border, #dfe9f4);
+  border-radius: 12px; padding: 10px 12px;
+  font-size: 13.5px; line-height: 1.45;
+}
+.mn-wx-advice img { width: 24px; height: 24px; border-radius: 50%; flex: none; object-fit: cover; }
+.mn-wx-fail { text-align: center; }
+.mn-wx-fail-t { font-size: 15px; font-weight: 700; }
+.mn-wx-fail-s { font-size: 13.5px; color: var(--mn-weather-sub, #5d7f9f); margin-top: 4px; line-height: 1.45; }
+.mn-wx-retry {
+  min-height: 44px; margin-top: 10px; padding: 0 18px;
+  border-radius: 12px; border: 1.5px solid var(--mn-border-2, #CBD5E1);
+  background: transparent; color: inherit;
+  font-size: 14px; font-weight: 700; font-family: 'Noto Sans KR', sans-serif; cursor: pointer;
+}
+
+/* 오늘의 브리핑 */
+.mn-brief { padding: 4px 16px; }
+.mn-brief-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 0; border-bottom: 1px solid var(--mn-divider-c, #EEF2F7);
+  text-decoration: none; color: inherit;
+}
+.mn-brief-row:last-child { border-bottom: none; }
+.mn-brief-chip {
+  flex: none; font-size: 12px; font-weight: 700;
+  padding: 3px 9px; border-radius: 999px;
+}
+.mn-brief-chip.labor { background: var(--mn-brand-soft); color: var(--accent); }
+.mn-brief-chip.grant { background: var(--mn-good-soft);  color: var(--mn-success-text, #15803D); }
+.mn-brief-chip.tax   { background: var(--mn-att-half-soft); color: var(--mn-att-half); }
+.mn-brief-chip.econ  { background: var(--mn-point-soft, #FEF3C7); color: var(--mn-point-text, #B45309); }
+.mn-brief-txt { flex: 1; min-width: 0; }
+.mn-brief-txt b {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  font-size: 14.5px; font-weight: 600; color: var(--text); line-height: 1.45;
+}
+.mn-brief-txt i { display: block; font-style: normal; font-size: 12.5px; color: var(--text3); margin-top: 2px; }
+.mn-brief-empty { font-size: 13.5px; color: var(--text3); padding: 12px 0; text-align: center; }
+
+/* 경고 카드 */
+.mn-warn-card {
+  background: var(--mn-warn-bg, #FFEDD5); color: var(--mn-warn-text, #9A3412);
+  border-radius: 16px; padding: 14px 16px; font-size: 13.5px; line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+/* 스켈레톤 (로딩) */
+.mn-sk { background: var(--mn-divider-c, #EEF2F7); border-radius: 8px; animation: mn-sk-pulse 1.2s ease-in-out infinite; }
+.mn-sk-line { height: 12px; }
+.mn-sk-temp { height: 36px; width: 45%; margin: 8px 0; }
+.mn-sk-cell { flex: 1; height: 44px; border-radius: 12px; }
+.mn-sk-chip { width: 46px; height: 22px; border-radius: 999px; flex: none; }
+@keyframes mn-sk-pulse { 0%,100% { opacity: 1; } 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .mn-sk { animation: none; } }
+
+/* ── 설정: 화면 밝기 · 글자 크기 카드 (renderSettingsPage 래핑으로 주입) ── */
+#mn-display-card .mn-set-lbl {
+  font-size: 14px; font-weight: 700; color: var(--text2); margin: 4px 0 6px;
+}
+.mn-set-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.mn-set-chip {
+  flex: 1 1 0; min-height: 44px; padding: 0 12px;
+  border-radius: 12px; border: 1.5px solid var(--mn-border-2, #CBD5E1);
+  background: var(--surface); color: var(--text3);
+  font-size: 14.5px; font-weight: 700; font-family: 'Noto Sans KR', sans-serif;
+  cursor: pointer; white-space: nowrap;
+  transition: background .25s, color .25s, border-color .25s;
+}
+.mn-set-chip.active {
+  background: var(--text); border-color: var(--text); color: var(--bg);
+}
+#mn-display-card .mn-set-help {
+  font-size: 13px; color: var(--text3); line-height: 1.5; margin-top: 8px;
+}
+
+/* ── 근태 v3 주간 스트립 — 새 주 스트립과 시각 정합 (셀 프레임 11px + 오늘 잉크 강조)
+   v3 마크업은 인라인 스타일이라 !important로 덮는다. 상세 리스킨은 다음 차수. ── */
+[data-attv3-day] {
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--bg);
+  padding: 6px 0 5px !important;
+}
+[data-attv3-day] div[style*="background:var(--accent"] {
+  /* 오늘: 라이트=잉크 채움 / 다크=밝은 블루 채움 (잉크는 다크 배경과 동색이라 무의미) */
+  background: var(--mn-today-fill, #1E293B) !important;
+  color: var(--mn-today-text, #F8FAFC) !important;
+}
+[data-attv3-day] div[style*="border:2px solid var(--accent"] {
+  border-color: var(--mn-today-fill, #1E293B) !important; /* 선택 날짜 링도 동일 강조색 */
+}
+/* v3 월 전체달력 팝업 — 새 시트와 딤·라운드 정합 */
+#attv3-month-overlay { background: var(--mn-dim, rgba(30,41,59,.45)) !important; }
+#attv3-month-overlay > div { border-radius: 22px !important; }
+
+/* ── 근태: 주 단위 스트립 (모바일 셸 전용 — ensureAttUI) ── */
+#mn-week-strip-wrap { margin-bottom: 14px; }
+#mn-week-hdr { display: flex; align-items: baseline; gap: 8px; padding: 2px 2px 8px; }
+#mn-week-title { font-size: 15px; font-weight: 900; letter-spacing: -.02em; color: var(--text); }
+#mn-week-hint  { margin-left: auto; font-size: 13px; color: var(--text3); }
+#mn-week-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.mn-ws-cell {
+  padding: 8px 0 7px; border-radius: 11px;
+  border: 1px solid var(--border); background: var(--bg);
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  cursor: pointer; font-family: 'Noto Sans KR', sans-serif; min-height: 44px;
+}
+.mn-ws-wd  { font-size: 12px; color: var(--text3); }
+.mn-ws-wd.sun { color: var(--sun); }
+.mn-ws-wd.sat { color: var(--sat); }
+.mn-ws-day { font-size: 15.5px; font-weight: 800; color: var(--text); }
+.mn-ws-dot { width: 6px; height: 6px; border-radius: 50%; }
+.mn-ws-cell.today { background: var(--mn-today-fill, #1E293B); border-color: var(--mn-today-fill, #1E293B); }
+.mn-ws-cell.today .mn-ws-wd, .mn-ws-cell.today .mn-ws-day { color: var(--mn-today-text, #F8FAFC); }
+#mn-cal-open-btn {
+  width: 100%; min-height: 46px; margin-top: 8px;
+  border-radius: 12px; border: 1.5px solid var(--mn-border-2, #CBD5E1);
+  background: var(--bg); color: var(--text);
+  font-size: 14.5px; font-weight: 700; font-family: 'Noto Sans KR', sans-serif; cursor: pointer;
+}
+
+/* ── 근태: 전체달력 시트 (기존 #cal-area가 이 안으로 이동) ── */
+#mn-cal-sheet {
+  position: fixed; inset: 0; background: var(--mn-dim, rgba(30,41,59,.45));
+  z-index: 940; display: none; align-items: center; justify-content: center;
+}
+#mn-cal-sheet.open { display: flex; }
+#mn-cal-sheet-box {
+  box-sizing: border-box;                          /* padding 포함 폭 — 390px 폰에서 잘림 방지 */
+  width: min(440px, calc(100% - 32px));
+  max-height: 88vh; overflow: auto;
+  background: var(--bg); border-radius: 22px; padding: 20px;
+  box-shadow: var(--mn-shadow-sheet, 0 20px 50px rgba(30,41,59,.35));
+  position: relative;
+}
+#mn-cal-close {
+  position: absolute; top: 10px; right: 10px; z-index: 2;
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--text2); font-size: 15px; cursor: pointer;
+}
+

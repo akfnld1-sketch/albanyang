@@ -1841,10 +1841,10 @@ function renderEtcCalendar(){
     if(hName) html += `<div style="font-size:11px;color:var(--orange);margin-bottom:2px;">${hName}</div>`;
 
     etcItems.slice(0, 2).forEach(it => {
-      html += `<div style="font-size:12px;color:#3dd68c;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">✨ ${it.name||'추가수익'}</div>`;
+      html += `<div style="font-size:12px;color:var(--mn-success-text,#15803D);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">✨ ${it.name||'추가수익'}</div>`;
     });
     if(etcItems.length > 2) html += `<div style="font-size:11px;color:var(--text3);">+${etcItems.length-2}건</div>`;
-    if(dayAmt > 0) html += `<div style="font-size:12px;color:#3dd68c;font-weight:700;margin-top:1px;">${dayAmt>=10000?Math.round(dayAmt/10000)+'만':dayAmt.toLocaleString()}원</div>`;
+    if(dayAmt > 0) html += `<div style="font-size:12px;color:var(--mn-success-text,#15803D);font-weight:700;margin-top:1px;">${dayAmt>=10000?Math.round(dayAmt/10000)+'만':dayAmt.toLocaleString()}원</div>`;
 
     el.innerHTML = html;
     grid.appendChild(el);

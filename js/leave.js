@@ -523,12 +523,20 @@ function lsLoad(){
         }
       }catch(e2){}
     }
-    const st = localStorage.getItem('atm2_st'); if(st) satToggle=JSON.parse(st);
-    const _whe = localStorage.getItem('atm2_weekly_holiday_enabled');
-    if(_whe !== null) weeklyHolidayEnabled = (_whe !== 'false');
-    const mp=localStorage.getItem('atm2_manual'); if(mp && !manualPay) manualPay=JSON.parse(mp); // 레거시 fallback
-    const lov=localStorage.getItem('atm2_leaveOverride');
-    leaveOverride = lov !== null ? parseFloat(lov) : null;
+    // ★ 이 구간은 개별 try로 감싼다 — 예전엔 감싸지 않아 atm2_st/atm2_manual 중
+    //   하나라도 JSON이 깨져 있으면 바깥 catch로 빠지면서 아래쪽의 프리랜서/알바/알람
+    //   복원(flData·albaData·alarmList)까지 통째로 건너뛰어, 알바 기록이 사라진 것처럼
+    //   보이는 증상이 생길 수 있었다. 값·구조·계산은 그대로이고 복원 실패 격리만 추가.
+    try{ const st = localStorage.getItem('atm2_st'); if(st) satToggle=JSON.parse(st); }catch(eSt){}
+    try{
+      const _whe = localStorage.getItem('atm2_weekly_holiday_enabled');
+      if(_whe !== null) weeklyHolidayEnabled = (_whe !== 'false');
+    }catch(eWh){}
+    try{ const mp=localStorage.getItem('atm2_manual'); if(mp && !manualPay) manualPay=JSON.parse(mp); }catch(eMp){} // 레거시 fallback
+    try{
+      const lov=localStorage.getItem('atm2_leaveOverride');
+      leaveOverride = lov !== null ? parseFloat(lov) : null;
+    }catch(eLov){}
     // 채팅 히스토리 복원
     try{
       const rawHist = localStorage.getItem('atm2_chatHistory');

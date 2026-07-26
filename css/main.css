@@ -529,11 +529,12 @@ body.sidebar-disabled #mob-sidebar-btn { display: none !important; }
   margin-bottom:1px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   max-width:100%;
 }
-.fl-chip.type-meeting  { background:rgba(79,124,255,.2);color:#5b8fff; }
-.fl-chip.type-deadline { background:rgba(255,92,122,.2);color:#e0003a; }
-.fl-chip.type-work     { background:rgba(61,214,140,.2);color:#1a9e5c; }
-.fl-chip.type-personal { background:rgba(255,209,102,.2);color:#cc9900; }
-.fl-chip.type-etc      { background:rgba(160,160,160,.2);color:#888; }
+/* 리디자인 v2.0: 확정 토큰 파생값으로 교체 (하드코딩 금지 — design-system.css 참조) */
+.fl-chip.type-meeting  { background:var(--mn-brand-soft,rgba(37,99,235,.10));color:var(--accent); }
+.fl-chip.type-deadline { background:var(--mn-bad-soft,rgba(239,68,68,.12));color:var(--mn-danger-text,#DC2626); }
+.fl-chip.type-work     { background:var(--mn-good-soft,rgba(34,197,94,.14));color:var(--mn-success-text,#15803D); }
+.fl-chip.type-personal { background:var(--mn-warn-soft,rgba(245,158,11,.16));color:var(--mn-point-text,#B45309); }
+.fl-chip.type-etc      { background:var(--surface3,#E9EEF5);color:var(--text3); }
 .fl-chip.has-alarm     { position:relative; }
 .fl-chip.has-alarm::after { content:'🔔';font-size:8px;margin-left:2px; }
 
@@ -545,7 +546,8 @@ body.sidebar-disabled #mob-sidebar-btn { display: none !important; }
 /* ── 알바 달력 칩 ── */
 .alba-chip {
   font-size:9px;padding:1px 5px;border-radius:4px;display:block;
-  background:rgba(230,120,0,.18);color:#c05500;font-weight:600;
+  /* 리디자인 v2.0: 포인트-소프트 + 포인트-텍스트 (앰버 칩 규칙) */
+  background:var(--mn-point-soft,#FEF3C7);color:var(--mn-point-text,#B45309);font-weight:600;
   margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .alba-chip.has-alarm::after { content:'🔔';font-size:8px;margin-left:2px; }

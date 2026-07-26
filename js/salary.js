@@ -913,9 +913,10 @@ function renderNjobYearlySummary(){
   const barRows = monthlyData.map(({m, gross, isFuture})=>{
     const pct = gross > 0 ? (gross/maxGross*100).toFixed(1) : 0;
     const isNow = (m===nowM && y===nowY);
+    // 리디자인 v2.0 확정: 이번달/지난달/미래달 (다크는 토큰이 반전 — design-system.css)
     const barColor = isFuture
-      ? 'rgba(79,124,255,0.2)'
-      : 'linear-gradient(90deg,var(--orange),var(--yellow))';
+      ? 'var(--mn-bar-future,#EEF2F7)'
+      : (isNow ? 'var(--mn-bar-now,#2563EB)' : 'var(--mn-bar-past,#CBD5E1)');
     const label = isFuture
       ? `<span style="font-size:14px;color:var(--text3);">-</span>`
       : gross > 0
@@ -923,7 +924,7 @@ function renderNjobYearlySummary(){
         : `<span style="font-size:14px;color:var(--text3);">기록없음</span>`;
 
     const bar = gross > 0
-      ? `<div style="height:14px;background:rgba(255,140,66,.12);border-radius:3px;overflow:hidden;">
+      ? `<div style="height:14px;background:var(--mn-bar-track,#EEF2F7);border-radius:3px;overflow:hidden;">
            <div style="height:100%;width:${pct}%;background:${barColor};border-radius:3px;transition:width .6s;"></div>
          </div>`
       : `<div style="height:14px;display:flex;align-items:center;">
@@ -932,9 +933,9 @@ function renderNjobYearlySummary(){
 
     return `
     <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);">
-      <div style="width:26px;font-size:15px;font-weight:700;color:${isNow?'var(--accent)':'var(--text2)'};">${MO_KO_S[m]}월</div>
+      <div style="width:38px;flex:none;white-space:nowrap;font-size:15px;font-weight:700;color:${isNow?'var(--accent)':'var(--text2)'};">${MO_KO_S[m]}월</div>
       <div style="flex:1;min-width:0;">${bar}</div>
-      <div style="width:90px;text-align:right;">${label}</div>
+      <div style="width:90px;flex:none;text-align:right;">${label}</div>
     </div>`;
   }).join('');
 
@@ -1360,20 +1361,53 @@ function renderDash(){
     // ★ P1-1: 월 단위 게이트 — 해당 월에 기록(근태 or 명세서)이 있을 때만 막대·금액 표시
     const hasData   = (hasRecord && actual>0) || d.totalWorkH>0 || hasManual;
 
+    // 리디자인 v2.0 확정: 이번달/지난달/미래달 (다크는 토큰이 반전 — design-system.css)
+    // 직접입력(명세서) 월은 포인트(앰버) 채움으로 구분
+    const _barFill = hasManual ? 'var(--mn-point,#F59E0B)'
+      : (isFuture ? 'var(--mn-bar-future,#EEF2F7)'
+        : (isNow ? 'var(--mn-bar-now,#2563EB)' : 'var(--mn-bar-past,#CBD5E1)'));
+    // PC 연간(2열)에서만 작년 막대를 겹쳐 보여준다 — 올해 15px / 작년 10px, gap 3px.
+    // redesign-v6.js가 PC에서 window.__mnPcYearCompare를 켤 때만 계산하므로 모바일 비용 0.
+    // 실제 기록이 저장된 달만 표시한다(기본값 가정으로 생기는 유령 막대 방지).
+    let _lastBar = '';
+    let _curH = 14;
+    if(window.__mnPcYearCompare && hasData){
+      _curH = 15;
+      try{
+        const _lk = `atm2_att_${activeWpId}_${activeEmpId}_${y-1}_${pad2(m+1)}`;
+        if(localStorage.getItem(_lk)){
+          const _lp = getPayDataForMonth(y-1, m);
+          const _la = _lp ? (_lp.finalPay||0) : 0;
+          if(_la > 0){
+            const _lpct = (_la/maxActual*100).toFixed(1);
+            _lastBar = `<div title="작년 같은 달 ${Math.round(_la).toLocaleString()}원" style="height:10px;background:var(--mn-bar-track,#EEF2F7);border-radius:3px;overflow:hidden;margin-top:3px;">
+              <div style="height:100%;width:${_lpct}%;background:var(--mn-bar-past,#CBD5E1);border-radius:3px;"></div>
+            </div>`;
+          }
+        }
+      }catch(e){}
+    }
     const barHTML = hasData ? `
-        <div style="height:14px;background:rgba(79,124,255,.12);border-radius:3px;overflow:hidden;margin-bottom:2px;">
-          <div style="height:100%;width:${pct}%;background:${hasManual?'linear-gradient(90deg,#ffd166,#ff8c42)':'linear-gradient(90deg,var(--accent),var(--accent2))'};border-radius:3px;transition:width .5s;"></div>
+        <div style="height:${_curH}px;background:var(--mn-bar-track,#EEF2F7);border-radius:3px;overflow:hidden;margin-bottom:2px;">
+          <div style="height:100%;width:${pct}%;background:${_barFill};border-radius:3px;transition:width .5s;"></div>
         </div>
-        <div style="height:7px;background:rgba(61,214,140,.1);border-radius:2px;overflow:hidden;">
-          <div style="height:100%;width:${hpct}%;background:rgba(61,214,140,.45);border-radius:2px;transition:width .5s;"></div>
+        ${_lastBar}
+        <div style="height:7px;background:var(--mn-bar-track,#EEF2F7);border-radius:2px;overflow:hidden;">
+          <div style="height:100%;width:${hpct}%;background:var(--mn-success-fill,#22C55E);opacity:.5;border-radius:2px;transition:width .5s;"></div>
         </div>` :
-      `<div style="height:23px;display:flex;align-items:center;"><span style="font-size:14px;color:var(--text3);">명세서를 입력하면 막대가 표시됩니다</span></div>`;
+      // ★ 375px에서 이 열의 실폭은 약 60px(38+110+34+80+gap이 고정) — 안내 문구를 넣으면
+      //   3줄로 감기며 행이 무너졌다. 오른쪽 입력칸 placeholder가 이미 "명세서 입력"으로
+      //   행동을 안내하므로, 여기서는 빈 트랙만 보여 "아직 막대 없음"을 시각으로 전달.
+      //   (표시만 변경 — 계산·데이터 무관)
+      `<div style="min-height:23px;display:flex;align-items:center;" title="명세서를 입력하면 막대가 표시됩니다">
+         <div style="width:100%;height:14px;background:var(--mn-bar-track,#EEF2F7);border-radius:3px;opacity:.6;"></div>
+       </div>`;
 
     return `
     <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);">
-      <div style="width:26px;font-size:15px;font-weight:700;color:${isNow?'var(--accent)':'var(--text2)'};">${MO_KO_S[m]}월</div>
+      <div style="width:38px;flex:none;white-space:nowrap;font-size:15px;font-weight:700;color:${isNow?'var(--accent)':'var(--text2)'};">${MO_KO_S[m]}월</div>
       <div style="flex:1;min-width:0;">${barHTML}</div>
-      <div style="position:relative;width:110px;">
+      <div style="position:relative;width:110px;flex:none;">
         <input type="text"
           placeholder="${(isFuture&&_dashHasRecord)?'앱 계산: '+(auto>0?auto.toLocaleString():'0')+'원':'명세서 입력'}"
           value="${manualVal?manualVal.toLocaleString():''}"
@@ -1891,7 +1925,7 @@ function renderIncomePage(){
       ${(_dualEmp?_dualEmp.grossPay:totalNet).toLocaleString()}원
     </div>
     ${_dualEmp?`
-    <div style="font-size:14px;color:var(--text2);margin-top:6px;">4대보험 -${_dualEmp.ins.total.toLocaleString()}원 · 세금 -${_dualEmp.tax.total.toLocaleString()}원 공제</div>
+    <div style="font-size:14px;color:var(--text2);margin-top:6px;">4대보험 <span style="color:var(--mn-danger-text,#DC2626);">−${_dualEmp.ins.total.toLocaleString()}원</span> · 세금 <span style="color:var(--mn-danger-text,#DC2626);">−${_dualEmp.tax.total.toLocaleString()}원</span> 공제</div>
     <div style="font-size:18px;font-weight:700;color:var(--green);margin-top:4px;">→ 실수령 예상 <span style="font-family:'JetBrains Mono';">${_dualEmp.finalPay.toLocaleString()}원</span></div>`:''}
     ${_salaryWDays===0 && !hasSalary && totalNet > 0 ? `
     <div style="font-size:13px;color:var(--text3);margin-top:6px;padding:8px 10px;background:rgba(255,255,255,.04);border-radius:8px;">

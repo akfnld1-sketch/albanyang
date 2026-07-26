@@ -1,0 +1,71 @@
+/* ══════════════════════════════════════════════════════════════
+   머니냥 데이브레이크 테마 v1.0 (theme-daybreak.css)
+   — 2026-07 6탭 리디자인 시안(31·34·36·37 라이트 세트) 기반
+   원칙: add-only 오버라이드. main.css/design-system.css 뒤에 로드.
+   라이트 모드 토큰만 재정의 — 다크 모드([data-theme="dark"])는 기존 유지.
+   ══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* 쿨 그레이 배경 + 화이트 카드 (시안: #f6f7fa 배경, 흰 카드, #e2e6ee 테두리) */
+  --bg:#f6f7fa;
+  --surface:#ffffff;
+  --surface2:#f0f2f7;
+  --surface3:#e9ecf3;
+  --border:#e2e6ee;
+
+  /* 포인트: 앰버(수입·강조) + 민트(음성·긍정) — 시안 토큰 */
+  --accent:#e8960c;
+  --accent2:#2bbd8e;
+  --green:#2eaf6e;
+  --red:#e04545;
+  --yellow:#e8a020;
+  --orange:#ff7a59;
+
+  /* 텍스트 (시안 #1a2030 / #3a4358 / #7d879c) */
+  --text:#1a2030;
+  --text2:#3a4358;
+  --text3:#7d879c;
+
+  --radius:16px;
+  --shadow:0 1px 4px rgba(26,32,48,.05);
+
+  --mn-att-work:#2eaf6e;
+  --mn-att-leave:#3b6fe0;
+  --mn-att-half:#8c52d9;
+  --mn-att-late:#e0862e;
+  --mn-att-early:#e8a020;
+  --mn-att-absent:#e04545;
+  --mn-shadow-1:0 1px 4px rgba(26,32,48,.05);
+  --mn-shadow-2:0 2px 8px rgba(26,32,48,.08);
+  --mn-shadow-3:0 12px 40px rgba(26,32,48,.14);
+}
+
+/* 카드류 */
+:root:not([data-theme="dark"]) .mn-card,
+:root:not([data-theme="dark"]) .home-card,
+:root:not([data-theme="dark"]) .stat-card,
+:root:not([data-theme="dark"]) .budget-card,
+:root:not([data-theme="dark"]) .popup{
+  border-radius:16px;
+  box-shadow:0 1px 4px rgba(26,32,48,.05);
+}
+:root:not([data-theme="dark"]) .cal-day{ border-radius:12px; }
+:root:not([data-theme="dark"]) .mn-btn,
+:root:not([data-theme="dark"]) .btn{ border-radius:13px; }
+
+/* 헤더/사이드바/하단탭: 흰 배경 */
+:root:not([data-theme="dark"]) #banner{ background:#ffffff; }
+:root:not([data-theme="dark"]) #sidebar{ background:#ffffff; }
+:root:not([data-theme="dark"]) #mob-nav{ background:#ffffff; border-top:1px solid #eef0f5; }
+
+/* 주요 CTA(출퇴근 도장 등): 앰버 + 흰 글자 */
+:root:not([data-theme="dark"]) .btn-primary,
+:root:not([data-theme="dark"]) .mn-btn-primary{
+  background:#e8960c; color:#fff; border-color:#e8960c;
+}
+
+/* 정보 탭 새 소식 점 */
+.mn-info-dot{
+  position:absolute; top:6px; right:calc(50% - 16px);
+  width:7px; height:7px; border-radius:50%; background:#ff7a59;
+}
