@@ -220,7 +220,7 @@ function renderSalaryAnalysis(d) {
     <div style="margin-top:12px;display:flex;gap:16px;flex-wrap:wrap;">
       <div style="font-size:15px;color:var(--text3);">기본급 <b style="color:var(--text2);">₩${Math.round(basePay).toLocaleString()}</b></div>
       <div style="font-size:15px;color:var(--text3);">수당 <b style="color:var(--accent);">+₩${Math.round(totAllow).toLocaleString()}</b></div>
-      <div style="font-size:15px;color:var(--text3);">공제 <b style="color:var(--red);">-₩${Math.round(totDeduct).toLocaleString()}</b></div>
+      <div style="font-size:15px;color:var(--text3);">공제 <b style="color:var(--red);">−₩${Math.round(totDeduct).toLocaleString()}</b></div>
     </div>
     <div style="position:absolute;right:16px;top:16px;font-size:40px;opacity:.06;">💰</div>
   </div>`;
@@ -752,7 +752,7 @@ function renderSalary(){
     <div class="lbl">이번달 예상 급여 <span style="font-size:15px;opacity:.7;">(세전)</span>${(typeof CompanyEngine!=='undefined'&&CompanyEngine.isMulti())?' <span style="font-size:13px;opacity:.6;">— 메인 사업장 상세</span>':''}</div>
     <div class="amt">${fmt(d.grossPay)}</div>
     <div style="font-size:16px;color:var(--text2);margin-top:8px;">
-      4대보험 -${fmt(d.ins.total)} · 세금 -${fmt(d.tax.total)} 공제
+      4대보험 <span style="color:var(--mn-danger-text,#DC2626);">−${fmt(d.ins.total)}</span> · 세금 <span style="color:var(--mn-danger-text,#DC2626);">−${fmt(d.tax.total)}</span> 공제
     </div>
     <div style="font-size:18px;color:var(--green);margin-top:6px;font-weight:700;">
       → 실수령 예상 <span style="font-family:'JetBrains Mono';">${fmt(d.finalPay)}</span>
