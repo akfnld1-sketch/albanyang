@@ -1333,8 +1333,15 @@ html { -webkit-overflow-scrolling: touch; }
   }
   #mn-pc-asst img { width: 28px; height: 28px; border-radius: 50%; flex: none; }
 
-  /* 셸이 붙으면 본문 여백은 상단 바가 대신한다 */
-  body.mn-pc #main { padding: 24px 28px 40px; }
+  /* 셸이 붙으면 본문 여백은 상단 바가 대신한다.
+     ★ 좌우 여백(거터)은 여기 한 곳에서만 준다 — main.css에 화면별 padding 규칙이
+       흩어져 있어 화면마다 시작점이 어긋났다 */
+  body.mn-pc #main { padding: 24px 28px 40px !important; }
+  /* 화면 안쪽 컨테이너는 좌우 여백을 갖지 않는다 (거터는 #main이 담당).
+     홈·정보는 .home-content의 12px 패딩 때문에 근태·수입 등과 12px 어긋나 있었다 */
+  body.mn-pc .home-content { padding-left: 0; padding-right: 0; }
+  body.mn-pc #cal-area,
+  body.mn-pc .budget-container { padding-left: 0; padding-right: 0; }
 
   /* ── ④-3 화면별 2열 (명세 §6) ── */
   .mn-pc-2col, #mn-pc-att {
