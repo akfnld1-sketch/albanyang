@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&amp;display=swap" rel="stylesheet"><style>body{margin:0;background:#080D18;font-family:'Noto Sans KR',system-ui,sans-serif}a{color:#FBBF24}a:hover{color:#F59E0B}</style></helmet>
+<div style="height:100vh;display:flex;flex-direction:column;box-sizing:border-box">
+<div style="flex:1;display:flex;flex-direction:column;max-width:520px;width:100%;margin:0 auto;background:#0F172A;color:#E6EDF7;user-select:none;height:100vh;position:relative;overflow:hidden">
+  <!-- 고정 헤더 -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 6px">
+    <div style="display:flex;align-items:center;gap:9px"><img src="assets/nyang-hello.png" alt="" style="width:31px;height:31px;border-radius:50%"><span style="font-size:19px;font-weight:900;letter-spacing:-.02em">머니냥</span></div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span style="padding:6px 12px;border-radius:999px;background:#3A2C10;color:#FBBF24;font-size:13px;font-weight:700">오늘 +86,200원</span>
+      <svg onClick="{{ go6 }}" width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="{{ gearColor }}" stroke-width="1.8" stroke-linecap="round" style="cursor:pointer"><circle cx="12" cy="12" r="3.1"></circle><path d="M10.6 2.9h2.8l.45 2.35 1.75.72 1.95-1.35 1.98 1.98-1.35 1.95.72 1.75 2.35.45v2.8l-2.35.45-.72 1.75 1.35 1.95-1.98 1.98-1.95-1.35-1.75.72-.45 2.35h-2.8l-.45-2.35-1.75-.72-1.95 1.35-1.98-1.98 1.35-1.95-.72-1.75L2.9 13.4v-2.8l2.35-.45.72-1.75L4.62 6.45 6.6 4.47l1.95 1.35 1.75-.72Z"></path></svg>
+    </div>
+  </div>
+  <!-- 탭 (인디케이터가 스와이프 따라 이동) -->
+  <div style="position:relative;display:grid;grid-template-columns:repeat(6,1fr);border-bottom:1px solid #2E3A4E">
+    <span onClick="{{ go0 }}" style="text-align:center;padding:12px 0;font-size:15px;font-weight:{{ w0 }};color:{{ c0 }};cursor:pointer">홈</span>
+    <span onClick="{{ go1 }}" style="text-align:center;padding:12px 0;font-size:15px;font-weight:{{ w1 }};color:{{ c1 }};cursor:pointer">정보<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#F87171;margin-left:3px;vertical-align:top"></span></span>
+    <span onClick="{{ go2 }}" style="text-align:center;padding:12px 0;font-size:15px;font-weight:{{ w2 }};color:{{ c2 }};cursor:pointer">근태</span>
+    <span onClick="{{ go3 }}" style="text-align:center;padding:12px 0;font-size:15px;font-weight:{{ w3 }};color:{{ c3 }};cursor:pointer">수입</span>
+    <span onClick="{{ go4 }}" style="text-align:center;padding:12px 0;font-size:15px;font-weight:{{ w4 }};color:{{ c4 }};cursor:pointer">생존</span>
+    <span onClick="{{ go5 }}" style="text-align:center;padding:12px 0;font-size:15px;font-weight:{{ w5 }};color:{{ c5 }};cursor:pointer">연간</span>
+    <span style="position:absolute;bottom:-1px;left:0;width:16.6667%;height:3px;background:#1D4ED8;border-radius:3px;transform:translateX({{ indPct }}%);transition:{{ indTransition }};opacity:{{ indOp }}"></span>
+  </div>
+  <!-- 스와이프 트랙 -->
+  <div onPointerDown="{{ down }}" onPointerMove="{{ move }}" onPointerUp="{{ up }}" onPointerLeave="{{ up }}" style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;touch-action:pan-y;cursor:grab">
+    <div style="display:flex;width:700%;transform:translateX(calc({{ pct }}% + {{ dragPx }}px));transition:{{ trackTransition }}">
+
+      <!-- 화면 1: 홈 (타임라인) -->
+      <div style="width:14.2857%;flex:none;padding:14px 20px 28px;box-sizing:border-box">
+        <div style="font-size:21px;font-weight:900;letter-spacing:-.02em">7월 25일 토요일</div>
+        <div style="display:flex;gap:14px;margin-top:14px">
+          <div style="display:flex;flex-direction:column;align-items:center"><span style="width:12px;height:12px;border-radius:50%;background:#4ADE80;margin-top:5px"></span><span style="flex:1;width:2px;background:#e8e4d4"></span></div>
+          <div style="flex:1;padding-bottom:14px">
+            <div style="font-size:13px;font-weight:700;color:#4ADE80">09:00 — 출근 완료</div>
+            <div style="background:#1B2536;border:1px solid #2E3A4E;border-radius:16px;padding:14px 16px;margin-top:6px">
+              <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:16px;font-weight:700">카페 어반빈</span><span style="font-size:15px;font-weight:900;color:#FBBF24">+42,300원</span></div>
+              <div style="font-size:14px;color:#93A1B5;margin-top:2px">근무 중 · 4시간 32분 경과</div>
+              <button style="width:100%;margin-top:10px;min-height:46px;border:none;border-radius:12px;background:#1D4ED8;color:#EAF1FB;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer">지금 퇴근 기록</button>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:14px">
+          <div style="display:flex;flex-direction:column;align-items:center"><span style="width:12px;height:12px;border-radius:50%;border:2.5px solid #3A4759;background:#0F172A;margin-top:5px"></span><span style="flex:1;width:2px;background:#e8e4d4"></span></div>
+          <div style="flex:1;padding-bottom:14px">
+            <div style="font-size:13px;font-weight:700;color:#93A1B5">18:00 — 출근 예정</div>
+            <div style="background:#1B2536;border:1px solid #2E3A4E;border-radius:16px;padding:14px 16px;margin-top:6px">
+              <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:16px;font-weight:700">편의점 나이트</span><span style="font-size:15px;font-weight:900;color:#818CF8">+43,900원</span></div>
+              <div style="font-size:14px;color:#93A1B5;margin-top:2px">야간수당 적용 · 6시간</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:14px">
+          <div style="display:flex;flex-direction:column;align-items:center"><span style="width:12px;height:12px;border-radius:50%;border:2.5px solid #3A4759;background:#0F172A;margin-top:5px"></span></div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700;color:#93A1B5">이번 달 요약</div>
+            <div style="display:flex;justify-content:space-between;margin-top:6px;padding:14px 16px;background:#1D4ED8;border-radius:16px;color:#EAF1FB"><span style="font-size:14px;opacity:.75">예상 수입 · 근무</span><span style="font-size:15px;font-weight:900">1,842,000원 · 112시간</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 화면 2: 정보 (날씨 + 브리핑) -->
+      <div style="width:14.2857%;flex:none;padding:14px 16px 28px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px">
+        <div style="background:linear-gradient(150deg,#1B2B44,#16233A);border:1px solid #2C3F5C;border-radius:20px;padding:18px 20px;color:#DCE8F7">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <div style="font-size:14px;color:#93AFCC">서울 · 토요일</div>
+              <div style="font-size:36px;font-weight:900;letter-spacing:-.02em;margin-top:2px">23°</div>
+              <div style="font-size:14.5px;margin-top:2px">흐리고 오후 한때 비 · 최고 26° 최저 19°</div>
+            </div>
+            <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#7FB2E5" stroke-width="1.6" stroke-linecap="round"><path d="M7 15a4 4 0 0 1 .4-8 5 5 0 0 1 9.6 1.4A3.5 3.5 0 0 1 16.5 15H7Z"></path><path d="M9 18.5v1.5M12.5 18.5V21M16 18.5v1.5"></path></svg>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:14px">
+            <span style="flex:1;text-align:center;background:#1B2536;border:1px solid #2C3F5C;border-radius:12px;padding:9px 0;font-size:13px">15시<br><b>비 60%</b></span>
+            <span style="flex:1;text-align:center;background:#1B2536;border:1px solid #2C3F5C;border-radius:12px;padding:9px 0;font-size:13px">18시<br><b>비 80%</b></span>
+            <span style="flex:1;text-align:center;background:#1B2536;border:1px solid #2C3F5C;border-radius:12px;padding:9px 0;font-size:13px">21시<br><b>흐림</b></span>
+            <span style="flex:1;text-align:center;background:#1B2536;border:1px solid #2C3F5C;border-radius:12px;padding:9px 0;font-size:13px">24시<br><b>맑음</b></span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:12px;background:#1B2536;border:1px solid #2C3F5C;border-radius:12px;padding:10px 12px">
+            <img src="assets/nyang-hello.png" alt="" style="width:24px;height:24px;border-radius:50%;flex:none">
+            <span style="font-size:13.5px;line-height:1.45">18시 편의점 출근길에 비가 와요. 우산 꼭 챙기세요!</span>
+          </div>
+        </div>
+        <div style="font-size:14px;font-weight:900;padding:2px 4px 0">오늘의 브리핑</div>
+        <div style="background:#1B2536;border:1px solid #2E3A4E;border-radius:16px;padding:4px 16px">
+          <div style="display:flex;gap:10px;padding:13px 0;border-bottom:1px solid #2A3547">
+            <span style="flex:none;padding:3px 9px;border-radius:999px;background:#3A2C10;color:#FBBF24;font-size:12px;font-weight:700;height:fit-content">노동</span>
+            <div><div style="font-size:14.5px;line-height:1.5;font-weight:600">2027년 최저시급 10,850원 확정 — 5.1% 인상</div><div style="font-size:12.5px;color:#7A8798;margin-top:3px">내 시급 반영 시 월 +58,000원 예상</div></div>
+          </div>
+          <div style="display:flex;gap:10px;padding:13px 0;border-bottom:1px solid #2A3547">
+            <span style="flex:none;padding:3px 9px;border-radius:999px;background:#12301F;color:#4ADE80;font-size:12px;font-weight:700;height:fit-content">지원금</span>
+            <div><div style="font-size:14.5px;line-height:1.5;font-weight:600">청년 일자리 도약장려금 8월 신청 시작</div><div style="font-size:12.5px;color:#7A8798;margin-top:3px">김냥이님 조건 충족 — 최대 200만원</div></div>
+          </div>
+          <div style="display:flex;gap:10px;padding:13px 0">
+            <span style="flex:none;padding:3px 9px;border-radius:999px;background:#2B2440;color:#A78BFA;font-size:12px;font-weight:700;height:fit-content">세금</span>
+            <div><div style="font-size:14.5px;line-height:1.5;font-weight:600">7월 주민세 납부 기한 8월 1일까지</div><div style="font-size:12.5px;color:#7A8798;margin-top:3px">놓치면 가산세 3%가 붙어요</div></div>
+          </div>
+        </div>
+        <div style="font-size:14px;font-weight:900;padding:2px 4px 0">내 소식</div>
+        <div style="display:flex;gap:10px;align-items:flex-start;background:#1B2536;border:1px solid #2E3A4E;border-radius:16px;padding:14px 16px">
+          <img src="assets/nyang-hello.png" alt="" style="width:32px;height:32px;border-radius:50%;flex:none">
+          <div><div style="font-size:14.5px;line-height:1.5">이번 주 수입이 지난주보다 <b>8% 늘었어요.</b></div><div style="font-size:12.5px;color:#7A8798;margin-top:4px">오전 9:00 · 수입 인사이트</div></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;background:#3A2413;border-radius:16px;padding:14px 16px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9a6a13" stroke-width="2" stroke-linecap="round" style="flex:none;margin-top:2px"><path d="M12 4 21 19H3L12 4ZM12 10v4M12 16.8v.4"></path></svg>
+          <div><div style="font-size:14.5px;line-height:1.5;color:#FDBA74">이번 주 지출이 평소보다 <b>22% 많아요.</b> 추가 근무 1일 = 약 82,000원 확보.</div><div style="font-size:12.5px;color:#b39355;margin-top:4px">오후 1:20 · 생존 경고</div></div>
+        </div>
+      </div>
+
+      <!-- 화면 3: 근태 -->
+      <div style="width:14.2857%;flex:none;padding:14px 20px 28px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px">
+        <div style="background:#1B2536;border:1px solid #2E3A4E;border-radius:16px;padding:14px 14px 12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:0 2px">
+            <span style="font-size:15px;font-weight:900">이번 주 (7월 19일~25일)</span>
+            <span style="font-size:13px;color:#93A1B5">날짜를 누르면 기록 창이 열려요</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center">
+            <sc-for list="{{ weekDays }}" as="d" hint-placeholder-count="7">
+              <span onClick="{{ d.pick }}" style="padding:8px 0 7px;border-radius:11px;background:{{ d.bg }};border:{{ d.border }};cursor:pointer">
+                <span style="display:block;font-size:12px;color:{{ d.wdColor }}">{{ d.wd }}</span>
+                <span style="display:block;font-size:15.5px;font-weight:800;color:{{ d.color }};margin-top:2px">{{ d.num }}</span>
+                <i style="display:inline-block;width:6px;height:6px;border-radius:50%;background:{{ d.dot }};margin-top:3px"></i>
+              </span>
+            </sc-for>
+          </div>
+          <button onClick="{{ toggleCal }}" style="width:100%;margin-top:10px;min-height:46px;border:1.5px solid #3A4759;border-radius:12px;background:#0F172A;color:#E6EDF7;font-family:inherit;font-size:14.5px;font-weight:700;cursor:pointer">7월 전체달력 보기</button>
+        </div>
+        <div style="background:#1B2536;border:1px solid #2E3A4E;border-radius:16px;padding:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:16px;font-weight:700">카페 어반빈</span><span style="padding:3px 9px;border-radius:999px;background:#3A2C10;color:#FBBF24;font-size:12px;font-weight:700">메인</span></div><span style="font-size:13px;font-weight:700;color:#4ADE80">● 근무 중</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:8px"><span style="font-size:24px;font-weight:900">4시간 32분</span><span style="font-size:16px;font-weight:900;color:#FBBF24">+42,300원</span></div>
+          <button style="width:100%;margin-top:12px;min-height:50px;border:none;border-radius:12px;background:#1D4ED8;color:#EAF1FB;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer">퇴근 기록하기</button>
+        </div>
+        <div style="background:#1B2536;border:1px solid #2E3A4E;border-radius:16px;padding:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:16px;font-weight:700">편의점 나이트</span><span style="padding:3px 9px;border-radius:999px;background:#2A3547;color:#93A1B5;font-size:12px;font-weight:700">보조</span></div><span style="font-size:13px;color:#93A1B5">18:00 예정</span></div>
+          <div style="font-size:14px;color:#93A1B5;margin-top:4px">야간수당 적용 · 6시간 · 예상 +43,900원</div>
+          <button style="width:100%;margin-top:12px;min-height:50px;border:1.5px solid #3A4759;border-radius:12px;background:#0F172A;color:#E6EDF7;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer">출근 기록하기</button>
+        </div>
+        <div style="background:#1B2536;border:1px solid #2E3A4E;border-radius:16px;padding:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span style="font-size:14px;font-weight:700;color:#93A1B5">연차·월차 현황</span><span style="font-size:13px;color:#93A1B5">발생 11 · 사용 1</span></div>
+          <div style="height:10px;border-radius:999px;background:#2A3547;overflow:hidden"><div style="width:9%;height:100%;background:#60A5FA;border-radius:999px"></div></div>
+          <div style="display:flex;justify-content:space-between;margin-top:8px"><span style="font-size:14px;color:#B7C2D4">잔여 <b style="color:#E6EDF7">10일</b></span><span style="font-size:13px;color:#7A8798">올해 12월 31일까지</span></div>
+        </div>
+        <div style="background:#1B2536;border:1px solid #2E3A4E;border-radius:16px;padding:16px">
+          <div style="font-size:14px;font-weight:700;color:#93A1B5;margin-bottom:12px">이번 달 근태 (7월)</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);row-gap:12px">
+            <span style="display:flex;align-items:center;gap:6px;font-size:14px"><span style="width:11px;height:11px;border-radius:50%;background:#4ADE80"></span>정상 16</span>
+            <span style="display:flex;align-items:center;gap:6px;font-size:14px"><span style="width:11px;height:11px;border-radius:50%;background:#60A5FA"></span>연차 1</span>
+            <span style="display:flex;align-items:center;gap:6px;font-size:14px"><span style="width:11px;height:11px;border-radius:50%;background:#FB923C"></span>지각 1</span>
+            <span style="display:flex;align-items:center;gap:6px;font-size:14px"><span style="width:11px;height:11px;border-radius:50%;background:#818CF8"></span>야간 6</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 화면 3: 수입 -->
+      <div style="width:14.2857%;flex:none;padding:14px 20px 28px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px">
+        <div><div style="font-size:14px;color:#93A1B5">이번 달 총 예상 수입</div><div style="font-size:32px;font-weight:900;letter-spacing:-.02em">1,842,000원</div><span style="display:inline-block;margin-top:4px;padding:4px 10px;border-radius:999px;background:#12301F;color:#4ADE80;font-size:13px;font-weight:700">전월 대비 +120,000원</span></div>
+        <div style="background:#1B2536;border:1px solid #2E3A4E;border-radius:16px;padding:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:16px;font-weight:700">카페 어반빈</span><span style="font-size:17px;font-weight:900">1,214,000원</span></div>
+          <div style="margin-top:10px;border-top:1px solid #2A3547">
+            <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #2A3547"><span style="font-size:14.5px;color:#93A1B5">기본급</span><span style="font-size:14.5px;font-weight:700">1,032,000원</span></div>
+            <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #2A3547"><span style="font-size:14.5px;color:#93A1B5">주휴 + 야간수당</span><span style="font-size:14.5px;font-weight:700">254,000원</span></div>
+            <div style="display:flex;justify-content:space-between;padding:9px 0"><span style="font-size:14.5px;color:#93A1B5">공제</span><span style="font-size:14.5px;font-weight:700;color:#F87171">−72,000원</span></div>
+          </div>
+        </div>
+        <div style="background:#1B2536;border:1px solid #2E3A4E;border-radius:16px;padding:16px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:16px;font-weight:700">편의점 나이트</span><span style="font-size:17px;font-weight:900">628,000원</span></div>
+        <div style="background:#1B2536;border:1px solid #2E3A4E;border-radius:16px;padding:16px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:15px;font-weight:700">6월 급여명세서 비교</div><div style="font-size:13.5px;color:#93A1B5;margin-top:2px">실지급 1,795,110원 · 차이 −4,890원</div></div><span style="padding:5px 11px;border-radius:999px;background:#12301F;color:#4ADE80;font-size:12.5px;font-weight:700">98.7%</span></div>
+      </div>
+
+      <!-- 화면 4: 생존 -->
+      <div style="width:14.2857%;flex:none;padding:14px 20px 28px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px">
+        <div style="background:#1B2536;border:1px solid #2E3A4E;border-radius:16px;padding:20px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:15px;font-weight:700;color:#B7C2D4">생존 점수</span><span style="font-size:38px;font-weight:900;color:#4ADE80">68<span style="font-size:17px;font-weight:500;color:#93A1B5">점</span></span></div>
+          <div style="height:12px;border-radius:999px;background:#2A3547;margin-top:10px;overflow:hidden"><div style="width:68%;height:100%;border-radius:999px;background:#4ADE80"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:12.5px;color:#7A8798;margin-top:5px"><span>위험</span><span>주의</span><span>안전</span></div>
+        </div>
+        <div style="background:#1B2536;border:1px solid #2E3A4E;border-radius:16px;padding:6px 16px">
+          <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #2A3547"><span style="font-size:15px;color:#93A1B5">수입</span><span style="font-size:16px;font-weight:900">1,842,000원</span></div>
+          <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #2A3547"><span style="font-size:15px;color:#93A1B5">지출</span><span style="font-size:16px;font-weight:900;color:#F87171">−589,000원</span></div>
+          <div style="display:flex;justify-content:space-between;padding:12px 0"><span style="font-size:15px;color:#93A1B5">남은 돈 · 버틸 날</span><span style="font-size:16px;font-weight:900;color:#4ADE80">1,253,000원 · 41일</span></div>
+        </div>
+        <div style="background:#3A2413;border-radius:14px;padding:13px 15px;display:flex;gap:9px;align-items:flex-start"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9a6a13" stroke-width="2" stroke-linecap="round" style="flex:none;margin-top:2px"><path d="M12 4 21 19H3L12 4ZM12 10v4M12 16.8v.4"></path></svg><span style="font-size:14px;line-height:1.5;color:#FDBA74">이번 주 지출이 평소보다 <b>22% 많아요.</b> 추가 근무 1일 = 약 82,000원 확보.</span></div>
+      </div>
+
+      <!-- 화면 5: 연간 -->
+      <div style="width:14.2857%;flex:none;padding:14px 20px 28px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px">
+        <div><div style="font-size:14px;color:#93A1B5">2026년 총 수입</div><div style="font-size:30px;font-weight:900;letter-spacing:-.02em">12,480,000원</div><div style="font-size:14px;color:#B7C2D4;margin-top:2px">731시간 · 작년 대비 <b style="color:#4ADE80">+18%</b></div></div>
+        <div style="background:#1B2536;border:1px solid #2E3A4E;border-radius:16px;padding:16px">
+          <div style="font-size:14px;font-weight:700;color:#93A1B5;margin-bottom:12px">월별 수입</div>
+          <div style="display:flex;align-items:flex-end;gap:8px;height:90px">
+            <div style="flex:1;height:52%;border-radius:5px 5px 0 0;background:#3A4759"></div>
+            <div style="flex:1;height:60%;border-radius:5px 5px 0 0;background:#3A4759"></div>
+            <div style="flex:1;height:56%;border-radius:5px 5px 0 0;background:#3A4759"></div>
+            <div style="flex:1;height:70%;border-radius:5px 5px 0 0;background:#3A4759"></div>
+            <div style="flex:1;height:64%;border-radius:5px 5px 0 0;background:#3A4759"></div>
+            <div style="flex:1;height:78%;border-radius:5px 5px 0 0;background:#3A4759"></div>
+            <div style="flex:1;height:88%;border-radius:5px 5px 0 0;background:#F59E0B"></div>
+          </div>
+        </div>
+        <div style="background:#1B2536;border:1px solid #2E3A4E;border-radius:16px;padding:16px">
+          <div style="font-size:14px;font-weight:700;color:#93A1B5;margin-bottom:10px">사업장별 비율</div>
+          <div style="display:flex;height:12px;border-radius:999px;overflow:hidden"><div style="width:66%;background:#1D4ED8"></div><div style="width:34%;background:#1E3A8A"></div></div>
+          <div style="display:flex;gap:14px;margin-top:8px;font-size:13.5px;color:#B7C2D4"><span>카페 어반빈 66%</span><span style="color:#93A1B5">편의점 나이트 34%</span></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span style="padding:10px 14px;border-radius:999px;background:#3A2C10;color:#FBBF24;font-size:13.5px;font-weight:700">개근왕</span>
+          <span style="padding:10px 14px;border-radius:999px;background:#12301F;color:#4ADE80;font-size:13.5px;font-weight:700">칼출근</span>
+          <span style="padding:10px 14px;border-radius:999px;background:#2B2440;color:#A78BFA;font-size:13.5px;font-weight:700">N잡러</span>
+        </div>
+      </div>
+
+      <!-- 화면 6: 설정 -->
+      <div style="width:14.2857%;flex:none;padding:14px 20px 28px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px">
+        <div style="font-size:19px;font-weight:900;letter-spacing:-.02em">설정</div>
+        <div style="background:#1B2536;border:1px solid #2E3A4E;border-radius:16px;padding:16px;display:flex;align-items:center;gap:14px">
+          <img src="assets/nyang-hello.png" alt="" style="width:48px;height:48px;border-radius:50%">
+          <div><div style="font-size:17px;font-weight:900">김냥이</div><div style="font-size:13.5px;color:#93A1B5;margin-top:2px">카카오 계정 로그인</div></div>
+        </div>
+        <div style="background:#1B2536;border:1px solid #2E3A4E;border-radius:16px;padding:16px">
+          <div style="font-size:15px;font-weight:700;margin-bottom:10px">화면 밝기 · 글자 크기</div>
+          <div style="font-size:13px;color:#93A1B5;margin:-6px 0 10px">‘휴대폰 설정’을 고르면 휴대폰이 어두워질 때 앱도 같이 어두워져요</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <span style="text-align:center;padding:10px 0;border-radius:11px;background:#1D4ED8;color:#EAF1FB;font-size:14px;font-weight:700">밝게</span>
+            <span style="text-align:center;padding:10px 0;border-radius:11px;border:1.5px solid #3A4759;color:#B7C2D4;font-size:14px">어둡게</span>
+            <span style="text-align:center;padding:10px 0;border-radius:11px;border:1.5px solid #3A4759;color:#B7C2D4;font-size:14px">휴대폰 설정</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px">
+            <span style="text-align:center;padding:10px 0;border-radius:11px;border:1.5px solid #3A4759;color:#B7C2D4;font-size:14px">보통</span>
+            <span style="text-align:center;padding:10px 0;border-radius:11px;background:#1D4ED8;color:#EAF1FB;font-size:14px;font-weight:700">크게</span>
+            <span style="text-align:center;padding:10px 0;border-radius:11px;border:1.5px solid #3A4759;color:#B7C2D4;font-size:14px">아주 크게</span>
+          </div>
+        </div>
+        <div style="background:#1B2536;border:1px solid #2E3A4E;border-radius:16px;padding:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:15px;font-weight:700">직업 설정</span><span style="font-size:13px;color:#FBBF24;font-weight:700;cursor:pointer">변경 ›</span></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+            <span style="padding:8px 14px;border-radius:999px;background:#1D4ED8;color:#EAF1FB;font-size:13.5px;font-weight:700">시급제</span>
+            <span style="padding:8px 14px;border-radius:999px;background:#1D4ED8;color:#EAF1FB;font-size:13.5px;font-weight:700">알바</span>
+            <span style="padding:8px 14px;border-radius:999px;border:1.5px solid #3A4759;color:#7A8798;font-size:13.5px">연봉제</span>
+            <span style="padding:8px 14px;border-radius:999px;border:1.5px solid #3A4759;color:#7A8798;font-size:13.5px">배달/대리</span>
+            <span style="padding:8px 14px;border-radius:999px;border:1.5px solid #3A4759;color:#7A8798;font-size:13.5px">프리랜서</span>
+          </div>
+          <div style="font-size:15px;font-weight:700;margin:16px 0 10px;padding-top:14px;border-top:1px solid #2A3547">근무 형태</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px">
+            <span style="text-align:center;padding:10px 0;border-radius:11px;background:#1D4ED8;color:#EAF1FB;font-size:14px;font-weight:700">주간</span>
+            <span style="text-align:center;padding:10px 0;border-radius:11px;border:1.5px solid #3A4759;color:#B7C2D4;font-size:14px">야간</span>
+            <span style="text-align:center;padding:10px 0;border-radius:11px;border:1.5px solid #3A4759;color:#B7C2D4;font-size:14px">2교대</span>
+            <span style="text-align:center;padding:10px 0;border-radius:11px;border:1.5px solid #3A4759;color:#B7C2D4;font-size:14px">3교대</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><span style="font-size:14px;color:#93A1B5">기본 출퇴근</span><span style="font-size:14px;font-weight:700">09:00 ~ 18:00 <span style="color:#FBBF24;cursor:pointer">수정</span></span></div>
+        </div>
+        <div style="background:#1B2536;border:1px solid #2E3A4E;border-radius:16px;padding:4px 16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid #2A3547"><span style="font-size:15.5px;font-weight:600">사업장 관리</span><span style="font-size:14px;color:#93A1B5">2곳 ›</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid #2A3547"><span style="font-size:15.5px;font-weight:600">알림</span><span style="width:46px;height:26px;border-radius:999px;background:#FBBF24;position:relative;display:inline-block"><span style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:#E6EDF7"></span></span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid #2A3547"><span style="font-size:15.5px;font-weight:600">급여명세서 비교</span><span style="font-size:14px;color:#93A1B5">›</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid #2A3547"><span style="font-size:15.5px;font-weight:600">튜토리얼 다시 보기</span><span style="font-size:14px;color:#93A1B5">›</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0"><span style="font-size:15.5px;font-weight:600">문의하기</span><span style="font-size:14px;color:#93A1B5">›</span></div>
+        </div>
+        <div style="background:#1B2536;border:1px solid #2E3A4E;border-radius:16px;padding:4px 16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid #2A3547"><span style="font-size:15.5px;font-weight:600">데이터 백업 (파일 저장)</span><span style="font-size:14px;color:#93A1B5">›</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid #2A3547"><span style="font-size:15.5px;font-weight:600">데이터 복원</span><span style="font-size:14px;color:#93A1B5">›</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0"><span style="font-size:15.5px;font-weight:600;color:#F87171">전체 데이터 초기화</span><span style="font-size:13px;color:#F87171">되돌릴 수 없음</span></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:2px 6px"><span style="font-size:13.5px;color:#7A8798">머니냥 v4.2.2</span><span style="font-size:13.5px;font-weight:700;color:#F87171">로그아웃</span></div>
+      </div>
+
+    </div>
+  </div>
+  <!-- 전체달력 팝업 -->
+  <div style="position:fixed;inset:0;display:{{ calOverlayDisplay }};align-items:center;justify-content:center;background:rgba(0,0,0,.45);z-index:40" onClick="{{ toggleCal }}">
+    <div style="box-sizing:border-box;width:min(440px,calc(100% - 32px));max-height:88vh;overflow:auto;background:#0F172A;border-radius:22px;padding:20px;box-shadow:0 20px 50px rgba(0,0,0,.35)" onClick="{{ stop }}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#93A1B5" stroke-width="2" stroke-linecap="round" style="cursor:pointer"><path d="m14 6-6 6 6 6"></path></svg>
+        <span style="font-size:18px;font-weight:900">2026년 7월 전체달력</span>
+        <span onClick="{{ toggleCal }}" style="font-size:15px;color:#93A1B5;cursor:pointer;padding:4px 8px">✕</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center;font-size:13px;color:#7A8798;margin-bottom:6px"><span style="color:#F87171">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span style="color:#818CF8">토</span></div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center">
+        <sc-for list="{{ calDays }}" as="d" hint-placeholder-count="35">
+          <span onClick="{{ d.pick }}" style="padding:10px 0 8px;font-size:15px;background:{{ d.bg }};color:{{ d.color }};border:{{ d.border }};border-radius:10px;cursor:pointer;visibility:{{ d.vis }}">{{ d.num }}<br><i style="display:inline-block;width:7px;height:7px;border-radius:50%;background:{{ d.dot }}"></i></span>
+        </sc-for>
+      </div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid #2E3A4E">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:15.5px;font-weight:900">{{ selLabel }}</span>
+          <span style="font-size:13px;color:#93A1B5">날짜를 누르고 상태를 선택하세요</span>
+        </div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:10px">
+          <sc-for list="{{ statusOpts }}" as="s" hint-placeholder-count="8">
+            <span onClick="{{ s.set }}" style="display:flex;align-items:center;gap:6px;padding:9px 13px;border-radius:999px;border:{{ s.border }};background:{{ s.bg }};color:{{ s.color }};font-size:13.5px;font-weight:700;cursor:pointer"><i style="width:8px;height:8px;border-radius:50%;background:{{ s.dotColor }};display:inline-block"></i>{{ s.name }}</span>
+          </sc-for>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;background:#1B2536;border:1px solid #2E3A4E;border-radius:12px;padding:12px 14px">
+          <span style="font-size:14.5px;color:#B7C2D4">출근 <b style="color:#E6EDF7">09:00</b> ~ 퇴근 <b style="color:#E6EDF7">18:00</b></span>
+          <span style="font-size:13.5px;color:#FBBF24;font-weight:700;cursor:pointer">시간 수정</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 챗봇 패널 -->
+  <div style="position:fixed;left:max(16px,calc(50% - 244px));right:max(16px,calc(50% - 244px));bottom:82px;display:{{ chatDisplay }};flex-direction:column;gap:10px;background:#1B2536;border:1px solid #2E3A4E;border-radius:20px;padding:16px;box-shadow:0 14px 34px rgba(0,0,0,.22);z-index:20">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:8px"><img src="assets/nyang-hello.png" alt="" style="width:28px;height:28px;border-radius:50%"><span style="font-size:15px;font-weight:900">머니냥 비서</span></div>
+      <span onClick="{{ toggleChat }}" style="font-size:13px;color:#93A1B5;cursor:pointer;padding:4px 8px">닫기 ✕</span>
+    </div>
+    <div style="display:flex;gap:9px;align-items:flex-start">
+      <img src="assets/nyang-think.png" alt="" style="width:28px;height:28px;border-radius:50%;flex:none">
+      <div style="background:#243044;border-radius:4px 14px 14px 14px;padding:10px 13px;font-size:14.5px;line-height:1.5">무엇이 궁금하세요? 기록도 말로 할 수 있어요.</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <span style="padding:9px 14px;border-radius:999px;border:1.5px solid #3A4759;font-size:13.5px;font-weight:600;color:#B7C2D4;cursor:pointer">"퇴근했어"</span>
+      <span style="padding:9px 14px;border-radius:999px;border:1.5px solid #3A4759;font-size:13.5px;font-weight:600;color:#B7C2D4;cursor:pointer">"이번 달 얼마 벌었어?"</span>
+      <span style="padding:9px 14px;border-radius:999px;border:1.5px solid #3A4759;font-size:13.5px;font-weight:600;color:#B7C2D4;cursor:pointer">"점심값 9천원 썼어"</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;background:#243044;border-radius:999px;padding:6px 6px 6px 16px">
+      <span style="flex:1;font-size:14.5px;color:#7A8798">냥이에게 물어보세요…</span>
+      <span style="width:38px;height:38px;border-radius:50%;background:#F59E0B;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="9" y="3.5" width="6" height="11" rx="3"></rect><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"></path></svg></span>
+    </div>
+  </div>
+  <!-- 음성 듣는 중 오버레이 -->
+  <div onClick="{{ toggleMic }}" style="position:fixed;left:max(16px,calc(50% - 244px));right:max(16px,calc(50% - 244px));bottom:82px;display:{{ micDisplay }};align-items:center;gap:12px;background:#F59E0B;border-radius:999px;padding:10px 10px 10px 20px;box-shadow:0 12px 30px rgba(245,158,11,.4);cursor:pointer;z-index:21">
+    <span style="flex:1;font-size:15px;color:#1A1206;font-weight:600">듣고 있어요… "퇴근했어" 처럼 말해보세요</span>
+    <div style="display:flex;align-items:center;gap:3px;height:22px">
+      <span style="width:3px;height:10px;border-radius:2px;background:#FDE68A"></span><span style="width:3px;height:18px;border-radius:2px;background:#E6EDF7"></span><span style="width:3px;height:12px;border-radius:2px;background:#FDE68A"></span><span style="width:3px;height:20px;border-radius:2px;background:#E6EDF7"></span><span style="width:3px;height:9px;border-radius:2px;background:#FDE68A"></span>
+    </div>
+    <span style="width:44px;height:44px;border-radius:50%;background:#1A1206;display:flex;align-items:center;justify-content:center;flex:none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FDE68A" stroke-width="2.4" stroke-linecap="round"><path d="M6 6 18 18M18 6 6 18"></path></svg></span>
+  </div>
+  <!-- 페이지 점 -->
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 16px 14px;border-top:1px solid #2E3A4E;background:#0F172A;flex:none">
+    <div style="display:flex;gap:7px;align-items:center">
+    <span style="width:{{ d0w }}px;height:6px;border-radius:999px;background:{{ d0 }};transition:all .25s"></span>
+    <span style="width:{{ d1w }}px;height:6px;border-radius:999px;background:{{ d1 }};transition:all .25s"></span>
+    <span style="width:{{ d2w }}px;height:6px;border-radius:999px;background:{{ d2 }};transition:all .25s"></span>
+    <span style="width:{{ d3w }}px;height:6px;border-radius:999px;background:{{ d3 }};transition:all .25s"></span>
+    <span style="width:{{ d4w }}px;height:6px;border-radius:999px;background:{{ d4 }};transition:all .25s"></span>
+    <span style="width:{{ d5w }}px;height:6px;border-radius:999px;background:{{ d5 }};transition:all .25s"></span>
+    </div>
+    <div style="display:flex;gap:10px;flex:none">
+      <div onClick="{{ toggleMic }}" style="width:48px;height:48px;border-radius:50%;background:{{ micBg }};display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(245,158,11,.32);cursor:pointer">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="9" y="3.5" width="6" height="11" rx="3"></rect><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"></path></svg>
+      </div>
+      <div onClick="{{ toggleChat }}" style="width:48px;height:48px;border-radius:50%;background:#1D4ED8;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.3);cursor:pointer">
+        <img src="assets/nyang-hello.png" alt="챗봇" style="width:30px;height:30px;border-radius:50%">
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { idx: 0, drag: 0, dragging: false, chatOpen: false, micOn: false, calOpen: false, calSel: 25,
+    statusMap: {1:'정상',2:'정상',3:'정상',6:'연차',7:'정상',8:'정상',9:'정상',10:'정상',13:'정상',14:'정상',15:'정상',16:'정상',17:'정상',18:'휴일특근',20:'정상',21:'야간',22:'야간',23:'야간',24:'지각',25:'정상'} };
+  W = 390; N = 7;
+  renderVals() {
+    const { idx, drag, dragging } = this.state;
+    const W = this._w || this.W;
+    const vals = {
+      pct: -idx * (100 / 7),
+      indOp: idx > 5 ? 0 : 1,
+      gearColor: idx === 6 ? '#1D4ED8' : '#93A1B5',
+      chatDisplay: this.state.chatOpen ? 'flex' : 'none',
+      micDisplay: this.state.micOn ? 'flex' : 'none',
+      micBg: this.state.micOn ? '#D97706' : '#F59E0B',
+      fabDisplay: this.state.chatOpen || this.state.micOn ? 'none' : 'flex',
+      toggleChat: () => this.setState(s => ({ chatOpen: !s.chatOpen, micOn: false })),
+      toggleMic: () => this.setState(s => ({ micOn: !s.micOn, chatOpen: false })),
+      bellColor: idx === 1 ? '#1D4ED8' : '#93A1B5',
+      calOverlayDisplay: this.state.calOpen ? 'flex' : 'none',
+      toggleCal: () => this.setState(s => ({ calOpen: !s.calOpen, chatOpen: false, micOn: false })),
+      stop: (e) => e.stopPropagation(),
+      ...this._calVals(),
+      dragPx: drag,
+      trackTransition: dragging ? 'none' : 'transform .3s cubic-bezier(.25,.8,.35,1)',
+      indPct: idx * 100 + (dragging ? (-drag / W) * 100 : 0),
+      indTransition: dragging ? 'none' : 'transform .3s cubic-bezier(.25,.8,.35,1)',
+      down: (e) => {
+        e.currentTarget.setPointerCapture && e.currentTarget.setPointerCapture(e.pointerId);
+        this._w = e.currentTarget.offsetWidth || this.W;
+        this._sx = e.clientX;
+        this.setState({ dragging: true, drag: 0 });
+      },
+      move: (e) => {
+        if (!this.state.dragging) return;
+        let d = e.clientX - this._sx;
+        const i = this.state.idx;
+        if ((i === 0 && d > 0) || (i === this.N - 1 && d < 0)) d = d * 0.3;
+        this.setState({ drag: d });
+      },
+      up: () => {
+        if (!this.state.dragging) return;
+        const { idx, drag } = this.state;
+        let next = idx;
+        if (drag < -60 && idx < this.N - 1) next = idx + 1;
+        if (drag > 60 && idx > 0) next = idx - 1;
+        this.setState({ idx: next, drag: 0, dragging: false });
+      },
+    };
+    for (let i = 0; i < this.N; i++) {
+      vals['go' + i] = () => this.setState({ idx: i, drag: 0, dragging: false });
+      vals['w' + i] = idx === i ? '700' : '400';
+      vals['c' + i] = idx === i ? '#1D4ED8' : '#7A8798';
+      vals['d' + i] = idx === i ? '#1D4ED8' : '#d9d4c2';
+      vals['d' + i + 'w'] = idx === i ? 22 : 6;
+    }
+    return vals;
+  }
+  _calVals() {
+    const SC = {정상:'#4ADE80',연차:'#60A5FA',반차:'#A78BFA',지각:'#FB923C',조퇴:'#FACC15',결근:'#F87171',휴일특근:'#2DD4BF',야간:'#818CF8'};
+    const map = this.state.statusMap, sel = this.state.calSel;
+    const calDays = [];
+    for (let i = 0; i < 3; i++) calDays.push({num:'',vis:'hidden',pick:()=>{},bg:'transparent',color:'#1D4ED8',border:'1px solid transparent',dot:'transparent'});
+    for (let d = 1; d <= 31; d++) {
+      const col = (3 + d - 1) % 7, isSel = sel === d;
+      calDays.push({
+        num: d, vis: 'visible',
+        pick: () => this.setState({ calSel: d }),
+        bg: isSel ? '#1D4ED8' : d === 25 ? '#2A3547' : '#1B2536',
+        color: isSel ? '#0F172A' : col === 0 ? '#F87171' : col === 6 ? '#818CF8' : '#1D4ED8',
+        border: isSel ? '1px solid #1D4ED8' : '1px solid #2E3A4E',
+        dot: map[d] ? SC[map[d]] : 'transparent',
+      });
+    }
+    const statusOpts = Object.keys(SC).map(name => {
+      const active = map[sel] === name;
+      return { name, dotColor: SC[name],
+        set: () => this.setState(s => ({ statusMap: { ...s.statusMap, [s.calSel]: name } })),
+        bg: active ? '#1D4ED8' : '#1B2536', color: active ? '#0F172A' : '#B7C2D4',
+        border: active ? '1px solid #1D4ED8' : '1px solid #3A4759' };
+    });
+    const wd = ['수','목','금','토','일','월','화'][(sel - 1) % 7];
+    const weekDays = [];
+    for (let d = 19; d <= 25; d++) {
+      const col = (3 + d - 1) % 7, today = d === 25;
+      weekDays.push({
+        num: d, wd: ['일','월','화','수','목','금','토'][col],
+        wdColor: col === 0 ? '#F87171' : col === 6 ? '#818CF8' : '#7A8798',
+        color: today ? '#0F172A' : '#1D4ED8',
+        bg: today ? '#1D4ED8' : '#0F172A',
+        border: today ? '1px solid #1D4ED8' : '1px solid #2E3A4E',
+        dot: map[d] ? SC[map[d]] : 'transparent',
+        pick: () => this.setState({ calSel: d, calOpen: true }),
+      });
+    }
+    return { calDays, statusOpts, weekDays, selLabel: '7월 ' + sel + '일 (' + wd + ')' };
+  }
+}
+</script>
+</body>
+</html>
