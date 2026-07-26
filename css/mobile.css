@@ -1700,3 +1700,61 @@ html { -webkit-overflow-scrolling: touch; }
   color: var(--text2); font-size: 15px; cursor: pointer;
 }
 
+
+/* ══════════════════════════════════════════════════════════════
+   글자 크기 설정 연동 (보통 1 / 크게 1.2 / 아주 크게 1.35)
+   리디자인으로 새로 만든 화면들이 고정 px이라 설정을 바꿔도 반응하지 않았다.
+   --mn-text-k(= --ui-scale / 1.2)를 곱해 기본값(크게)에서는 명세 px 그대로 두고,
+   설정을 바꿀 때만 비례해 커지게 한다.
+   ※ 큰 숫자(히어로 44/58px)와 버튼 높이는 고정 — 확대하면 카드가 깨진다.
+   ══════════════════════════════════════════════════════════════ */
+:root { --k: var(--mn-text-k, 1); }
+
+/* 모바일 셸 크롬 */
+#mn-hd-brand      { font-size: calc(19px * var(--k)); }
+#mn-today-chip    { font-size: calc(13px * var(--k)); }
+.mn-tab           { font-size: calc(15px * var(--k)); }
+
+/* 정보 — 날씨 카드 */
+.mn-wx-loc        { font-size: calc(14px   * var(--k)); }
+.mn-wx-sum        { font-size: calc(14.5px * var(--k)); }
+.mn-wx-cell span  { font-size: calc(12px   * var(--k)); }
+.mn-wx-cell b     { font-size: calc(13px   * var(--k)); }
+.mn-wx-advice     { font-size: calc(13.5px * var(--k)); }
+.mn-wx-fail-t     { font-size: calc(15px   * var(--k)); }
+.mn-wx-fail-s     { font-size: calc(13.5px * var(--k)); }
+.mn-wx-retry      { font-size: calc(14px   * var(--k)); }
+.mn-info-date     { font-size: calc(13px   * var(--k)); }
+
+/* 정보 — 브리핑 */
+.mn-brief-chip    { font-size: calc(12px   * var(--k)); }
+.mn-brief-txt b   { font-size: calc(14.5px * var(--k)); }
+.mn-brief-txt i   { font-size: calc(12.5px * var(--k)); }
+.mn-brief-empty   { font-size: calc(13.5px * var(--k)); }
+
+/* 근태 — 주 스트립 */
+#mn-week-title    { font-size: calc(15px   * var(--k)); }
+#mn-week-hint     { font-size: calc(13px   * var(--k)); }
+.mn-ws-wd         { font-size: calc(12px   * var(--k)); }
+.mn-ws-day        { font-size: calc(15.5px * var(--k)); }
+#mn-cal-open-btn  { font-size: calc(14.5px * var(--k)); }
+
+/* 설정 — 밝기·글자 크기 카드 */
+#mn-display-card .mn-set-lbl  { font-size: calc(14px   * var(--k)); }
+.mn-set-chip                  { font-size: calc(14.5px * var(--k)); }
+#mn-display-card .mn-set-help { font-size: calc(13px   * var(--k)); }
+
+@media (min-width: 769px) {
+  /* PC 사이드바 · 상단 바 */
+  .mn-pc-item        { font-size: calc(15px   * var(--k)); }
+  .mn-pc-logo span   { font-size: calc(17px   * var(--k)); }
+  .mn-pc-income span { font-size: calc(12.5px * var(--k)); }
+  .mn-pc-income b    { font-size: calc(17px   * var(--k)); }
+  #mn-pc-title-t     { font-size: calc(22px   * var(--k)); }
+  #mn-pc-title-s     { font-size: calc(13.5px * var(--k)); }
+  #mn-pc-chip        { font-size: calc(14px   * var(--k)); }
+  #mn-pc-asst        { font-size: calc(14.5px * var(--k)); }
+  .mn-pc-ctx-chip,
+  .mn-pc-ctx-btn     { font-size: calc(14px   * var(--k)); }
+  .mn-pc-col-r .mn-todo-h { font-size: calc(15px * var(--k)); }
+}
