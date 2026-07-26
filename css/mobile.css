@@ -1219,8 +1219,18 @@ html { -webkit-overflow-scrolling: touch; }
 @media (min-width: 769px) {
   body.mn-pc #banner { display: none !important; }
   body.mn-pc #main-tabbar { display: none !important; }
+  /* 명세 §4: 플로팅 어시스턴트 아바타·상시 음성 바는 PC에서도 숨기고
+     상단 바의 마이크·"냥이 비서"로 대체한다 (중복 방지) */
+  body.mn-pc #asst-btn,
+  body.mn-pc #asst-bubble { display: none !important; }
+  /* 음성 바는 런타임 주입 스타일(ensureVoiceBar)이 더 높은 특이성으로 display:flex를
+     걸 수 있어 !important로 확정한다 — PC에서는 상단 바 마이크로만 여닫는다 */
+  body.mn-pc #mn-voice-bar { display: none !important; }
+  body.mn-pc #mn-voice-bar.open { display: flex !important; }
 
   body.mn-pc #app { display: flex; align-items: stretch; }
+  /* 본문 컬럼 — 상단 바(전폭) 위, 콘텐츠 아래 (명세 §2) */
+  #mn-pc-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
 
   /* 기존 좌측 설정 패널은 삭제하지 않고 드로어로 전환 ("상세 설정"으로 열림) */
   body.mn-pc #sidebar {

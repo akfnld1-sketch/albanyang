@@ -761,7 +761,10 @@
       +'#mn-voice-wave i{display:block;width:3px;border-radius:2px;height:4px;background:#9db8f5;transition:height .08s linear;}'
       +'#mn-voice-wave i:nth-child(2n){background:#fff;}'
       // 구 셸(데스크톱)에서는 로그인 후 항상 표시 (기존 동작 유지)
-      +'body.mn-home-visible:not(.mn-shell) #mn-voice-bar{display:flex;}';
+      // 구 데스크톱(PC 셸 이전)에서만 상시 노출. PC 셸에서는 상단 바 마이크로 여닫는다
+      +'body.mn-home-visible:not(.mn-shell):not(.mn-pc) #mn-voice-bar{display:flex;}'
+      +'body.mn-pc #mn-voice-bar{display:none;}'
+      +'body.mn-pc #mn-voice-bar.open{display:flex;}';
     document.head.appendChild(st);
 
     var inp = document.getElementById('mn-voice-input');
@@ -1427,7 +1430,9 @@
     sal: '<circle cx="12" cy="12" r="8.5"/><path d="M14.5 9.3A3 3 0 0 0 9.5 11c0 2.5 5 1.5 5 4a3 3 0 0 1-5 1.6M12 7v10"/>',
     budget:'<path d="M12 3.5 19 6v6c0 4-3 7-7 8.5C8 19 5 16 5 12V6l7-2.5Z"/>',
     dash:'<path d="M4 19V9M9.3 19V5M14.7 19v-7M20 19v-4"/>',
-    settings:'<circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6"/>',
+    // 톱니 — 레퍼런스의 path는 햇살 모양이라 설정 아이콘으로 읽히지 않는다.
+    // 모바일 헤더와 같은 톱니 SVG로 통일 (명세 §3: 톱니 SVG 19px)
+    settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
     sliders:'<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>'
   };
   function _pcIcon(k){
@@ -1473,8 +1478,18 @@
       +'</button>'
       +'<button id="mn-pc-asst">'+_avatarImg(28)+'<span>냥이 비서</span></button>'
       +'</div>';
+    // ★ 본문 래퍼 — 명세 §2: body(flex row) = [사이드바] + [본문(flex column)].
+    //   상단 바를 #app(flex row)에 그냥 끼우면 사이드바 옆에 세로 열이 하나 더 생겨
+    //   "상단 바가 화면 중앙에 뜨고 콘텐츠가 3열처럼 보이는" 문제가 된다.
+    //   상단 바와 #main을 한 컬럼 컨테이너 안에 넣어야 한다.
     var main = document.getElementById('main');
-    if(main && main.parentNode) main.parentNode.insertBefore(top, main);
+    if(main && main.parentNode){
+      var bodyCol = document.createElement('div');
+      bodyCol.id = 'mn-pc-body';
+      main.parentNode.insertBefore(bodyCol, main);
+      bodyCol.appendChild(top);
+      bodyCol.appendChild(main);
+    }
 
     // PWA 설치 버튼은 배너와 함께 숨겨지므로 상단 바로 옮겨 보존
     try{
@@ -1548,6 +1563,20 @@
     if(html) actions.insertAdjacentHTML('afterbegin', html);
   }
 
+  // 사이드바 하단 월 예상 수입 — 어느 화면에서도 보인다 (명세 §3).
+  //  init 시점에는 근태 데이터 로드가 아직 안 끝났을 수 있어 값이 비는 경우가 있었다.
+  //  렌더가 일어날 때마다 갱신하고, 초기에는 짧게 재시도한다.
+  function _pcSyncIncome(){
+    var inc = document.getElementById('mn-pc-income-val');
+    if(!inc) return;
+    var v = 0;
+    try{
+      var fin = HomeDashboardBuilder.financial();
+      if(fin && (fin.hasRealData || fin.hasIncomeData)) v = fin.incTotal || 0;
+    }catch(e){}
+    inc.textContent = v > 0 ? _fmtWon(v)+'원' : '-';
+  }
+
   function _pcCurrent(){
     var a = document.querySelector('#mn-pc-nav .mn-pc-item.active');
     return a ? a.getAttribute('data-p') : 'home';
@@ -1573,13 +1602,7 @@
       chip.textContent = e.sum>0 ? '오늘 +'+_fmtWon(e.sum)+'원' : '오늘 0원';
       chip.classList.toggle('zero', !(e.sum>0));
     }
-    // 사이드바 하단 월 예상 수입 — 어느 화면에서도 보인다
-    var inc = document.getElementById('mn-pc-income-val');
-    if(inc){
-      var v = 0;
-      try{ var fin = HomeDashboardBuilder.financial(); if(fin && fin.hasRealData) v = fin.incTotal||0; }catch(e){}
-      inc.textContent = v>0 ? _fmtWon(v)+'원' : '-';
-    }
+    _pcSyncIncome();
     _pcSyncCtx(p);
     _syncInfoDot();
   }
@@ -1710,7 +1733,14 @@
       window._attV3PopupOpen = true;
       if(typeof renderCalendar === 'function') renderCalendar();
     }catch(e){}
-    finally{ window._attV3PopupOpen = prev; }
+    finally{
+      window._attV3PopupOpen = prev;
+      // ★ renderCalendar의 레거시 분기가 "v3 비활성"으로 보고 #att-v3를 숨긴다
+      //   (원래 월 팝업에서는 v3가 가려져 있어 문제가 없던 동작).
+      //   PC 2열에서는 좌측 v3와 우측 달력이 동시에 보여야 하므로 되돌린다.
+      var v3 = document.getElementById('att-v3');
+      if(v3) v3.style.display = 'block';
+    }
   }
 
   // 좌우 연동 ①: 좌측에서 선택한 날짜를 우측 달력에서 강조
@@ -1826,6 +1856,7 @@
       if(p === 'dash')   _pcSplit('dash-page');
       // 근태 미기록 칩은 달력이 그려진 뒤라야 개수를 셀 수 있어 배치 후 한 번 더
       _pcSyncCtx(p);
+      _pcSyncIncome();       // 렌더로 데이터가 채워진 뒤 사이드바 금액 갱신
     }catch(e){}
   }
 
@@ -1983,7 +2014,12 @@
       }
       syncVoiceBarDesktop();
       try{ if(typeof renderHomePage==='function') renderHomePage(); }catch(e){}
-      try{ syncPcShell('home'); applyPcLayout('home'); setInterval(function(){ syncPcShell(_pcCurrent()); }, 30000); }catch(e){}
+      try{
+        syncPcShell('home'); applyPcLayout('home');
+        // 데이터 로드가 늦는 경우 대비 — 초기 몇 초간 재시도
+        [500, 2000, 5000].forEach(function(ms){ setTimeout(_pcSyncIncome, ms); });
+        setInterval(function(){ syncPcShell(_pcCurrent()); }, 30000);
+      }catch(e){}
     }
     _syncInfoDot();
 
