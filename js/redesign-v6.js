@@ -1127,6 +1127,13 @@
     // 근태 v3(직장인·회사알바)는 자체 주간 스트립 + 월 전체달력 팝업을 이미 제공하며
     // (attendance-v3.js — #cal-area를 팝업으로 옮겼다 되돌리는 구조), 토큰은 1단계에서
     // 이미 반영됨. 여기서 또 만들면 중복 UI + #cal-area 이동 충돌 → 건너뛴다.
+    // ★ v3가 자체 주간 스트립을 그리는 상태에서 내 스트립이 남아 있으면
+    //   주 단위 달력이 위·아래로 두 개 보인다(직업 선택 등으로 v3가 나중에
+    //   켜진 경우 발생). v3 스트립이 있으면 내 것을 걷어낸다.
+    if(document.querySelector('[data-attv3-day]')){
+      var dup = document.getElementById('mn-week-strip-wrap');
+      if(dup) dup.remove();
+    }
     if(_attV3Active()) return;
     // v3가 아닌 모든 달력(레거시 직장인 / 알바·배달 / 프리랜서 / 기타수익)에 적용.
     // 전부 #cal-area 안의 #calendar 그리드에 렌더하고 renderCalendar()가 직군 분기하므로
