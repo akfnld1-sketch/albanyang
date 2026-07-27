@@ -1273,6 +1273,11 @@ html { -webkit-overflow-scrolling: touch; }
   /* v3 미니 달력은 우측 전체 달력과 중복이라 PC에서 숨긴다.
      미니에만 있던 상태 범례는 _pcLayoutAtt가 우측 달력 위로 옮겨 둔다 */
   body.mn-pc #attv3-minicalpanel { display: none !important; }
+  /* 미니 달력·전체달력 버튼이 둘 다 숨겨지면 좌측 열(.attv3-cal-col)이
+     빈 박스로 남고 35% 그리드 트랙이 통째로 빈 공간이 된다 —
+     열을 접고 출근 카드 열이 전폭을 쓰게 한다 */
+  body.mn-pc .attv3-cal-col { display: none !important; }
+  body.mn-pc .attv3-body { display: block !important; }
   #mn-pc-att-legend { margin-bottom: 10px; }
 
   /* 좌우 연동 ①: 좌측에서 선택된 날짜를 우측 달력에서 강조 */

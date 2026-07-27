@@ -1,5 +1,14 @@
 # 머니냥 CHANGELOG
 
+## v4.2.2-beta.51 (2026-07-28) — PC 근태: 출근하기 옆 빈 공간 제거
+- PC 셸 근태에서 미니 달력(#attv3-minicalpanel)과 전체 달력 버튼이 둘 다 숨겨지는데
+  부모 열(.attv3-cal-col)과 35% 그리드 트랙은 남아 출근하기 카드 옆이 빈 박스로
+  보이던 문제 — PC 셸에서 열을 접고(.attv3-body를 단일 열로) 출근·브리핑·생존
+  카드가 좌측 열 전폭을 쓰게 함 (실측 294→477px)
+- 모바일 셸 회귀 없음 확인(전체 달력 버튼·카드 전폭 유지), 콘솔 에러 0
+- 캐시: mobile.css ?v=20260728b, CACHE_NAME v283→v284
+- 현재 QA 기준 — 실기기(Android PWA) 검증 전
+
 ## v4.2.2-beta.50 (2026-07-28) — 오른쪽 엣지 SAO 스와이프 제거 (소유자 결정)
 - SAO 방사형 퀵메뉴 완전 제거 — #sao-handle/#sao-hint/#sao-overlay/#sao-row 마크업,
   index.html 인라인·data-utils.js 스크립트(오른쪽 엣지 스와이프 리스너 포함),
