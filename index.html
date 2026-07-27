@@ -24,7 +24,7 @@
 <!-- ══ CSS ══ -->
 <link rel="stylesheet" href="css/main.css?v=20260725a">
 <link rel="stylesheet" href="css/design-system.css?v=20260727a">  <!-- 머니냥 디자인 시스템 v2.0 (리디자인 확정 토큰 — 색은 이 파일에서만) -->
-<link rel="stylesheet" href="css/mobile.css?v=20260727o">
+<link rel="stylesheet" href="css/mobile.css?v=20260727p">
 <!-- 리디자인 v2.0: 구 컬러 테마(파스텔/스카이/민트/라벤더/피치)는 새 토큰을 덮어쓰므로 비활성.
      복원하려면 아래 두 줄 주석 해제.
 <link id="theme-css" rel="stylesheet" href="css/theme-sky.css?v=20260724c">
@@ -32,7 +32,7 @@
 -->
 
 <!-- ══ 앱 버전 (전역 상수 — 버전 변경 시 여기만 수정) ══ -->
-<script>var APP_VERSION = 'v4.2.2-beta.48';</script>
+<script>var APP_VERSION = 'v4.2.2-beta.49';</script>
 
 <!-- ══ Service Worker + 온라인 감지 ══ -->
 <script src="js/sw-init.js"></script>
@@ -460,6 +460,25 @@
   </div>
 
   </div><!-- /sb-section 설정 -->
+
+  <!-- ═══ 빠른 메뉴 (SAO 항목을 드로어에서도 접근 — 오른쪽 엣지 SAO는 당분간 유지) ═══ -->
+  <div class="sb-section">
+    <span class="sec-label">빠른 메뉴</span>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:6px 8px 4px;">
+      <button onclick="closeDrawer();exportData()"
+        style="padding:11px 7px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR';min-height:44px;">💾 백업</button>
+      <button onclick="closeDrawer();openImportDialog()"
+        style="padding:11px 7px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR';min-height:44px;">📂 복원</button>
+      <button onclick="closeDrawer();showJobTypeSelector(true)"
+        style="padding:11px 7px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR';min-height:44px;">🛠️ 직업 설정</button>
+      <button onclick="closeDrawer();reopenTutorial()"
+        style="padding:11px 7px;border-radius:10px;border:1px solid rgba(79,124,255,.4);background:rgba(79,124,255,.08);color:var(--accent);font-size:13px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR';min-height:44px;">🎯 튜토리얼</button>
+    </div>
+    <div style="padding:0 8px 10px;">
+      <button onclick="closeDrawer();resetAllData(true)"
+        style="width:100%;padding:11px 7px;border-radius:10px;border:1px solid rgba(255,92,122,.35);background:transparent;color:#ff5c7a;font-size:12px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR';min-height:44px;">🗑️ 초기화</button>
+    </div>
+  </div><!-- /sb-section 빠른 메뉴 -->
 
 </div><!-- /sidebar -->
 
@@ -1649,7 +1668,7 @@ const _origShowPage = typeof showPage === 'function' ? showPage : null;
     </div>
   </div>
 </div>
-<script src="js/redesign-v6.js?v=20260727j"></script>  <!-- [99] 리디자인 셸 v7: 모바일 헤더+6탭+스와이프 트랙+하단 액션 바 (데스크톱은 기존 유지) -->
+<script src="js/redesign-v6.js?v=20260727k"></script>  <!-- [99] 리디자인 셸 v7: 모바일 헤더+6탭+스와이프 트랙+하단 액션 바 (데스크톱은 기존 유지) -->
 </body>
 </html>
 

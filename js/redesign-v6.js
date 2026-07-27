@@ -338,18 +338,44 @@
   // ══════════════════════════════════════════
 
   // 예정 근무 시간대 — 설정(근무 형태·커스텀 시프트) 값 바인딩만
+  // ★ 2교대·3교대는 오늘의 조를 "오늘 기록에 저장된 조 → 고정조/현재 소속 조" 순으로 정해
+  //   그 조의 시작·종료 시각을 쓴다. 예전에는 근무 형태와 무관하게 주간(09~18)으로만
+  //   계산해서 교대 근무자에게 틀린 시간을 보여줬다.
   function _shiftPlan(){
-    var s = 9, e = 18;
+    var s = 9, e = 18, sh;   // sh: calcNetHours 휴게 공제에 넘길 조
     try{
-      var t = (typeof wt !== 'undefined') ? wt : 'day';
-      if(typeof customShift !== 'undefined' && customShift){
-        if(t === 'night' && customShift.night){ s = customShift.night.start; e = customShift.night.end; }
-        else if(customShift.day){ s = customShift.day.start; e = customShift.day.end; }
-      } else if(typeof dayStart !== 'undefined'){ s = dayStart; e = dayStart + 9; }
+      var t  = (typeof wt !== 'undefined') ? wt : 'day';
+      var cs = (typeof customShift !== 'undefined' && customShift) ? customShift : null;
+      var recShift = null;   // 오늘 기록에 저장된 조 (있으면 최우선)
+      try{
+        var d = new Date();
+        var key = (typeof dk === 'function') ? dk(d.getFullYear(), d.getMonth(), d.getDate()) : null;
+        var r = (key && typeof dayData !== 'undefined') ? dayData[key] : null;
+        if(r && r.shift) recShift = r.shift;
+      }catch(err){}
+      if(t === '2shift'){
+        sh = recShift || ((typeof p2Sh !== 'undefined' && p2Sh) ? p2Sh : 'day');
+        if(sh === 'day_fixed') sh = 'day';
+        var c2 = cs && (sh === 'night' ? cs.shift2night : cs.shift2day);
+        if(c2){ s = c2.start; e = c2.end; }
+        else if(typeof SHIFT2 !== 'undefined' && SHIFT2[sh]){ s = SHIFT2[sh].s; e = SHIFT2[sh].e; }
+      } else if(t === '3shift'){
+        sh = recShift || ((typeof myShift3 !== 'undefined' && myShift3) ? myShift3 : 'A');
+        if(sh === 'day_fixed') sh = 'A';
+        var c3 = cs && cs[{A:'shift3a', B:'shift3b', C:'shift3c'}[sh]];
+        if(c3){ s = c3.start; e = c3.end; }
+        else if(typeof SHIFT3 !== 'undefined' && SHIFT3[sh]){ s = SHIFT3[sh].s; e = SHIFT3[sh].e; }
+      } else if(t === 'night'){
+        if(cs && cs.night){ s = cs.night.start; e = cs.night.end; }
+        else if(typeof nightStart !== 'undefined'){ s = nightStart; e = (nightStart + 8) % 24; }
+      } else {
+        if(cs && cs.day){ s = cs.day.start; e = cs.day.end; }
+        else if(typeof dayStart !== 'undefined'){ s = dayStart; e = dayStart + 9; }
+      }
     }catch(err){}
     var span = e - s; if(span <= 0) span += 24;
     var net = span;
-    try{ if(typeof calcNetHours === 'function'){ var n = calcNetHours(s, e, 'work', undefined); if(n > 0) net = n; } }catch(err){}
+    try{ if(typeof calcNetHours === 'function'){ var n = calcNetHours(s, e, 'work', sh); if(n > 0) net = n; } }catch(err){}
     return { start:s, end:e, span:span, net:net };
   }
 
@@ -928,7 +954,13 @@
     var hd = document.createElement('div');
     hd.id = 'mn-header';
     hd.innerHTML =
-      '<div id="mn-hd-brand">'+_avatarImg(31)+'<span>머니냥</span></div>'
+      // ★ 삼선(햄버거): 캐릭터 왼쪽 — 기존 왼쪽 드로어(#sidebar)를 연다.
+      //   sidebar-disabled 직종(일반알바·프리랜서 등)에서는 CSS로 숨긴다.
+      '<div id="mn-hd-brand">'
+      +'<button id="mn-hd-menu" aria-label="설정 메뉴" onclick="toggleDrawer()">'
+      +'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>'
+      +'</button>'
+      +_avatarImg(31)+'<span>머니냥</span></div>'
       +'<div id="mn-hd-right">'
       +'<span id="mn-today-chip" onclick="showPage(\'home\')">오늘 0원</span>'
       +'<button id="mn-hd-gear" aria-label="설정" onclick="showPage(\'settings\')">'

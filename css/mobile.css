@@ -1036,6 +1036,16 @@ html { -webkit-overflow-scrolling: touch; }
     background: var(--bg);
   }
   #mn-hd-brand { display: flex; align-items: center; gap: 8px; font-size: 19px; font-weight: 900; letter-spacing: -.02em; color: var(--text); }
+  /* 삼선(햄버거) — 캐릭터 왼쪽, 왼쪽 드로어(#sidebar) 열기 */
+  #mn-hd-menu {
+    background: none; border: none; cursor: pointer; padding: 6px;
+    margin-left: -6px;                 /* 아이콘 시각 정렬 — 헤더 왼쪽 여백과 맞춤 */
+    min-width: 44px; min-height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text2);
+  }
+  /* 드로어가 비활성화된 직종(일반알바·프리랜서 등)에서는 삼선도 숨긴다 */
+  body.sidebar-disabled #mn-hd-menu { display: none; }
   #mn-hd-right { display: flex; align-items: center; gap: 12px; }
   #mn-today-chip {
     background: var(--mn-point-soft, #FEF3C7);
