@@ -1117,6 +1117,22 @@
     return ATT_DOT[data.status] || null;
   }
 
+  // 모바일 v3 화면: "N월 전체 달력 보기" 버튼을 주간 스트립 바로 아래로 옮긴다.
+  //  기본 위치는 화면 맨 아래라 주간 스트립에서 달력으로 넘어가는 흐름이 끊긴다.
+  function _mvFullCalBtn(){
+    var btn = document.getElementById('attv3-open-fullcal');
+    var cell = document.querySelector('[data-attv3-day]');
+    if(!btn || !cell) return;
+    // 스트립 행 → 스트립을 감싼 블록까지 올라가 그 다음 자리에 넣는다
+    var anchor = cell.parentNode;
+    if(anchor && anchor.parentNode && anchor.parentNode.id !== 'att-v3') anchor = anchor.parentNode;
+    if(!anchor || !anchor.parentNode) return;
+    if(btn.previousElementSibling === anchor) return;   // 이미 제자리
+    btn.style.display = 'block';
+    btn.style.margin = '10px 0 0';
+    anchor.parentNode.insertBefore(btn, anchor.nextSibling);
+  }
+
   function _attV3Active(){
     try{ return typeof attV3ShouldRender==='function' && attV3ShouldRender(); }
     catch(e){ return false; }
@@ -1134,7 +1150,7 @@
       var dup = document.getElementById('mn-week-strip-wrap');
       if(dup) dup.remove();
     }
-    if(_attV3Active()) return;
+    if(_attV3Active()){ _mvFullCalBtn(); return; }
     // v3가 아닌 모든 달력(레거시 직장인 / 알바·배달 / 프리랜서 / 기타수익)에 적용.
     // 전부 #cal-area 안의 #calendar 그리드에 렌더하고 renderCalendar()가 직군 분기하므로
     // 시트·스트립은 공통으로 동작한다 (2026-07-25 차수: 알바/배달/프리랜서 지원 추가)
@@ -1998,7 +2014,10 @@
       var origAtt = window.renderAttV3;
       window.renderAttV3 = function(){
         origAtt.apply(this, arguments);
-        try{ if(document.getElementById('mn-pc-nav')){ _pcLayoutAtt(); _pcBindCalClicks(); } }catch(e){}
+        try{
+          if(document.getElementById('mn-pc-nav')){ _pcLayoutAtt(); _pcBindCalClicks(); }
+          else { _mvFullCalBtn(); }     // 모바일: 전체 달력 버튼을 주간 스트립 아래로
+        }catch(e){}
       };
       window.renderAttV3.__mnPc = true;
     }
@@ -2044,8 +2063,32 @@
 
   // 모바일 폭이면 셸 구축 (한 번만). 늦은 뷰포트 확정(웹뷰 초기화·회전)에도
   // 대응할 수 있게 init 이후 resize에서도 호출된다 — 리로드 없이 동적 업그레이드
+  // PC 셸 크롬 제거 — 데스크톱에서 모바일 폭으로 좁혔을 때 두 셸이 겹치는 것을 막는다
+  function _teardownPcShell(){
+    var nav = document.getElementById('mn-pc-nav');
+    var top = document.getElementById('mn-pc-top');
+    var bodyCol = document.getElementById('mn-pc-body');
+    if(!nav && !top && !bodyCol) return;
+    // 상단 바에 옮겨 둔 PWA 설치 버튼은 잃지 않도록 되돌린다
+    try{
+      var pwa = document.getElementById('pwa-install-btn');
+      var hdr = document.querySelector('.header-right');
+      if(pwa && hdr) hdr.insertBefore(pwa, hdr.firstChild);
+    }catch(e){}
+    if(nav) nav.remove();
+    if(top) top.remove();
+    if(bodyCol){                       // #main을 #app 직속으로 되돌리고 래퍼 제거
+      var app = document.getElementById('app');
+      var main = document.getElementById('main');
+      if(app && main) app.appendChild(main);
+      bodyCol.remove();
+    }
+    document.body.classList.remove('mn-pc');
+  }
+
   function ensureShell(){
     if(shellBuilt || !_isMobileNow()) return;
+    _teardownPcShell();               // PC 셸이 남아 있으면 먼저 걷어낸다
     if(!buildShell()) return;
     shellBuilt = true;
     installShellShowPage();
