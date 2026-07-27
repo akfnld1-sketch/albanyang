@@ -844,10 +844,26 @@
   }
 
   var _rec = null;
+
+  // 인식 중지 (음성 바를 닫을 때)
+  function stopVoice(){
+    if(_rec){ try{ _rec.stop(); }catch(e){} _rec = null; }
+    var mic = document.getElementById('mn-voice-mic');
+    if(mic) mic.classList.remove('rec');
+    _stopMeter();
+    _restorePh(document.getElementById('mn-voice-input'));
+  }
+
   function startVoice(mic, inp){
     var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if(!SR){ if(typeof showToast==='function') showToast('이 브라우저는 음성 인식을 지원하지 않아요 — 입력창을 이용해주세요'); inp.focus(); return; }
-    if(_rec){ try{ _rec.stop(); }catch(e){} _rec = null; mic.classList.remove('rec'); _stopMeter(); _restorePh(inp); return; }
+    if(!SR){ if(typeof showToast==='function') showToast('이 브라우저는 음성 인식을 지원하지 않아요 — 입력창에 적어주세요'); inp.focus(); return; }
+    // 음성 인식·마이크는 보안 컨텍스트(https 또는 localhost)에서만 동작한다.
+    // 파일(file://)로 열면 조용히 실패해 "말해도 인식이 안 된다"로 보이므로 이유를 알린다.
+    if(window.isSecureContext === false){
+      if(typeof showToast==='function') showToast('음성 인식은 https 주소에서만 돼요 — 지금은 입력창에 적어주세요');
+      inp.focus(); return;
+    }
+    if(_rec){ stopVoice(); return; }
     var r = new SR();
     r.lang = 'ko-KR'; r.interimResults = false; r.maxAlternatives = 1;
     mic.classList.add('rec');
@@ -858,7 +874,16 @@
       inp.value = text;
       setTimeout(function(){ handleVoiceText(text); inp.value=''; }, 200);
     };
-    r.onerror = function(){ if(typeof showToast==='function') showToast('🎙️ 음성을 인식하지 못했어요 — 다시 시도해주세요'); };
+    // 실패 원인을 구분해 알려준다 (조용히 끝나면 사용자는 앱이 고장난 줄 안다)
+    r.onerror = function(ev){
+      var e = ev && ev.error, msg = '🎙️ 음성을 인식하지 못했어요 — 다시 시도해주세요';
+      if(e === 'not-allowed' || e === 'service-not-allowed')
+        msg = '🎙️ 마이크 권한이 필요해요 — 브라우저 설정에서 허용해주세요';
+      else if(e === 'no-speech')  msg = '🎙️ 소리가 들리지 않았어요 — 다시 말씀해주세요';
+      else if(e === 'network')    msg = '🎙️ 네트워크가 필요해요 — 연결 후 다시 시도해주세요';
+      else if(e === 'audio-capture') msg = '🎙️ 마이크를 찾지 못했어요';
+      if(typeof showToast==='function') showToast(msg);
+    };
     r.onend = function(){ mic.classList.remove('rec'); _rec = null; _stopMeter(); _restorePh(inp); };
     _rec = r;
     try{ r.start(); }catch(e){ mic.classList.remove('rec'); _rec = null; _stopMeter(); _restorePh(inp); }
@@ -944,7 +969,12 @@
       if(!vb) return;
       var open = vb.classList.toggle('open');
       this.classList.toggle('on', open);
-      if(open){ var inp = document.getElementById('mn-voice-input'); if(inp) setTimeout(function(){ inp.focus(); }, 50); }
+      // ★ 바만 열고 끝내면 "음성 모드로 바꿨는데 말해도 인식이 안 된다"가 된다.
+      //   열 때 바로 듣기 시작하고, 닫을 때 중지한다.
+      var inp = document.getElementById('mn-voice-input');
+      var mic2 = document.getElementById('mn-voice-mic');
+      if(open){ if(mic2 && inp) startVoice(mic2, inp); }
+      else { stopVoice(); }
     });
     document.getElementById('mn-ab-chat').addEventListener('click', function(){
       var vb = document.getElementById('mn-voice-bar');
@@ -1502,7 +1532,10 @@
       if(!vb) return;
       var open = vb.classList.toggle('open');
       this.classList.toggle('on', open);
-      if(open){ var i = document.getElementById('mn-voice-input'); if(i) setTimeout(function(){ i.focus(); }, 50); }
+      var i = document.getElementById('mn-voice-input');
+      var m = document.getElementById('mn-voice-mic');
+      if(open){ if(m && i) startVoice(m, i); }   // 열자마자 듣기 시작
+      else { stopVoice(); }
     });
     document.getElementById('mn-pc-asst').addEventListener('click', function(){
       var vb = document.getElementById('mn-voice-bar');
