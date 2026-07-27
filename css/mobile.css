@@ -582,14 +582,17 @@ html { -webkit-overflow-scrolling: touch; }
     top: 50%;
     transform: translateY(-50%);
     z-index: 1050;
-    width: 3px;
-    height: 40px;
+    /* v4.2.2-beta.38: 실기기 확인 — 여전히 커 보인다는 피드백으로 한 단계 더 축소
+       (3×40 → 2×28). 터치 영역 44px은 아래 padding-left로 그대로 유지 */
+    width: 2px;
+    height: 28px;
     /* v4.2.2-beta.10: 흰색 15%는 라이트 테마·밝은 배경에서 사실상 보이지 않아
        스와이프 메뉴가 숨은 기능이 되던 문제 — 오른쪽 끝에 살짝 삐져나온
        파란 탭처럼 항상 보이게 (기능 변경 없음, 색·두께만 조정)
        v4.2.2-beta.11: 소유자 피드백 — 더 얇게(3px), 메뉴 열려 있는 동안은
        탭을 숨기고 닫으면 다시 얇게 표시 */
-    background: rgba(79,124,255,0.5);
+    /* 색도 리디자인 토큰으로 (구 하드코딩 #4f7cff → 메인 블루, 다크 자동 대응) */
+    background: color-mix(in srgb, var(--mn-primary, #2563EB) 45%, transparent);
     border-radius: 2px 0 0 2px;
     cursor: pointer;
     transition: background 0.2s, opacity 0.2s;
