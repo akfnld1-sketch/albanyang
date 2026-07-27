@@ -597,9 +597,19 @@ html { -webkit-overflow-scrolling: touch; }
     border-radius: 2px 0 0 2px;
     cursor: pointer;
     transition: background 0.2s, opacity 0.2s;
-    /* 시각은 3px 유지, 터치 영역을 왼쪽으로 확장 (총 44px) */
-    padding-left: 41px;
-    box-sizing: content-box;
+    /* ★ 이전에는 padding-left:41px로 터치 영역을 넓혔는데, 배경은 패딩까지 칠해지므로
+       화면에는 3px가 아니라 44px 폭의 파란 덩어리로 보였다(두께를 줄여도 반영 안 됨).
+       보이는 탭은 3px 그대로 두고, 터치 영역만 투명한 가상요소로 확장한다. */
+    padding-left: 0;
+    box-sizing: border-box;
+    position: fixed;
+  }
+  #sao-handle::before {
+    content: '';
+    position: absolute;
+    right: 0; top: 50%;
+    transform: translateY(-50%);
+    width: 44px; height: 44px;   /* 터치 영역만 확보 — 보이지 않는다 */
   }
   #sao-handle.active {
     /* 메뉴 열림: 파란 탭 숨김 (같은 자리 탭/스와이프로 닫기는 그대로 동작) */
@@ -1767,4 +1777,6 @@ html { -webkit-overflow-scrolling: touch; }
    화면 맨 아래에 붙어 자리만 차지했고, 상태는 셀의 아이콘(✔️🌴🌗⏰🏃❌🌞🌙)으로도
    구분된다. PC는 우측 달력 위(#mn-pc-att-legend)에 유지 — 거기선 참조 역할을 한다.
    (소유자 요청 2026-07-27) */
-body.mn-shell .mn-att-legend { display: none !important; }
+body.mn-shell #att-v3 .mn-att-legend { display: none !important; }
+/* 단, "N월 전체 달력 보기" 팝업 안의 범례는 남긴다 — 거기서는 색점을 해석하는
+   유일한 단서이고, 글자 크기 설정에 따라 아이콘·라벨이 함께 커진다 */
