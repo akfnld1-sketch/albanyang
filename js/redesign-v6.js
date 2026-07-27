@@ -1288,6 +1288,8 @@
 
   window.mnSetFontScale = function(v, silent){
     try{ localStorage.setItem(FONT_KEY, v); }catch(e){}
+    // data-fs 속성으로 적용 — init.js가 인라인 --ui-scale을 지우므로 인라인만으로는 무력화된다
+    document.documentElement.setAttribute('data-fs', v);
     document.documentElement.style.setProperty('--ui-scale', v);
     _syncBrightnessChips();
     if(!silent && typeof showToast === 'function') showToast('🔠 글자 크기를 바꿨어요');
