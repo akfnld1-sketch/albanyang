@@ -480,11 +480,18 @@
     }
     if(recs.done > 0) return { kind:'done', earn:earn };
     if(!_hasTodayPlan()) return { kind:'none', earn:earn };
-    var diff = plan.start - _nowH();
+    // ★ 시작 시각이 지났다고 무조건 "지남"으로 두면, 밤 11시에 "아침 9시에서 14시간 지남"
+    //   같은 쓸모없는 안내가 된다. 오늘 근무 시간대(start~end) 안일 때만 "지남"으로 보고,
+    //   그 시간대까지 지났으면 다음 출근(내일)까지의 카운트다운으로 넘긴다.
+    var nowH = _nowH();
+    var diff = plan.start - nowH;
     if(diff > 0) return { kind:'pre', name:_mainWpName(), plan:plan, until:diff,
                           planned:_todayPlannedStoredAmount(), earn:earn };
-    return { kind:'late', name:_mainWpName(), plan:plan, over:-diff,
-             planned:_todayPlannedStoredAmount(), earn:earn };
+    var endH = plan.end; if(endH <= plan.start) endH += 24;   // 야간근무 대응
+    if(nowH < endH) return { kind:'late', name:_mainWpName(), plan:plan, over:-diff,
+                             planned:_todayPlannedStoredAmount(), earn:earn };
+    return { kind:'pre', name:_mainWpName(), plan:plan, until:(24 - nowH + plan.start),
+             tomorrow:true, planned:0, earn:earn };
   }
 
   // 날씨 힌트 (출근 전 상태 — 날씨 데이터 있을 때만)
@@ -552,7 +559,7 @@
     var amtTxt = s.planned > 0 ? ' · 예상 <b>'+_fmtWon(s.planned)+'원</b>' : '';
     var subTxt = isLate
       ? s.name+' · '+_hhmm(s.plan.start)+' 출근 예정이었어요'+amtTxt
-      : s.name+' · '+_hhmm(s.plan.start)+' 시작'+amtTxt;
+      : s.name+' · '+(s.tomorrow ? '내일 ' : '')+_hhmm(s.plan.start)+' 시작'+amtTxt;
     return '<div class="mn-hero mn-hero--plain">'
       +'<div class="mn-hero-label">'+(isLate ? '출근 시간이 지났어요' : '다음 근무까지')+'</div>'
       // 숫자 자리는 44px 고정이라 문자열이 길면 375px에서 줄바꿈된다 —
