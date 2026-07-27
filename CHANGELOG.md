@@ -1,5 +1,15 @@
 # 머니냥 CHANGELOG
 
+## v4.2.2-beta.50 (2026-07-28) — 오른쪽 엣지 SAO 스와이프 제거 (소유자 결정)
+- SAO 방사형 퀵메뉴 완전 제거 — #sao-handle/#sao-hint/#sao-overlay/#sao-row 마크업,
+  index.html 인라인·data-utils.js 스크립트(오른쪽 엣지 스와이프 리스너 포함),
+  mobile.css/main.css 관련 규칙, --sao-size 변수까지 정리
+- 접근 경로 유지 확인: 백업·복원·직업 설정·튜토리얼·초기화는 삼선 드로어
+  "빠른 메뉴"(직장인 계열)와 설정 탭(모든 직종, renderSettingsPage)에 모두 존재.
+  #import-inp2(iOS 복원 파일 선택)는 openImportDialog가 사용하므로 유지
+- 캐시: main.css/mobile.css/data-utils.js ?v=20260728a, CACHE_NAME v282→v283
+- 현재 QA 기준 — 실기기(Android PWA) 검증 전
+
 ## v4.2.2-beta.49 (2026-07-27) — 교대 근무자 홈 시간 버그 + 삼선 메뉴 복귀
 - **홈 히어로가 근무 형태와 무관하게 주간(09~18) 기준으로 계산하던 버그** —
   `_shiftPlan()`이 2교대·3교대에서 오늘의 조(오늘 기록 저장 조 → 고정조/현재 소속 조 순)를

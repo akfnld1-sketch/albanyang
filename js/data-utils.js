@@ -51,78 +51,8 @@ function setMobActive(page){
   }, { passive: true });
 })();
 
-/* ── SAO 스타일 방사형 메뉴 ── */
-(function(){
-  const row     = document.getElementById('sao-row');
-  const overlay = document.getElementById('sao-overlay');
-  const handle  = document.getElementById('sao-handle');
-  const hint    = document.getElementById('sao-hint');
-  if(!row) return;
-
-  let saoOpen = false;
-
-  // 힌트: 3초 후 서서히 사라짐
-  setTimeout(()=>{ if(hint) hint.style.opacity='0'; }, 3000);
-
-  window.toggleSaoMenu = function(){
-    saoOpen ? closeSaoMenu() : openSaoMenu();
-  };
-
-  window.openSaoMenu = function(){
-    if(saoOpen) return;
-    saoOpen = true;
-    row.classList.remove('close');
-    row.classList.add('open');
-    overlay.classList.add('open');
-    handle.classList.add('active');
-    if(hint) hint.style.opacity='0';
-  };
-
-  window.closeSaoMenu = function(){
-    if(!saoOpen) return;
-    saoOpen = false;
-    row.classList.remove('open');
-    row.classList.add('close');
-    overlay.classList.remove('open');
-    handle.classList.remove('active');
-    // close 클래스 정리
-    setTimeout(()=>{ if(!saoOpen) row.classList.remove('close'); }, 300);
-  };
-
-  // ── 오른쪽 엣지에서 왼쪽으로 스와이프 감지 ──
-  let touchStartY = 0;
-  let touchStartX = 0;
-  let touchStartTime = 0;
-
-  document.addEventListener('touchstart', e => {
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-    touchStartTime = Date.now();
-  }, { passive: true });
-
-  document.addEventListener('touchend', e => {
-    const endX = e.changedTouches[0].clientX;
-    const endY = e.changedTouches[0].clientY;
-    const dx = endX - touchStartX;   // 음수 = 왼쪽 방향
-    const dy = Math.abs(endY - touchStartY);
-    const dt = Date.now() - touchStartTime;
-    const sw = window.innerWidth;
-
-    // 오른쪽 엣지(60px) → 왼쪽으로 40px+ 스와이프 → 메뉴 열기
-    if(!saoOpen && touchStartX > sw - 60 && dx < -40 && dy < 80 && dt < 400){
-      openSaoMenu();
-      return;
-    }
-    // 메뉴 열린 상태 → 오른쪽으로 스와이프 or 왼쪽 영역 탭 → 닫기
-    if(saoOpen && dx > 40 && dy < 80 && dt < 400){
-      closeSaoMenu();
-    }
-  }, { passive: true });
-
-  // ESC 키
-  document.addEventListener('keydown', e => {
-    if(e.key === 'Escape' && saoOpen) closeSaoMenu();
-  });
-})();
+/* SAO 방사형 메뉴 제거 (2026-07-28 소유자 결정) —
+   오른쪽 엣지 스와이프 폐지. 항목은 삼선 드로어 "빠른 메뉴"(#sidebar)와
+   설정 탭(renderSettingsPage)에서 계속 접근 가능. */
 
 
