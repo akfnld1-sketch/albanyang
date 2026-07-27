@@ -117,9 +117,31 @@
     next();
   }
 
+  // 만료 여부와 무관하게 마지막으로 성공한 기사 (전부 실패했을 때의 대비책)
+  function _cacheAny(){
+    try{
+      var o = JSON.parse(localStorage.getItem(KEY) || 'null');
+      return (o && o.items && o.items.length) ? o : null;
+    }catch(e){ return null; }
+  }
+
   function _fail(){
     var el = document.getElementById('home-news-list');
-    if(el) el.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:8px 0;">뉴스를 불러오지 못했어요. 잠시 후 다시 확인해주세요.</div>';
+    if(!el) return;
+    // ★ 무료 소스가 전부 막혀도 화면을 비우지 않는다.
+    //   외부 서비스 사정으로 앱이 고장난 것처럼 보이는 상황을 막기 위해,
+    //   지난번에 받아둔 기사를 그대로 보여주고 언제 기준인지만 덧붙인다.
+    var last = _cacheAny();
+    if(last){
+      var mins = Math.max(1, Math.round((Date.now() - last.t) / 60000));
+      var ago = mins < 60 ? (mins + '분 전')
+              : (mins < 1440 ? (Math.round(mins/60) + '시간 전') : (Math.round(mins/1440) + '일 전'));
+      el.innerHTML = _rows(last.items)
+        + '<div style="font-size:11px;color:var(--text3);padding:6px 0 2px;">'
+        + ago + ' 받아둔 소식이에요 · 새 소식은 잠시 후 다시 확인돼요</div>';
+      return;
+    }
+    el.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:8px 0;">뉴스를 불러오지 못했어요. 잠시 후 다시 확인해주세요.</div>';
   }
 
   // weather.js renderHomePage에서 호출 — 카드 틀을 반환하고 내용은 비동기 채움
