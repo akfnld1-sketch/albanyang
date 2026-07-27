@@ -546,156 +546,8 @@ html { -webkit-overflow-scrolling: touch; }
   #mob-nav, #mob-sidebar-btn, #drawer-overlay { display: none !important; }
 }
 
-/* ══════════════════════════════════
-   SAO 스타일 세로 방사형 메뉴 (오른쪽)
-   — 480px 이하 전용
-   위→아래 스와이프로 열림 / 닫힘
-══════════════════════════════════ */
-
-/* 딤 오버레이 */
-#sao-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 1100;
-  background: rgba(0,0,0,0);
-  transition: background 0.3s;
-}
-#sao-overlay.open {
-  display: block;
-  background: rgba(0,0,0,0.45);
-}
-
-/* 스와이프 핸들 — 오른쪽 중단 세로 바 */
-#sao-handle {
-  display: none;
-}
-/* ★ 481~768px(태블릿) 사각지대 수정: 기존 max-width:480px이라 481~768px 구간에는
-   이 모바일 전용 스타일이 전혀 적용되지 않고, PC 숨김 규칙(main.css min-width:769px)도
-   적용되지 않아 SAO 메뉴가 레이아웃 깨진 채 그대로 노출되던 문제. 768px까지 모바일과
-   동일한 UX(스와이프 핸들 방식)를 적용해 사각지대를 없앰. */
-@media (max-width: 768px) {
-  #sao-handle {
-    display: flex;
-    position: fixed;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 1050;
-    width: 3px;
-    height: 40px;
-    /* v4.2.2-beta.10: 흰색 15%는 라이트 테마·밝은 배경에서 사실상 보이지 않아
-       스와이프 메뉴가 숨은 기능이 되던 문제 — 오른쪽 끝에 살짝 삐져나온
-       파란 탭처럼 항상 보이게 (기능 변경 없음, 색·두께만 조정)
-       v4.2.2-beta.11: 소유자 피드백 — 더 얇게(3px), 메뉴 열려 있는 동안은
-       탭을 숨기고 닫으면 다시 얇게 표시 */
-    background: rgba(79,124,255,0.5);
-    border-radius: 2px 0 0 2px;
-    cursor: pointer;
-    transition: background 0.2s, opacity 0.2s;
-    /* 시각은 3px 유지, 터치 영역을 왼쪽으로 확장 (총 44px) */
-    padding-left: 41px;
-    box-sizing: content-box;
-  }
-  #sao-handle.active {
-    /* 메뉴 열림: 파란 탭 숨김 (같은 자리 탭/스와이프로 닫기는 그대로 동작) */
-    background: transparent;
-    box-shadow: none;
-  }
-
-  /* 힌트 텍스트 */
-  #sao-hint {
-    position: fixed;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%) translateX(0);
-    z-index: 1040;
-    font-size: 10px;
-    color: rgba(255,255,255,0.3);
-    font-family: 'Noto Sans KR', sans-serif;
-    font-weight: 500;
-    white-space: nowrap;
-    pointer-events: none;
-    transition: opacity 0.5s;
-    writing-mode: vertical-rl;
-    letter-spacing: 2px;
-  }
-
-  /* ── 아이콘 세로 컨테이너 — 오른쪽 고정 ── */
-  #sao-row {
-    position: fixed;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 8px;
-    pointer-events: none;
-    z-index: 1200;
-  }
-
-  /* 개별 아이콘 버튼 */
-  .sao-btn {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
-    background: rgba(16, 20, 34, 0.93);
-    border: 1px solid rgba(79,124,255,0.3);
-    border-radius: 12px;
-    color: #c8d4f0;
-    font-size: 11px;
-    font-weight: 700;
-    font-family: 'Noto Sans KR', sans-serif;
-    cursor: pointer;
-    padding: 10px 14px 10px 12px;
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    box-shadow: 0 4px 24px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06);
-    pointer-events: auto;
-    white-space: nowrap;
-    min-width: 90px;
-    justify-content: flex-start;
-
-    /* 초기: 오른쪽으로 숨김 + 투명 */
-    opacity: 0;
-    transform: translateX(120%);
-    transition: opacity 0s, transform 0s;
-  }
-
-  /* 열릴 때 — 위에서부터 순서대로 스프링 바운스 */
-  #sao-row.open .sao-btn {
-    opacity: 1;
-    transform: translateX(0);
-  }
-  #sao-row.open .sao-btn:nth-child(1) { transition: opacity 0.2s 0.00s, transform 0.28s 0.00s cubic-bezier(0.34,1.56,0.64,1); }
-  #sao-row.open .sao-btn:nth-child(2) { transition: opacity 0.2s 0.05s, transform 0.28s 0.05s cubic-bezier(0.34,1.56,0.64,1); }
-  #sao-row.open .sao-btn:nth-child(3) { transition: opacity 0.2s 0.10s, transform 0.28s 0.10s cubic-bezier(0.34,1.56,0.64,1); }
-  #sao-row.open .sao-btn:nth-child(4) { transition: opacity 0.2s 0.15s, transform 0.28s 0.15s cubic-bezier(0.34,1.56,0.64,1); }
-  #sao-row.open .sao-btn:nth-child(5) { transition: opacity 0.2s 0.20s, transform 0.28s 0.20s cubic-bezier(0.34,1.56,0.64,1); }
-  #sao-row.open .sao-btn:nth-child(6) { transition: opacity 0.2s 0.25s, transform 0.28s 0.25s cubic-bezier(0.34,1.56,0.64,1); }
-  #sao-row.open .sao-btn:nth-child(7) { transition: opacity 0.2s 0.30s, transform 0.28s 0.30s cubic-bezier(0.34,1.56,0.64,1); }
-
-  /* 닫힐 때 — 아래서부터 역순으로 빠르게 */
-  #sao-row.close .sao-btn {
-    opacity: 0;
-    transform: translateX(100%);
-  }
-  #sao-row.close .sao-btn:nth-child(7) { transition: opacity 0.12s 0.00s, transform 0.14s 0.00s ease-in; }
-  #sao-row.close .sao-btn:nth-child(6) { transition: opacity 0.12s 0.03s, transform 0.14s 0.03s ease-in; }
-  #sao-row.close .sao-btn:nth-child(5) { transition: opacity 0.12s 0.06s, transform 0.14s 0.06s ease-in; }
-  #sao-row.close .sao-btn:nth-child(4) { transition: opacity 0.12s 0.09s, transform 0.14s 0.09s ease-in; }
-  #sao-row.close .sao-btn:nth-child(3) { transition: opacity 0.12s 0.12s, transform 0.14s 0.12s ease-in; }
-  #sao-row.close .sao-btn:nth-child(2) { transition: opacity 0.12s 0.15s, transform 0.14s 0.15s ease-in; }
-  #sao-row.close .sao-btn:nth-child(1) { transition: opacity 0.12s 0.18s, transform 0.14s 0.18s ease-in; }
-
-  .sao-btn .sao-icon  { font-size: 20px; line-height: 1; flex-shrink: 0; }
-  .sao-btn:active     { background: rgba(79,124,255,0.22); border-color: var(--accent); transform: scale(0.96) translateX(0) !important; }
-  .sao-btn.sao-danger { border-color: rgba(255,92,122,0.45); color: #ff8fab; }
-  .sao-btn.sao-info   { border-color: rgba(79,124,255,0.55); color: #9bb8ff; }
-  .sao-btn.sao-on     { border-color: var(--accent); color: var(--accent); background: rgba(79,124,255,0.18); }
-}
+/* SAO 세로 방사형 메뉴 제거 (2026-07-28 소유자 결정) —
+   오른쪽 엣지 스와이프 폐지. 항목은 삼선 드로어 "빠른 메뉴"와 설정 탭으로 이동. */
 
 /* ══════════════════════════════════
    배너 아이콘 전용 버튼 — 480px 이하
@@ -1022,6 +874,16 @@ html { -webkit-overflow-scrolling: touch; }
     background: var(--bg);
   }
   #mn-hd-brand { display: flex; align-items: center; gap: 8px; font-size: 19px; font-weight: 900; letter-spacing: -.02em; color: var(--text); }
+  /* 삼선(햄버거) — 캐릭터 왼쪽, 왼쪽 드로어(#sidebar) 열기 */
+  #mn-hd-menu {
+    background: none; border: none; cursor: pointer; padding: 6px;
+    margin-left: -6px;                 /* 아이콘 시각 정렬 — 헤더 왼쪽 여백과 맞춤 */
+    min-width: 44px; min-height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text2);
+  }
+  /* 드로어가 비활성화된 직종(일반알바·프리랜서 등)에서는 삼선도 숨긴다 */
+  body.sidebar-disabled #mn-hd-menu { display: none; }
   #mn-hd-right { display: flex; align-items: center; gap: 12px; }
   #mn-today-chip {
     background: var(--mn-point-soft, #FEF3C7);
@@ -1411,6 +1273,11 @@ html { -webkit-overflow-scrolling: touch; }
   /* v3 미니 달력은 우측 전체 달력과 중복이라 PC에서 숨긴다.
      미니에만 있던 상태 범례는 _pcLayoutAtt가 우측 달력 위로 옮겨 둔다 */
   body.mn-pc #attv3-minicalpanel { display: none !important; }
+  /* 미니 달력·전체달력 버튼이 둘 다 숨겨지면 좌측 열(.attv3-cal-col)이
+     빈 박스로 남고 35% 그리드 트랙이 통째로 빈 공간이 된다 —
+     열을 접고 출근 카드 열이 전폭을 쓰게 한다 */
+  body.mn-pc .attv3-cal-col { display: none !important; }
+  body.mn-pc .attv3-body { display: block !important; }
   #mn-pc-att-legend { margin-bottom: 10px; }
 
   /* 좌우 연동 ①: 좌측에서 선택된 날짜를 우측 달력에서 강조 */
@@ -1700,3 +1567,69 @@ html { -webkit-overflow-scrolling: touch; }
   color: var(--text2); font-size: 15px; cursor: pointer;
 }
 
+
+/* ══════════════════════════════════════════════════════════════
+   글자 크기 설정 연동 (보통 1 / 크게 1.2 / 아주 크게 1.35)
+   리디자인으로 새로 만든 화면들이 고정 px이라 설정을 바꿔도 반응하지 않았다.
+   --mn-text-k(= --ui-scale / 1.2)를 곱해 기본값(크게)에서는 명세 px 그대로 두고,
+   설정을 바꿀 때만 비례해 커지게 한다.
+   ※ 큰 숫자(히어로 44/58px)와 버튼 높이는 고정 — 확대하면 카드가 깨진다.
+   ══════════════════════════════════════════════════════════════ */
+:root { --k: var(--mn-text-k, 1); }
+
+/* 모바일 셸 크롬 */
+#mn-hd-brand      { font-size: calc(19px * var(--k)); }
+#mn-today-chip    { font-size: calc(13px * var(--k)); }
+.mn-tab           { font-size: calc(15px * var(--k)); }
+
+/* 정보 — 날씨 카드 */
+.mn-wx-loc        { font-size: calc(14px   * var(--k)); }
+.mn-wx-sum        { font-size: calc(14.5px * var(--k)); }
+.mn-wx-cell span  { font-size: calc(12px   * var(--k)); }
+.mn-wx-cell b     { font-size: calc(13px   * var(--k)); }
+.mn-wx-advice     { font-size: calc(13.5px * var(--k)); }
+.mn-wx-fail-t     { font-size: calc(15px   * var(--k)); }
+.mn-wx-fail-s     { font-size: calc(13.5px * var(--k)); }
+.mn-wx-retry      { font-size: calc(14px   * var(--k)); }
+.mn-info-date     { font-size: calc(13px   * var(--k)); }
+
+/* 정보 — 브리핑 */
+.mn-brief-chip    { font-size: calc(12px   * var(--k)); }
+.mn-brief-txt b   { font-size: calc(14.5px * var(--k)); }
+.mn-brief-txt i   { font-size: calc(12.5px * var(--k)); }
+.mn-brief-empty   { font-size: calc(13.5px * var(--k)); }
+
+/* 근태 — 주 스트립 */
+#mn-week-title    { font-size: calc(15px   * var(--k)); }
+#mn-week-hint     { font-size: calc(13px   * var(--k)); }
+.mn-ws-wd         { font-size: calc(12px   * var(--k)); }
+.mn-ws-day        { font-size: calc(15.5px * var(--k)); }
+#mn-cal-open-btn  { font-size: calc(14.5px * var(--k)); }
+
+/* 설정 — 밝기·글자 크기 카드 */
+#mn-display-card .mn-set-lbl  { font-size: calc(14px   * var(--k)); }
+.mn-set-chip                  { font-size: calc(14.5px * var(--k)); }
+#mn-display-card .mn-set-help { font-size: calc(13px   * var(--k)); }
+
+@media (min-width: 769px) {
+  /* PC 사이드바 · 상단 바 */
+  .mn-pc-item        { font-size: calc(15px   * var(--k)); }
+  .mn-pc-logo span   { font-size: calc(17px   * var(--k)); }
+  .mn-pc-income span { font-size: calc(12.5px * var(--k)); }
+  .mn-pc-income b    { font-size: calc(17px   * var(--k)); }
+  #mn-pc-title-t     { font-size: calc(22px   * var(--k)); }
+  #mn-pc-title-s     { font-size: calc(13.5px * var(--k)); }
+  #mn-pc-chip        { font-size: calc(14px   * var(--k)); }
+  #mn-pc-asst        { font-size: calc(14.5px * var(--k)); }
+  .mn-pc-ctx-chip,
+  .mn-pc-ctx-btn     { font-size: calc(14px   * var(--k)); }
+  .mn-pc-col-r .mn-todo-h { font-size: calc(15px * var(--k)); }
+}
+
+/* 근태 상태 범례(근무·연차·반차·지각·조퇴·결근·휴일·야간)는 모바일에서 숨긴다.
+   화면 맨 아래에 붙어 자리만 차지했고, 상태는 셀의 아이콘(✔️🌴🌗⏰🏃❌🌞🌙)으로도
+   구분된다. PC는 우측 달력 위(#mn-pc-att-legend)에 유지 — 거기선 참조 역할을 한다.
+   (소유자 요청 2026-07-27) */
+body.mn-shell #att-v3 .mn-att-legend { display: none !important; }
+/* 단, "N월 전체 달력 보기" 팝업 안의 범례는 남긴다 — 거기서는 색점을 해석하는
+   유일한 단서이고, 글자 크기 설정에 따라 아이콘·라벨이 함께 커진다 */

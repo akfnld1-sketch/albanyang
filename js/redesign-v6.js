@@ -338,18 +338,44 @@
   // ══════════════════════════════════════════
 
   // 예정 근무 시간대 — 설정(근무 형태·커스텀 시프트) 값 바인딩만
+  // ★ 2교대·3교대는 오늘의 조를 "오늘 기록에 저장된 조 → 고정조/현재 소속 조" 순으로 정해
+  //   그 조의 시작·종료 시각을 쓴다. 예전에는 근무 형태와 무관하게 주간(09~18)으로만
+  //   계산해서 교대 근무자에게 틀린 시간을 보여줬다.
   function _shiftPlan(){
-    var s = 9, e = 18;
+    var s = 9, e = 18, sh;   // sh: calcNetHours 휴게 공제에 넘길 조
     try{
-      var t = (typeof wt !== 'undefined') ? wt : 'day';
-      if(typeof customShift !== 'undefined' && customShift){
-        if(t === 'night' && customShift.night){ s = customShift.night.start; e = customShift.night.end; }
-        else if(customShift.day){ s = customShift.day.start; e = customShift.day.end; }
-      } else if(typeof dayStart !== 'undefined'){ s = dayStart; e = dayStart + 9; }
+      var t  = (typeof wt !== 'undefined') ? wt : 'day';
+      var cs = (typeof customShift !== 'undefined' && customShift) ? customShift : null;
+      var recShift = null;   // 오늘 기록에 저장된 조 (있으면 최우선)
+      try{
+        var d = new Date();
+        var key = (typeof dk === 'function') ? dk(d.getFullYear(), d.getMonth(), d.getDate()) : null;
+        var r = (key && typeof dayData !== 'undefined') ? dayData[key] : null;
+        if(r && r.shift) recShift = r.shift;
+      }catch(err){}
+      if(t === '2shift'){
+        sh = recShift || ((typeof p2Sh !== 'undefined' && p2Sh) ? p2Sh : 'day');
+        if(sh === 'day_fixed') sh = 'day';
+        var c2 = cs && (sh === 'night' ? cs.shift2night : cs.shift2day);
+        if(c2){ s = c2.start; e = c2.end; }
+        else if(typeof SHIFT2 !== 'undefined' && SHIFT2[sh]){ s = SHIFT2[sh].s; e = SHIFT2[sh].e; }
+      } else if(t === '3shift'){
+        sh = recShift || ((typeof myShift3 !== 'undefined' && myShift3) ? myShift3 : 'A');
+        if(sh === 'day_fixed') sh = 'A';
+        var c3 = cs && cs[{A:'shift3a', B:'shift3b', C:'shift3c'}[sh]];
+        if(c3){ s = c3.start; e = c3.end; }
+        else if(typeof SHIFT3 !== 'undefined' && SHIFT3[sh]){ s = SHIFT3[sh].s; e = SHIFT3[sh].e; }
+      } else if(t === 'night'){
+        if(cs && cs.night){ s = cs.night.start; e = cs.night.end; }
+        else if(typeof nightStart !== 'undefined'){ s = nightStart; e = (nightStart + 8) % 24; }
+      } else {
+        if(cs && cs.day){ s = cs.day.start; e = cs.day.end; }
+        else if(typeof dayStart !== 'undefined'){ s = dayStart; e = dayStart + 9; }
+      }
     }catch(err){}
     var span = e - s; if(span <= 0) span += 24;
     var net = span;
-    try{ if(typeof calcNetHours === 'function'){ var n = calcNetHours(s, e, 'work', undefined); if(n > 0) net = n; } }catch(err){}
+    try{ if(typeof calcNetHours === 'function'){ var n = calcNetHours(s, e, 'work', sh); if(n > 0) net = n; } }catch(err){}
     return { start:s, end:e, span:span, net:net };
   }
 
@@ -480,11 +506,18 @@
     }
     if(recs.done > 0) return { kind:'done', earn:earn };
     if(!_hasTodayPlan()) return { kind:'none', earn:earn };
-    var diff = plan.start - _nowH();
+    // ★ 시작 시각이 지났다고 무조건 "지남"으로 두면, 밤 11시에 "아침 9시에서 14시간 지남"
+    //   같은 쓸모없는 안내가 된다. 오늘 근무 시간대(start~end) 안일 때만 "지남"으로 보고,
+    //   그 시간대까지 지났으면 다음 출근(내일)까지의 카운트다운으로 넘긴다.
+    var nowH = _nowH();
+    var diff = plan.start - nowH;
     if(diff > 0) return { kind:'pre', name:_mainWpName(), plan:plan, until:diff,
                           planned:_todayPlannedStoredAmount(), earn:earn };
-    return { kind:'late', name:_mainWpName(), plan:plan, over:-diff,
-             planned:_todayPlannedStoredAmount(), earn:earn };
+    var endH = plan.end; if(endH <= plan.start) endH += 24;   // 야간근무 대응
+    if(nowH < endH) return { kind:'late', name:_mainWpName(), plan:plan, over:-diff,
+                             planned:_todayPlannedStoredAmount(), earn:earn };
+    return { kind:'pre', name:_mainWpName(), plan:plan, until:(24 - nowH + plan.start),
+             tomorrow:true, planned:0, earn:earn };
   }
 
   // 날씨 힌트 (출근 전 상태 — 날씨 데이터 있을 때만)
@@ -552,7 +585,7 @@
     var amtTxt = s.planned > 0 ? ' · 예상 <b>'+_fmtWon(s.planned)+'원</b>' : '';
     var subTxt = isLate
       ? s.name+' · '+_hhmm(s.plan.start)+' 출근 예정이었어요'+amtTxt
-      : s.name+' · '+_hhmm(s.plan.start)+' 시작'+amtTxt;
+      : s.name+' · '+(s.tomorrow ? '내일 ' : '')+_hhmm(s.plan.start)+' 시작'+amtTxt;
     return '<div class="mn-hero mn-hero--plain">'
       +'<div class="mn-hero-label">'+(isLate ? '출근 시간이 지났어요' : '다음 근무까지')+'</div>'
       // 숫자 자리는 44px 고정이라 문자열이 길면 375px에서 줄바꿈된다 —
@@ -844,10 +877,26 @@
   }
 
   var _rec = null;
+
+  // 인식 중지 (음성 바를 닫을 때)
+  function stopVoice(){
+    if(_rec){ try{ _rec.stop(); }catch(e){} _rec = null; }
+    var mic = document.getElementById('mn-voice-mic');
+    if(mic) mic.classList.remove('rec');
+    _stopMeter();
+    _restorePh(document.getElementById('mn-voice-input'));
+  }
+
   function startVoice(mic, inp){
     var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if(!SR){ if(typeof showToast==='function') showToast('이 브라우저는 음성 인식을 지원하지 않아요 — 입력창을 이용해주세요'); inp.focus(); return; }
-    if(_rec){ try{ _rec.stop(); }catch(e){} _rec = null; mic.classList.remove('rec'); _stopMeter(); _restorePh(inp); return; }
+    if(!SR){ if(typeof showToast==='function') showToast('이 브라우저는 음성 인식을 지원하지 않아요 — 입력창에 적어주세요'); inp.focus(); return; }
+    // 음성 인식·마이크는 보안 컨텍스트(https 또는 localhost)에서만 동작한다.
+    // 파일(file://)로 열면 조용히 실패해 "말해도 인식이 안 된다"로 보이므로 이유를 알린다.
+    if(window.isSecureContext === false){
+      if(typeof showToast==='function') showToast('음성 인식은 https 주소에서만 돼요 — 지금은 입력창에 적어주세요');
+      inp.focus(); return;
+    }
+    if(_rec){ stopVoice(); return; }
     var r = new SR();
     r.lang = 'ko-KR'; r.interimResults = false; r.maxAlternatives = 1;
     mic.classList.add('rec');
@@ -858,7 +907,16 @@
       inp.value = text;
       setTimeout(function(){ handleVoiceText(text); inp.value=''; }, 200);
     };
-    r.onerror = function(){ if(typeof showToast==='function') showToast('🎙️ 음성을 인식하지 못했어요 — 다시 시도해주세요'); };
+    // 실패 원인을 구분해 알려준다 (조용히 끝나면 사용자는 앱이 고장난 줄 안다)
+    r.onerror = function(ev){
+      var e = ev && ev.error, msg = '🎙️ 음성을 인식하지 못했어요 — 다시 시도해주세요';
+      if(e === 'not-allowed' || e === 'service-not-allowed')
+        msg = '🎙️ 마이크 권한이 필요해요 — 브라우저 설정에서 허용해주세요';
+      else if(e === 'no-speech')  msg = '🎙️ 소리가 들리지 않았어요 — 다시 말씀해주세요';
+      else if(e === 'network')    msg = '🎙️ 네트워크가 필요해요 — 연결 후 다시 시도해주세요';
+      else if(e === 'audio-capture') msg = '🎙️ 마이크를 찾지 못했어요';
+      if(typeof showToast==='function') showToast(msg);
+    };
     r.onend = function(){ mic.classList.remove('rec'); _rec = null; _stopMeter(); _restorePh(inp); };
     _rec = r;
     try{ r.start(); }catch(e){ mic.classList.remove('rec'); _rec = null; _stopMeter(); _restorePh(inp); }
@@ -896,7 +954,13 @@
     var hd = document.createElement('div');
     hd.id = 'mn-header';
     hd.innerHTML =
-      '<div id="mn-hd-brand">'+_avatarImg(31)+'<span>머니냥</span></div>'
+      // ★ 삼선(햄버거): 캐릭터 왼쪽 — 기존 왼쪽 드로어(#sidebar)를 연다.
+      //   sidebar-disabled 직종(일반알바·프리랜서 등)에서는 CSS로 숨긴다.
+      '<div id="mn-hd-brand">'
+      +'<button id="mn-hd-menu" aria-label="설정 메뉴" onclick="toggleDrawer()">'
+      +'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>'
+      +'</button>'
+      +_avatarImg(31)+'<span>머니냥</span></div>'
       +'<div id="mn-hd-right">'
       +'<span id="mn-today-chip" onclick="showPage(\'home\')">오늘 0원</span>'
       +'<button id="mn-hd-gear" aria-label="설정" onclick="showPage(\'settings\')">'
@@ -944,7 +1008,12 @@
       if(!vb) return;
       var open = vb.classList.toggle('open');
       this.classList.toggle('on', open);
-      if(open){ var inp = document.getElementById('mn-voice-input'); if(inp) setTimeout(function(){ inp.focus(); }, 50); }
+      // ★ 바만 열고 끝내면 "음성 모드로 바꿨는데 말해도 인식이 안 된다"가 된다.
+      //   열 때 바로 듣기 시작하고, 닫을 때 중지한다.
+      var inp = document.getElementById('mn-voice-input');
+      var mic2 = document.getElementById('mn-voice-mic');
+      if(open){ if(mic2 && inp) startVoice(mic2, inp); }
+      else { stopVoice(); }
     });
     document.getElementById('mn-ab-chat').addEventListener('click', function(){
       var vb = document.getElementById('mn-voice-bar');
@@ -1087,6 +1156,22 @@
     return ATT_DOT[data.status] || null;
   }
 
+  // 모바일 v3 화면: "N월 전체 달력 보기" 버튼을 주간 스트립 바로 아래로 옮긴다.
+  //  기본 위치는 화면 맨 아래라 주간 스트립에서 달력으로 넘어가는 흐름이 끊긴다.
+  function _mvFullCalBtn(){
+    var btn = document.getElementById('attv3-open-fullcal');
+    var cell = document.querySelector('[data-attv3-day]');
+    if(!btn || !cell) return;
+    // 스트립 행 → 스트립을 감싼 블록까지 올라가 그 다음 자리에 넣는다
+    var anchor = cell.parentNode;
+    if(anchor && anchor.parentNode && anchor.parentNode.id !== 'att-v3') anchor = anchor.parentNode;
+    if(!anchor || !anchor.parentNode) return;
+    if(btn.previousElementSibling === anchor) return;   // 이미 제자리
+    btn.style.display = 'block';
+    btn.style.margin = '10px 0 0';
+    anchor.parentNode.insertBefore(btn, anchor.nextSibling);
+  }
+
   function _attV3Active(){
     try{ return typeof attV3ShouldRender==='function' && attV3ShouldRender(); }
     catch(e){ return false; }
@@ -1097,7 +1182,14 @@
     // 근태 v3(직장인·회사알바)는 자체 주간 스트립 + 월 전체달력 팝업을 이미 제공하며
     // (attendance-v3.js — #cal-area를 팝업으로 옮겼다 되돌리는 구조), 토큰은 1단계에서
     // 이미 반영됨. 여기서 또 만들면 중복 UI + #cal-area 이동 충돌 → 건너뛴다.
-    if(_attV3Active()) return;
+    // ★ v3가 자체 주간 스트립을 그리는 상태에서 내 스트립이 남아 있으면
+    //   주 단위 달력이 위·아래로 두 개 보인다(직업 선택 등으로 v3가 나중에
+    //   켜진 경우 발생). v3 스트립이 있으면 내 것을 걷어낸다.
+    if(document.querySelector('[data-attv3-day]')){
+      var dup = document.getElementById('mn-week-strip-wrap');
+      if(dup) dup.remove();
+    }
+    if(_attV3Active()){ _mvFullCalBtn(); return; }
     // v3가 아닌 모든 달력(레거시 직장인 / 알바·배달 / 프리랜서 / 기타수익)에 적용.
     // 전부 #cal-area 안의 #calendar 그리드에 렌더하고 renderCalendar()가 직군 분기하므로
     // 시트·스트립은 공통으로 동작한다 (2026-07-25 차수: 알바/배달/프리랜서 지원 추가)
@@ -1258,6 +1350,8 @@
 
   window.mnSetFontScale = function(v, silent){
     try{ localStorage.setItem(FONT_KEY, v); }catch(e){}
+    // data-fs 속성으로 적용 — init.js가 인라인 --ui-scale을 지우므로 인라인만으로는 무력화된다
+    document.documentElement.setAttribute('data-fs', v);
     document.documentElement.style.setProperty('--ui-scale', v);
     _syncBrightnessChips();
     if(!silent && typeof showToast === 'function') showToast('🔠 글자 크기를 바꿨어요');
@@ -1502,7 +1596,10 @@
       if(!vb) return;
       var open = vb.classList.toggle('open');
       this.classList.toggle('on', open);
-      if(open){ var i = document.getElementById('mn-voice-input'); if(i) setTimeout(function(){ i.focus(); }, 50); }
+      var i = document.getElementById('mn-voice-input');
+      var m = document.getElementById('mn-voice-mic');
+      if(open){ if(m && i) startVoice(m, i); }   // 열자마자 듣기 시작
+      else { stopVoice(); }
     });
     document.getElementById('mn-pc-asst').addEventListener('click', function(){
       var vb = document.getElementById('mn-voice-bar');
@@ -1956,7 +2053,10 @@
       var origAtt = window.renderAttV3;
       window.renderAttV3 = function(){
         origAtt.apply(this, arguments);
-        try{ if(document.getElementById('mn-pc-nav')){ _pcLayoutAtt(); _pcBindCalClicks(); } }catch(e){}
+        try{
+          if(document.getElementById('mn-pc-nav')){ _pcLayoutAtt(); _pcBindCalClicks(); }
+          else { _mvFullCalBtn(); }     // 모바일: 전체 달력 버튼을 주간 스트립 아래로
+        }catch(e){}
       };
       window.renderAttV3.__mnPc = true;
     }
@@ -2002,8 +2102,32 @@
 
   // 모바일 폭이면 셸 구축 (한 번만). 늦은 뷰포트 확정(웹뷰 초기화·회전)에도
   // 대응할 수 있게 init 이후 resize에서도 호출된다 — 리로드 없이 동적 업그레이드
+  // PC 셸 크롬 제거 — 데스크톱에서 모바일 폭으로 좁혔을 때 두 셸이 겹치는 것을 막는다
+  function _teardownPcShell(){
+    var nav = document.getElementById('mn-pc-nav');
+    var top = document.getElementById('mn-pc-top');
+    var bodyCol = document.getElementById('mn-pc-body');
+    if(!nav && !top && !bodyCol) return;
+    // 상단 바에 옮겨 둔 PWA 설치 버튼은 잃지 않도록 되돌린다
+    try{
+      var pwa = document.getElementById('pwa-install-btn');
+      var hdr = document.querySelector('.header-right');
+      if(pwa && hdr) hdr.insertBefore(pwa, hdr.firstChild);
+    }catch(e){}
+    if(nav) nav.remove();
+    if(top) top.remove();
+    if(bodyCol){                       // #main을 #app 직속으로 되돌리고 래퍼 제거
+      var app = document.getElementById('app');
+      var main = document.getElementById('main');
+      if(app && main) app.appendChild(main);
+      bodyCol.remove();
+    }
+    document.body.classList.remove('mn-pc');
+  }
+
   function ensureShell(){
     if(shellBuilt || !_isMobileNow()) return;
+    _teardownPcShell();               // PC 셸이 남아 있으면 먼저 걷어낸다
     if(!buildShell()) return;
     shellBuilt = true;
     installShellShowPage();
