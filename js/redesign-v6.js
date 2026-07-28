@@ -966,7 +966,7 @@
       // ★ 삼선(햄버거): 캐릭터 왼쪽 — 기존 왼쪽 드로어(#sidebar)를 연다.
       //   sidebar-disabled 직종(일반알바·프리랜서 등)에서는 CSS로 숨긴다.
       '<div id="mn-hd-brand">'
-      +'<button id="mn-hd-menu" aria-label="설정 메뉴" onclick="toggleDrawer()">'
+      +'<button id="mn-hd-menu" aria-label="근무·급여 상세 설정" title="근무·급여 상세 설정" onclick="toggleDrawer()">'
       +'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>'
       +'</button>'
       +_avatarImg(31)+'<span>머니냥</span></div>'
@@ -1556,7 +1556,7 @@
       // ★ 삼선(햄버거): 모바일 셸과 동일하게 캐릭터 왼쪽 — 상세 설정 드로어(#sidebar)를 연다.
       //   (기존 하단 "상세 설정" 텍스트 항목을 대체 — 소유자 결정 2026-07-28)
       '<div class="mn-pc-logo">'
-      +'<button id="mn-pc-menu-btn" aria-label="설정 메뉴" onclick="toggleDrawer()">'
+      +'<button id="mn-pc-menu-btn" aria-label="근무·급여 상세 설정" title="근무·급여 상세 설정" onclick="toggleDrawer()">'
       +'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>'
       +'</button>'
       +_avatarImg(32)+'<span>머니냥</span></div>'
