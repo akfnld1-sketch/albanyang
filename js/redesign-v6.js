@@ -386,7 +386,10 @@
   }
   function _durStr(hours){
     if(hours < 0) hours = 0;
-    var h = Math.floor(hours), m = Math.floor((hours - h) * 60);
+    // 분 단위로 반올림해 계산 — 시간을 실수로 쪼개면 19분이 18.999…분이 되어
+    // 내림 시 1분 낮게 표시되는 부동소수 오차가 있었다
+    var totalMin = Math.round(hours * 60);
+    var h = Math.floor(totalMin / 60), m = totalMin % 60;
     return h > 0 ? (h+'시간 '+m+'분') : (m+'분');
   }
   function _nowH(){
@@ -686,13 +689,19 @@
       +'</div>';
   }
 
-  // 경과 시간·게이지 1분 갱신 (근무 중일 때만)
+  // 히어로 1분 갱신 — 근무 중은 경과·게이지만 부분 갱신, 그 외 상태는 홈 재렌더.
+  // ★ 예전엔 근무 중일 때만 갱신해서 출근 전/지남 카운트가 렌더 시점 값으로 고정됐다
+  //   (15:13인데 15:09에 그린 "6시간 9분"이 그대로 보이던 문제). 홈 재렌더는
+  //   로컬 데이터 바인딩뿐이라(네트워크 없음) 1분 주기로 돌려도 비용이 없다.
   var _heroTimer = null;
   function _startHeroTimer(){
     if(_heroTimer) return;
     _heroTimer = setInterval(function(){
       var el = document.getElementById('mn-hero-elapsed');
-      if(!el) return;                       // 근무 중 히어로가 화면에 없으면 아무것도 안 함
+      if(!el){
+        if(document.querySelector('.mn-hero') && typeof renderHomePage==='function') renderHomePage();
+        return;
+      }
       var s = _heroState();
       if(s.kind !== 'working'){ if(typeof renderHomePage==='function') renderHomePage(); return; }
       el.textContent = _durStr(s.elapsed);
