@@ -1115,6 +1115,18 @@ html { -webkit-overflow-scrolling: touch; }
     position: sticky; top: 0; height: 100vh; box-sizing: border-box;
   }
   .mn-pc-logo { display: flex; align-items: center; gap: 9px; }
+  /* 삼선(햄버거) — 캐릭터 왼쪽, 상세 설정 드로어(#sidebar) 열기 (구 "상세 설정" 항목 대체) */
+  #mn-pc-menu-btn {
+    background: none; border: none; cursor: pointer; padding: 6px;
+    margin-left: -6px;
+    min-width: 40px; min-height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--mn-sidebar-dim, #A9BCE8);
+    border-radius: 10px;
+  }
+  #mn-pc-menu-btn:hover { color: #F8FAFC; background: rgba(255,255,255,.08); }
+  /* 드로어가 비활성화된 직종(일반알바·프리랜서 등)에서는 삼선도 숨긴다 */
+  body.sidebar-disabled #mn-pc-menu-btn { display: none; }
   .mn-pc-logo span { font-size: 17px; font-weight: 900; letter-spacing: -.02em; }
   .mn-pc-logo img { width: 32px; height: 32px; border-radius: 50%; flex: none; }
   .mn-pc-menu, .mn-pc-bottom { display: flex; flex-direction: column; gap: 3px; }
