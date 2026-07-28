@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>머니냥 - 내 돈 관리</title>
+<meta name="description" content="당신의 한 달을 끝까지 지켜주는 AI 비서, 머니냥. 알바·직장인 수입과 근태, 지출을 무료로 관리하세요. 데이터는 기기에 암호화되어 저장됩니다.">
+<meta property="og:title" content="머니냥 - 내 돈 관리 AI 비서">
+<meta property="og:description" content="수입·근태·지출을 한곳에서. 무료로 시작하세요.">
 <link id="favicon-link" rel="icon" type="image/png" href="img/icons/favicon-32.png">
 <link id="apple-icon-link" rel="apple-touch-icon" href="img/icons/apple-touch-icon.png">
 <link id="manifest-link" rel="manifest" href="manifest.json?v=20260611-fix3">
@@ -32,7 +35,7 @@
 -->
 
 <!-- ══ 앱 버전 (전역 상수 — 버전 변경 시 여기만 수정) ══ -->
-<script>var APP_VERSION = 'v4.2.2-beta.55';</script>
+<script>var APP_VERSION = 'v4.2.2-beta.56';</script>
 
 <!-- ══ Service Worker + 온라인 감지 ══ -->
 <script src="js/sw-init.js"></script>
@@ -64,6 +67,11 @@
 </head>
 
 <body>
+<!-- ══ SEO/접근성: 화면에는 안 보이지만 검색엔진·낭독기·정적 분석기가 읽는 서비스 소개 ══ -->
+<div style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;">
+  <h1>머니냥 — 당신의 한 달을 끝까지 지켜주는 수입·근태·지출 관리 AI 비서</h1>
+  <p>모든 기능을 무료로 사용할 수 있습니다. 데이터는 기기에 안전하게 암호화되어 저장되며, 문의는 앱 내 설정 → 문의하기에서 보낼 수 있습니다.</p>
+</div>
 <!-- ══════════════════════════════════════════
      머니냥 시작 스플래시
 ══════════════════════════════════════════ -->
@@ -1393,7 +1401,7 @@ const _origShowPage = typeof showPage === 'function' ? showPage : null;
 <script src="js/assistant.js?v=20260717a"></script>    <!-- [7] AI 챗봇 (getPayData/fmt/curY 의존) -->
 <script src="js/mn-character.js?v=20260727a"></script>       <!-- [6.8] 머니냥 캐릭터 시스템 v1.0 -->
 <script src="js/dev-mode.js?v=20260710b"></script>            <!-- [6.85] 🧪 개발자 모드 (QA 도구) -->
-<script src="js/login.js?v=20260724c"></script>               <!-- [6.9] v2.8 로그인 화면 (OAuth 연결 전 임시 게이트) -->
+<script src="js/login.js?v=20260728a"></script>               <!-- [6.9] v2.8 로그인 화면 (OAuth 연결 전 임시 게이트) -->
 <script src="js/sao-memory.js?v=20260710d"></script>          <!-- [7.0] SAO v2.7 Memory Engine -->
 <script src="js/sao-router.js?v=20260710c"></script>          <!-- [7.1] SAO v2.6 AI Router -->
 <script src="js/sao-mod-weather.js?v=20260710a"></script>     <!-- [7.2] Router: Weather -->

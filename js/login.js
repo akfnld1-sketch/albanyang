@@ -135,7 +135,8 @@ function _loginShow(){
     // ① 브랜드 헤드 (캐릭터보다 시선이 덜 가도록 로고는 절제)
     + '<div style="font-size:34px;font-weight:900;color:#1d4ed8;letter-spacing:1px;">머니냥<span style="font-size:16px;">🐾</span>'
     + '<div style="font-size:10px;font-weight:400;color:#8ea2c4;letter-spacing:6px;margin-top:1px;">MONEY + MEOW</div></div>'
-    + '<div style="font-size:16px;font-weight:700;color:#2c3e63;line-height:1.5;margin-top:8px;">당신의 <span style="color:#2f6bff;">한 달</span>을 <span style="color:#2f6bff;">끝까지</span> 지켜주는<br>AI 비서</div>'
+    /* 핵심 가치 문구를 시맨틱 H1으로 (보이는 모습은 동일) */
+    + '<h1 style="font-size:16px;font-weight:700;color:#2c3e63;line-height:1.5;margin:8px 0 0;">당신의 <span style="color:#2f6bff;">한 달</span>을 <span style="color:#2f6bff;">끝까지</span> 지켜주는<br>AI 비서</h1>'
     // ② 캐릭터 Hero — 캐릭터 시스템 컴포넌트 (화면 주인공, 카드 위에 겹침)
     + '<div style="position:relative;z-index:2;margin-top:20px;margin-bottom:-68px;">'
     + MnCharacter.img('welcome', 'hero', { id:'login-char', animate:'pop' })
@@ -153,6 +154,8 @@ function _loginShow(){
     + '<div style="display:flex;align-items:center;gap:10px;margin:4px 0 12px;"><div style="flex:1;height:1px;background:#dfe6f5;"></div><span style="font-size:12px;color:#98a4bd;">또는</span><div style="flex:1;height:1px;background:#dfe6f5;"></div></div>'
     + brandBtn('loginWithEmail', '#ffffff', '#222222', '#e3e8f4', '✉️', '이메일로 로그인하기')
     + '<div style="font-size:12px;color:#98a4bd;margin-top:8px;">🔒 데이터는 기기에 안전하게 암호화되어 저장됩니다</div>'
+    /* 가입을 망설이는 순간에 무료 여부와 문의 경로를 보여준다 */
+    + '<div style="font-size:12px;color:#98a4bd;margin-top:4px;">💯 지금은 모든 기능이 무료예요 · 문의는 로그인 후 설정 → 문의하기</div>'
     + '</div>'
     // ④ 회원가입
     + '<div style="margin-top:14px;font-size:14px;color:#3a4a6b;">🐾 처음이신가요? <a href="javascript:loginWithEmail()" style="color:#2f6bff;font-weight:700;text-decoration:none;">회원가입 ›</a></div>'
