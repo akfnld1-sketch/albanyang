@@ -108,8 +108,10 @@ function mnAttLegendHtml(){
   var items = keys.map(function(k){
     return '<span style="display:inline-flex;align-items:center;gap:3px;white-space:nowrap;">'
       + '<span style="width:8px;height:8px;border-radius:50%;background:'+MN_ATT_COLORS[k]+';display:inline-block;"></span>'
-      + '<span style="font-size:10px;">'+MN_ATT_ICONS[k]+'</span>'
-      + '<span class="mn-legend-txt" style="font-size:10px;color:var(--text3);">'+MN_ATT_LABELS[k]+'</span>'
+      // 글자 크기 설정(보통/크게/아주 크게)에 따라 아이콘·라벨이 함께 커진다.
+      // 이전에는 10px 고정이라 앱에서 가장 작은 글씨인데 설정으로도 못 키웠다.
+      + '<span style="font-size:calc(11px * var(--mn-text-k, 1));">'+MN_ATT_ICONS[k]+'</span>'
+      + '<span class="mn-legend-txt" style="font-size:calc(11px * var(--mn-text-k, 1));color:var(--text3);">'+MN_ATT_LABELS[k]+'</span>'
       + '</span>';
   }).join('');
   return '<div class="mn-att-legend" style="display:flex;flex-wrap:wrap;gap:6px 10px;padding:4px 2px 8px;">'+items+'</div>';

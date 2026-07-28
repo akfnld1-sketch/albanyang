@@ -28,7 +28,6 @@
   --mob-icon:   calc(22px * var(--ui-scale));
   --mob-label:  calc(10px * var(--ui-scale));
   --cal-cell-h: calc(72px * var(--ui-scale));
-  --sao-size:   calc(52px * var(--ui-scale));
   --touch-min:  calc(44px * var(--ui-scale));
 }
 [data-theme="dark"] {
@@ -896,10 +895,7 @@ body.sidebar-disabled #mob-sidebar-btn { display: none !important; }
   }
   #mob-sidebar-btn:hover { background: var(--surface3) !important; }
 
-  /* ── SAO 메뉴 — PC 완전 숨김 ── */
-  #sao-handle, #sao-hint, #sao-row, #sao-overlay {
-    display: none !important;
-  }
+  /* SAO 메뉴 제거됨 (2026-07-28) — 숨김 규칙 불필요 */
 
   /* ── 사이드바 — 기본 숨김 → 드로어 ── */
   #sidebar {
