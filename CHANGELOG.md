@@ -1,5 +1,16 @@
 # 머니냥 CHANGELOG
 
+## v4.2.2-beta.54 (2026-07-28) — 드로어 급여일 저장이 아예 안 되던 버그
+- 드로어(상세 설정) 급여일 저장 버튼이 부르는 savePayday()가 어디에도 정의돼 있지
+  않아 눌러도 ReferenceError만 나고 저장되지 않던 문제 — window.savePayday 정의.
+  설정 페이지와 같은 키(atm2_payday/payDay_setting + atm2_payday_settings.employee)에
+  기록해 드로어·설정 페이지가 항상 같은 값을 공유
+- 부팅 시 드로어 급여일 입력칸에 저장값 표시 (저장돼 있어도 빈칸으로 보이던 것)
+- 부수 효과: 설정 페이지의 직종별 급여일 저장(saveAllPaydaySettings)도
+  savePayday 호환 기록 경로가 살아나 atm2_payday 동기화가 다시 동작
+- 캐시: init.js ?v=20260728a, CACHE_NAME v286→v287
+- 현재 QA 기준 — 실기기(Android PWA) 검증 전
+
 ## v4.2.2-beta.53 (2026-07-28) — 홈 히어로 시간 카운트 1분 갱신
 - 출근 전/지남 상태의 히어로 숫자가 화면을 그린 시점 값으로 고정되던 문제
   (15:13인데 15:09에 그린 "6시간 9분"이 그대로 보임) — 히어로 타이머를 근무 중
