@@ -1246,6 +1246,37 @@ window.savePayDaySetting = function(val){
   try{ localStorage.setItem('payDay_setting', String(val)); }catch(e){}
 };
 
+// ── 드로어(상세 설정) 급여일 저장 ──
+// ★ #payday-input 저장 버튼이 부르는 함수가 정의돼 있지 않아 드로어에서 급여일
+//   저장이 아예 안 되던 버그. 설정 페이지와 같은 키(atm2_payday/payDay_setting +
+//   atm2_payday_settings.employee)에 기록해 두 화면이 항상 같은 값을 보게 한다.
+window.savePayday = function(){
+  const el = document.getElementById('payday-input');
+  const val = parseInt(el && el.value, 10);
+  if(!val || val < 1 || val > 31){ showToast('⚠️ 급여일은 1~31일 사이로 입력해주세요'); return; }
+  savePayDaySetting(val);
+  try{
+    const raw = localStorage.getItem('atm2_payday_settings');
+    const s = raw ? JSON.parse(raw) : {};
+    s.employee = Object.assign({}, s.employee, { type:'monthly', day: val });
+    localStorage.setItem('atm2_payday_settings', JSON.stringify(s));
+  }catch(e){}
+  const st = document.getElementById('payday-status');
+  if(st) st.textContent = '매월 ' + val + '일 · D-3/D-1/당일 알림';
+  showToast('✅ 급여일 ' + val + '일 저장됨');
+};
+
+// 부팅 시 드로어 급여일 입력칸에 저장값 표시 (저장돼 있어도 빈칸으로 보이던 것)
+function initPaydayInput(){
+  const saved = parseInt(localStorage.getItem('atm2_payday'), 10);
+  if(!saved) return;
+  const el = document.getElementById('payday-input');
+  if(el && !el.value) el.value = saved;
+  const st = document.getElementById('payday-status');
+  if(st && !st.textContent) st.textContent = '매월 ' + saved + '일 · D-3/D-1/당일 알림';
+}
+try{ initPaydayInput(); }catch(e){}
+
 // N잡 단가 저장 (atm2_jobWages 의 단일 저장 진입점)
 window.saveJobWages = function(wages){
   try{ localStorage.setItem('atm2_jobWages', JSON.stringify(wages)); }catch(e){}
