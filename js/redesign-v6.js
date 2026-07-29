@@ -1796,9 +1796,15 @@
     if(date) date.remove();                    // 날짜는 상단 바가 이미 보여준다
     // 높이 균형: 브리핑(긴 목록)만 우측, 날씨+내 소식+경고는 좌측.
     // 날씨만 좌측에 두면 좌측이 짧아 아래가 크게 빈다.
-    left.appendChild(wx);
+    // ★ 2026-07-29 PC 정리안 (C-1) — 멘토 지적 1순위 화면.
+    //   기존엔 날씨·브리핑·내 소식·경고가 전부 같은 등급의 카드로 병렬되어 시선이 갈 곳이 없었다.
+    //   날씨는 비교 대상이 아니니 그리드 밖 전폭 스트립으로 등급을 내리고,
+    //   우측 근거 열은 CSS(.mn-pc-plain)로 카드 껍데기를 벗긴다. 블록 삭제 없음.
+    page.insertBefore(wx, content);
+    wx.classList.add('mn-pc-wxstrip');
+    right.classList.add('mn-pc-plain');
     rest.forEach(function(c){
-      (c.classList.contains('mn-brief') ? right : left).appendChild(c);
+      (c.classList.contains('mn-brief') ? left : right).appendChild(c);
     });
 
     content.innerHTML = '';
@@ -1939,10 +1945,148 @@
   //  새 블록을 만들지 않는다. head = 전체 폭 머리글, left/right = 2열, 나머지는 아래 1열.
   var PC_SPLIT = {
     // inner: 블록이 한 겹 안쪽 컨테이너에 들어 있는 화면 (생존 = .budget-container)
-    'salary-page': { cls:'mn-pc-sal',  head:[0], left:[1],       right:[2] },
-    'budget-page': { cls:'mn-pc-bdg',  head:[0], left:[1,2,3,4], right:'rest', inner:'.budget-container' },
-    'dash-page':   { cls:'mn-pc-dash', head:[],  left:[0,1],     right:[-1] }  // -1 = 마지막(월별 12개월)
+    'salary-page': { cls:'mn-pc-sal',  head:[0], left:[1],       right:'rest' },
+    'budget-page': { cls:'mn-pc-bdg',  head:[], leftMatch:/버틸|소진|생존/, right:'rest', inner:'.budget-container' },
+    'dash-page':   { cls:'mn-pc-dash', head:[0], headMatch:/총수입|월평균|월 평균/, leftMatch:/월별 수입 추이/, right:[], fold:true }
   };
+
+  // C-4 헬퍼 — 컨테이너의 각 블록을 "제목 한 줄 + 펼치기" 아코디언으로 감싼다.
+  //  블록 자체는 그대로 옮겨 담기만 하므로 렌더 함수·계산과 무관하다.
+  function _pcFoldify(box){
+    if(!box) return;
+    [].slice.call(box.children).forEach(function(blk){
+      if(blk.classList.contains('mn-pc-fold')) return;
+      // 내용이 사실상 없는 래퍼(자식 하나만 감싼 익명 div)는 한 겹 들어가 실제 블록을 찾는다
+      if(!blk.querySelector('.mn-h, h3, h4') && blk.children.length === 1
+         && blk.children[0].querySelector && blk.children[0].querySelector('.mn-h, h3, h4')) {
+        blk = blk.children[0];
+      }
+      var t = blk.querySelector('.mn-h, h3, h4');
+      if(!t) return;                                 // 제목이 없는 블록은 접지 않는다
+      var title = (t && t.textContent ? t.textContent : '자세히').replace(/\s+/g,' ').trim();
+      if(t) t.style.display = 'none';               // 제목은 접힌 줄이 대신 보여준다
+      var host = blk.parentNode === box ? blk : blk.parentNode;   // box 직속 노드를 감싼다
+      var fold = document.createElement('div');
+      fold.className = 'mn-pc-fold';
+      var hd = document.createElement('button');
+      hd.className = 'mn-pc-fold-hd';
+      hd.type = 'button';
+      hd.innerHTML = '<b></b><i>펼치기</i>';
+      hd.querySelector('b').textContent = title;
+      hd.addEventListener('click', function(){
+        var open = fold.classList.toggle('open');
+        hd.querySelector('i').textContent = open ? '접기' : '펼치기';
+      });
+      var body = document.createElement('div');
+      body.className = 'mn-pc-fold-body';
+      box.insertBefore(fold, host);
+      fold.appendChild(hd);
+      fold.appendChild(body);
+      body.appendChild(host);
+    });
+  }
+
+  // 접힌 줄 한 개를 만든다 (제목 + 펼치기/접기) — C-4·C-3 공용
+  function _pcMakeFold(title){
+    var fold = document.createElement('div');
+    fold.className = 'mn-pc-fold';
+    var hd = document.createElement('button');
+    hd.className = 'mn-pc-fold-hd';
+    hd.type = 'button';
+    hd.innerHTML = '<b></b><i>펼치기</i>';
+    hd.querySelector('b').textContent = title;
+    hd.addEventListener('click', function(){
+      var open = fold.classList.toggle('open');
+      hd.querySelector('i').textContent = open ? '접기' : '펼치기';
+    });
+    var body = document.createElement('div');
+    body.className = 'mn-pc-fold-body';
+    fold.appendChild(hd);
+    fold.appendChild(body);
+    return { fold: fold, body: body };
+  }
+
+  // C-3 — 생존: 설정성 카드(고정지출·잔고/저축)를 우측 열 맨 아래 접힌 줄로 내린다.
+  //  월 1회만 건드리는 입력이므로, 매일 쓰는 변동지출 입력이 위로 올라온다. 기능·계산 무변경.
+  function _pcBudgetTidy(){
+    var R = document.querySelector('.mn-pc-bdg .mn-pc-col-r');
+    if(!R) return;
+    [].slice.call(R.querySelectorAll('.budget-card')).forEach(function(card){
+      if(card.closest('.mn-pc-fold')) return;
+      var t = card.firstElementChild;
+      var txt = t ? (t.textContent||'').replace(/\s+/g,' ').trim() : '';
+      if(!/고정지출|잔고|저축/.test(txt)) return;
+      if(t) t.style.display = 'none';
+      var f = _pcMakeFold(txt.replace(/^[^가-힣A-Za-z0-9]+/, ''));
+      R.appendChild(f.fold);
+      f.body.appendChild(card);
+    });
+  }
+
+  // R11 — 모바일 고정지출 배치 (이번 작업에서 모바일을 손대는 유일한 항목).
+  //  미설정(합계 0원)이면 최상단 유도 카드로, 설정되어 있으면 최하단 접힌 줄(아코디언)로 내린다.
+  //  월 1회만 건드리는 설정성 입력이라 매일 쓰는 지출 입력이 위로 온다. 계산·저장 경로 무변경.
+  function _mobBudgetFixedFold(){
+    var root = document.querySelector('#budget-page .budget-container');
+    if(!root) return;
+    var card = null;
+    [].slice.call(root.querySelectorAll('.budget-card')).forEach(function(c){
+      if(card) return;
+      var t = c.firstElementChild;
+      if(t && /고정지출/.test(t.textContent||'')) card = c;
+    });
+    if(!card || card.closest('.mn-pc-fold')) return;
+    var t = card.firstElementChild;
+    var title = (t.textContent||'').replace(/\s+/g,' ').trim();
+    var unset = /합계\s*0원/.test(title);
+    t.style.display = 'none';
+    var f = _pcMakeFold(title.replace(/^[^가-힣A-Za-z0-9]+/, ''));
+    if(unset){
+      f.fold.classList.add('open', 'mn-pc-fold--todo');
+      f.fold.querySelector('.mn-pc-fold-hd i').textContent = '접기';
+      root.insertBefore(f.fold, root.firstChild);      // 아직 안 정했으면 먼저 요구한다
+    } else {
+      root.appendChild(f.fold);                        // 정해졌으면 맨 아래로
+    }
+    f.body.appendChild(card);
+  }
+
+  // D — 빈 데이터 화면. 숫자를 지어내지 않는다(가계 앱에서 가짜 금액은 오해를 만든다).
+  //  대신 "지금 왜 비어 있고 무엇부터 하면 되는지" 한 줄과 첫 입력 경로를 준다.
+  function _pcEmptyHint(pageId){
+    var page = document.getElementById(pageId);
+    if(!page) return;
+    var old = page.querySelector('.mn-pc-emptyhint');
+    var txt = (page.textContent||'').replace(/\s+/g,' ');
+    var empty = /기록\s*없음|기록없음|수입 입력 후 계산|아직 기록이 없/.test(txt);
+    if(!empty){ if(old) old.remove(); return; }
+    if(old) return;
+    var hint = document.createElement('div');
+    hint.className = 'mn-pc-emptyhint';
+    hint.innerHTML =
+      '<span class="mn-pc-emptyhint-badge">기록 없음</span>'
+      + '<span class="mn-pc-emptyhint-msg"></span>'
+      + '<button type="button" class="mn-pc-emptyhint-cta"></button>';
+    var msg = pageId === 'budget-page'
+      ? '지출을 한 건이라도 기록하면 버틸 수 있는 날을 계산해드려요.'
+      : pageId === 'salary-page'
+        ? '근무를 기록하거나 명세서를 넣으면 실수령액이 계산돼요.'
+        : '근무를 기록하면 월별·연간 수입이 자동 집계돼요.';
+    hint.querySelector('.mn-pc-emptyhint-msg').textContent = msg;
+    var cta = hint.querySelector('.mn-pc-emptyhint-cta');
+    if(pageId === 'budget-page'){
+      cta.textContent = '지출 기록하기';
+      cta.addEventListener('click', function(){
+        var el = document.getElementById('var-expense-section') || document.getElementById('bdg-var-cat');
+        if(el){ el.focus && el.focus(); el.style.outline = '2px solid var(--accent)';
+          setTimeout(function(){ el.style.outline = ''; }, 1500); }
+      });
+    } else {
+      cta.textContent = '근태 기록하기';
+      cta.addEventListener('click', function(){ try{ showPage('att'); }catch(e){} });
+    }
+    page.insertBefore(hint, page.firstChild);
+  }
 
   function _pcSplit(pageId){
     var cfg = PC_SPLIT[pageId];
@@ -1973,6 +2117,19 @@
     }
     var head  = pick(cfg.head) || [];
     var left  = pick(cfg.left) || [];
+    // 인덱스는 데이터 유무에 따라 밀린다(AI 하이로·배지는 기록이 있을 때만 렌더된다).
+    // 주역 블록은 내용으로 찾는다 — 연간에서 막대 대신 안내 박스가 좌측에 오던 버그 방지.
+    function matchKids(re){
+      if(!re) return [];
+      return kids.filter(function(c){
+        if(c.classList.contains('mn-caption')) return false;   // 브랜드 문구 같은 한 줄 캡션은 제외
+        if(c.getBoundingClientRect().height < 40) return false; // 껍데기·빈 래퍼 제외
+        return re.test((c.textContent||'').replace(/\s+/g,' '));
+      });
+    }
+    if(cfg.headMatch) matchKids(cfg.headMatch).forEach(function(c){ if(head.indexOf(c) < 0) head.push(c); });
+    if(cfg.leftMatch) matchKids(cfg.leftMatch).filter(function(c){ return head.indexOf(c) < 0; })
+                        .slice(0,1).forEach(function(c){ if(left.indexOf(c) < 0) left.push(c); });
     var right = cfg.right === 'rest' ? null : (pick(cfg.right) || []);
     var used  = head.concat(left).concat(right || []);
     var rest  = kids.filter(function(c){ return used.indexOf(c) < 0; });
@@ -1983,13 +2140,16 @@
     var hd = document.createElement('div'); hd.className = 'mn-pc-head';
     var gr = document.createElement('div'); gr.className = 'mn-pc-grid';
     var L  = document.createElement('div'); L.className  = 'mn-pc-col-l';
-    var R  = document.createElement('div'); R.className  = 'mn-pc-col-r';
+    var R  = document.createElement('div'); R.className  = 'mn-pc-col-r mn-pc-plain';
     var bl = document.createElement('div'); bl.className = 'mn-pc-below';
 
     head.forEach(function(c){ hd.appendChild(c); });
     left.forEach(function(c){ L.appendChild(c); });
     right.forEach(function(c){ R.appendChild(c); });
     rest.forEach(function(c){ bl.appendChild(c); });
+    // C-4: 전폭 아래 블록(연간의 분기별·사업장별·근태분석·배지·총평)은 접힌 한 줄로 내린다.
+    //   블록을 지우지 않고 표현 등급만 낮춘다 — 클릭하면 제자리에서 펼쳐진다(팝업 아님).
+    if(cfg.fold) _pcFoldify(bl);
 
     gr.appendChild(L); gr.appendChild(R);
     if(hd.children.length) wrap.appendChild(hd);
@@ -2004,9 +2164,11 @@
       if(p === 'home') _pcLayoutHome();
       if(p === 'info') _pcLayoutInfo();
       if(p === 'att'){ _pcLayoutAtt(); _pcBindCalClicks(); }
-      if(p === 'sal')    _pcSplit('salary-page');
-      if(p === 'budget') _pcSplit('budget-page');
-      if(p === 'dash')   _pcSplit('dash-page');
+      if(p === 'sal')    { _pcSplit('salary-page'); _pcEmptyHint('salary-page'); }
+      if(p === 'budget'){ _pcSplit('budget-page'); _pcBudgetTidy(); _pcEmptyHint('budget-page'); }
+      if(p === 'dash')   { _pcSplit('dash-page'); _pcEmptyHint('dash-page'); }
+      // 연간: 파스텔 배경 2색이 경쟁해 난잡해 보이던 문제 — 카드 색을 한 종류로 (CSS에서 처리)
+      document.body.classList.toggle('mn-dash-plain', p === 'dash');
       // 근태 미기록 칩은 달력이 그려진 뒤라야 개수를 셀 수 있어 배치 후 한 번 더
       _pcSyncCtx(p);
       _pcSyncIncome();       // 렌더로 데이터가 채워진 뒤 사이드바 금액 갱신
@@ -2090,7 +2252,15 @@
         var orig = window[fn];
         window[fn] = function(){
           orig.apply(this, arguments);
-          try{ if(document.getElementById('mn-pc-nav')) _pcSplit(pageId); }catch(e){}
+          try{
+            if(document.getElementById('mn-pc-nav')){
+              _pcSplit(pageId);
+              if(pageId === 'budget-page') _pcBudgetTidy();
+              _pcEmptyHint(pageId);
+            } else if(pageId === 'budget-page'){
+              _mobBudgetFixedFold();          // R11 — 모바일 고정지출 배치
+            }
+          }catch(e){}
         };
         window[fn].__mnPcSplit = true;
       });
@@ -2181,6 +2351,10 @@
 
     if(MOB){
       ensureShell();
+      // R11 — 렌더 래퍼는 모바일에서도 설치해야 고정지출 배치가 동작한다.
+      //   래퍼 내부가 #mn-pc-nav 유무로 분기하므로 모바일에서는 budget-page의
+      //   _mobBudgetFixedFold()와 근태 _mvFullCalBtn()(멱등)만 실행된다.
+      patchPcRenders();
     } else {
       // 연간 월별 막대에 작년 같은 달을 겹쳐 보여준다 (PC 전용 — 명세 §5)
       window.__mnPcYearCompare = true;

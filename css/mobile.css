@@ -1317,6 +1317,119 @@ html { -webkit-overflow-scrolling: touch; }
   .mn-pc-dash .mn-pc-grid { grid-template-columns: 1fr 1.6fr; }
 }
 
+/* ══════════════════════════════════════════════════════════════
+   PC 정리안 (2026-07-29) — 멘토 피드백 "PC가 난잡하다" 대응
+   원칙: 펼치되 등급을 나눈다. 블록·기능 삭제 없음, 계산 무접촉, 모바일 무접촉.
+   ══════════════════════════════════════════════════════════════ */
+@media (min-width: 769px) {
+  /* A-1. #app 고정 높이(구 배너 72px) 때문에 본문이 중첩 스크롤 영역이 되던 문제.
+     PC 셸은 배너를 숨기므로 그 예약을 풀고 페이지 전체 스크롤로 돌린다. */
+  body.mn-pc #app  { height: auto !important; min-height: 100vh; align-items: flex-start; }
+  body.mn-pc #main { height: auto !important; overflow: visible !important; overflow-x: hidden; min-width: 0; }
+  body.mn-pc #mn-pc-nav { position: sticky; top: 0; height: 100vh; align-self: flex-start; }
+  body.mn-pc #mn-pc-top { position: sticky; top: 0; z-index: 20; }
+
+  /* R8. 그리드 트랙이 내용 min-content에 끌려가 반대편 열을 짓누르지 않게 */
+  body.mn-pc .mn-pc-grid > *,
+  body.mn-pc .mn-pc-2col > *,
+  body.mn-pc #mn-pc-att > *,
+  body.mn-pc .mn-pc-col-l,
+  body.mn-pc .mn-pc-col-r { min-width: 0; }
+
+  /* R3. 숫자 요약은 카드 여러 장이 아니라 한 줄 스트립 */
+  body.mn-pc .mn-pc-strip {
+    display: flex; flex-wrap: wrap; align-items: stretch; background: var(--card, #fff);
+    border: 1px solid var(--border, #E2E8F0); border-radius: 14px; margin-bottom: 18px;
+  }
+  body.mn-pc .mn-pc-strip > *      { padding: 15px 20px; flex: 1 1 auto; min-width: 0; }
+  body.mn-pc .mn-pc-strip > * + *  { border-left: 1px solid var(--border, #E2E8F0); }
+
+  /* R4. 우측 근거 열은 카드 껍데기를 벗긴다 (카드 남발이 난잡함의 주원인) */
+  body.mn-pc .mn-pc-col-r.mn-pc-plain > * {
+    background: none !important; border: none !important; box-shadow: none !important;
+    border-radius: 0 !important; padding: 0 !important;
+  }
+
+  /* R9. 입력 행은 줄바꿈 허용 — 좁은 폭에서 칸이 잘리지 않게 */
+  body.mn-pc .mn-pc-inline-form { display: flex; flex-wrap: wrap; gap: 8px; }
+  body.mn-pc .mn-pc-inline-form > * { flex: 1 1 120px; min-width: 0; height: 44px; }
+
+  /* C-4. 연간: 파스텔 배경 2색 경쟁 제거 — 카드 색은 한 종류로 */
+  body.mn-pc.mn-dash-plain .stat-card { background: var(--card, #fff) !important; }
+
+  /* 달력 셀 태그는 한 줄 유지 (세로로 쪼개져 잘리던 문제) */
+  body.mn-pc .cal-day .mn-pc-tag { white-space: nowrap; font-size: 11px; }
+
+  /* C-3. 생존 — 우측 근거 열 안의 2열 그리드를 1열로 (안 그러면 다시 3단처럼 보인다) */
+  body.mn-pc .mn-pc-bdg .budget-grid { grid-template-columns: 1fr !important; }
+  body.mn-pc .mn-pc-bdg .budget-container { max-width: none !important; }
+  /* 접힌 줄 안의 카드는 껍데기를 벗긴다 */
+  body.mn-pc .mn-pc-fold .budget-card { background: none !important; border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; }
+
+  /* C-1. 정보 — 날씨는 그리드 밖 전폭 스트립 (등급 하강). 브리핑이 좌측 주역 */
+  body.mn-pc .mn-pc-wxstrip { margin-bottom: 18px; }
+  body.mn-pc .mn-pc-wxstrip .mn-wx-card { border-radius: 14px; margin-bottom: 0; }
+  body.mn-pc .mn-pc-info { grid-template-columns: 1.55fr 1fr !important; }
+  /* 우측 근거 열 — 카드 대신 구분선 리스트 */
+  body.mn-pc .mn-pc-col-r.mn-pc-plain > * + * { border-top: 1px solid var(--border, #E2E8F0); padding-top: 16px !important; margin-top: 16px !important; }
+
+  /* A-3. 모달이 모바일 폭(440px)을 그대로 쓰던 문제 — PC는 720px, 내부는 2열로 나누지 않고 폭만 넓힌다 */
+  body.mn-pc .popup { width: 720px !important; max-width: 92vw !important; padding: 32px 36px; }
+  body.mn-pc .popup h3 { font-size: 21px; margin-bottom: 20px; }
+
+  /* C-2. 근태 — 달력이 주역, 우측은 미기록 목록만 (좁은 열) */
+  body.mn-pc #mn-pc-att { grid-template-columns: 268px 1fr; }
+  body.mn-pc #mn-pc-att-l { min-width: 0; }
+  body.mn-pc #mn-pc-att-r { min-width: 0; }
+
+  /* C-4. 연간 부수 분석 — 접힌 한 줄 (조회성 팝업 금지, 제자리 아코디언) */
+  body.mn-pc .mn-pc-fold-hd b { font-size: 14.5px; }
+}
+
+/* ══ 접힌 줄(아코디언) — PC·모바일 공용 (C-3 · C-4 · R11) ══════════════════ */
+.mn-pc-fold {
+  border: 1px solid var(--border, #E2E8F0); border-radius: 14px;
+  background: var(--card, #fff); margin-bottom: 10px; overflow: hidden;
+}
+.mn-pc-fold > .mn-pc-fold-hd {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 14px 16px; background: none; border: none; cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif; text-align: left; color: var(--text, #0F172A);
+}
+.mn-pc-fold-hd b { font-size: 14px; font-weight: 700; }
+.mn-pc-fold-hd i {
+  font-size: 13px; font-weight: 700; color: var(--mn-primary, #2563EB);
+  margin-left: auto; font-style: normal; white-space: nowrap;
+}
+.mn-pc-fold > .mn-pc-fold-body { display: none; padding: 0 16px 16px; }
+.mn-pc-fold.open > .mn-pc-fold-body { display: block; }
+.mn-pc-fold .mn-card,
+.mn-pc-fold .budget-card {
+  background: none !important; border: none !important; box-shadow: none !important;
+  padding: 0 !important; margin: 0 !important;
+}
+/* D — 빈 데이터 안내 한 줄 (숫자를 지어내지 않는다) */
+.mn-pc-emptyhint {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  background: #FEF3C7; border: 1px solid #FDE68A; border-radius: 14px;
+  padding: 13px 16px; margin-bottom: 16px;
+}
+.mn-pc-emptyhint-badge {
+  flex: none; font-size: 11.5px; font-weight: 900; color: #B45309;
+  background: #fff; border-radius: 6px; padding: 3px 8px;
+}
+.mn-pc-emptyhint-msg { font-size: 13.5px; color: #92400E; min-width: 0; line-height: 1.5; }
+.mn-pc-emptyhint-cta {
+  margin-left: auto; flex: none; background: #fff; border: 1px solid #FCD34D;
+  border-radius: 11px; padding: 8px 14px; font-family: 'Noto Sans KR', sans-serif;
+  font-size: 13.5px; font-weight: 700; color: #92400E; cursor: pointer;
+}
+
+/* 미설정 상태 — 먼저 해야 할 일이므로 최상단에서 주황으로 요구한다 (R11) */
+.mn-pc-fold--todo { border: 1.5px solid #F97316; background: #FFF7ED; }
+.mn-pc-fold--todo .mn-pc-fold-hd b { color: #9A3412; }
+.mn-pc-fold--todo .mn-pc-fold-hd i { color: #EA580C; }
+
 /* ── 반응형 경계 (PC_SHELL_V2_SPEC §7) ── */
 @media (min-width: 1024px) and (max-width: 1199px) {
   /* 2열 유지하되 카드 여백 축소 */
