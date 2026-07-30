@@ -1396,18 +1396,75 @@
       +'<div id="mn-bright-chips" class="mn-set-chips">'
       +'<button class="mn-set-chip" data-v="light" onclick="mnSetBrightness(\'light\')">밝게</button>'
       +'<button class="mn-set-chip" data-v="dark" onclick="mnSetBrightness(\'dark\')">어둡게</button>'
-      +'<button class="mn-set-chip" data-v="system" onclick="mnSetBrightness(\'system\')">휴대폰 설정</button>'
+      +'<button class="mn-set-chip" data-v="system" onclick="mnSetBrightness(\'system\')">자동 (기기 따라)</button>'
       +'</div>'
-      +'<div class="mn-set-help">\'휴대폰 설정\'을 고르면 휴대폰이 어두워질 때 앱도 같이 어두워져요</div>'
+      +'<div class="mn-set-help">\'자동\'을 고르면 기기가 어두워질 때 앱도 같이 어두워져요</div>'
       +'<div class="mn-set-lbl" style="margin-top:12px;">글자 크기</div>'
       +'<div id="mn-font-chips" class="mn-set-chips">'
       +'<button class="mn-set-chip" data-v="1" onclick="mnSetFontScale(\'1\')">보통</button>'
       +'<button class="mn-set-chip" data-v="1.2" onclick="mnSetFontScale(\'1.2\')">크게</button>'
       +'<button class="mn-set-chip" data-v="1.35" onclick="mnSetFontScale(\'1.35\')">아주 크게</button>'
-      +'</div>';
+      +'</div>'
+      // ★ 2026-07-30 (소유자 결정 A안) — 포인트 색상: 큐레이션 5색만 제공.
+      //   자유 피커는 대비 사고(연노랑 실증)로 배제, 주황은 미기록·미설정 경고의
+      //   시맨틱 색이라 팔레트에서 제외. 사이드바 네이비는 고정(중립).
+      +'<div class="mn-set-lbl" style="margin-top:12px;">포인트 색상</div>'
+      +'<div id="mn-accent-chips" class="mn-set-chips">'
+      + MN_ACCENTS.map(function(a){
+          return '<button class="mn-accent-chip" data-v="'+a.v+'" style="background:'+a.c+';" '
+            +'title="'+a.n+'" aria-label="포인트 색상: '+a.n+'" onclick="mnSetAccent(\''+a.v+'\')"></button>';
+        }).join('')
+      +'</div>'
+      +'<div class="mn-set-help">버튼·강조 색이 바뀌어요. 회사 컬러에 맞춰보세요</div>';
     page.insertBefore(card, page.firstChild);
     _syncBrightnessChips();
+    _syncAccentChips();
   }
+
+  // ── 포인트 색상 (2026-07-30, A안) ──
+  //  --accent/--mn-primary/--mn-brand(+soft) 토큰만 교체 — 사이드바·시맨틱 색 무접촉.
+  var MN_ACCENTS = [
+    { v:'',        c:'#2563EB', n:'기본 파랑' },
+    { v:'#059669', c:'#059669', n:'초록' },
+    { v:'#0D9488', c:'#0D9488', n:'틸' },
+    { v:'#7C3AED', c:'#7C3AED', n:'보라' },
+    { v:'#DB2777', c:'#DB2777', n:'로즈' }
+  ];
+  function _hexToSoft(hex){
+    var m = /^#?([0-9a-f]{6})$/i.exec(hex||'');
+    if(!m) return '';
+    var n = parseInt(m[1], 16);
+    return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+',.10)';
+  }
+  function _applyAccent(){
+    var hex = null;
+    try{ hex = localStorage.getItem('atm2_accentColor'); }catch(e){}
+    var r = document.documentElement.style;
+    if(hex && /^#[0-9a-f]{6}$/i.test(hex)){
+      r.setProperty('--accent', hex);
+      r.setProperty('--mn-primary', hex);
+      r.setProperty('--mn-brand', hex);
+      r.setProperty('--mn-brand-soft', _hexToSoft(hex));
+    } else {
+      ['--accent','--mn-primary','--mn-brand','--mn-brand-soft'].forEach(function(v){ r.removeProperty(v); });
+    }
+  }
+  function _syncAccentChips(){
+    var cur = '';
+    try{ cur = localStorage.getItem('atm2_accentColor') || ''; }catch(e){}
+    document.querySelectorAll('.mn-accent-chip').forEach(function(b){
+      b.classList.toggle('on', (b.getAttribute('data-v')||'') === cur);
+    });
+  }
+  window.mnSetAccent = function(hex, silent){
+    try{
+      if(hex) localStorage.setItem('atm2_accentColor', hex);
+      else localStorage.removeItem('atm2_accentColor');
+    }catch(e){}
+    _applyAccent();
+    _syncAccentChips();
+    if(!silent && typeof showToast === 'function') showToast('✅ 포인트 색이 바뀌었어요');
+  };
 
   // ══════════════════════════════════════════
   // 설정 마법사 (2026-07-30 소유자 요청) — 새 저장 로직·새 입력 폼 없음.
@@ -1621,6 +1678,7 @@
     try{ fs = localStorage.getItem(FONT_KEY); }catch(e){}
     if(b) mnSetBrightness(b, true);      // applyBg(구 배경 팔레트)보다 늦게 → 우선 적용
     if(fs) mnSetFontScale(fs, true);
+    _applyAccent();                      // 포인트 색상 복원 (2026-07-30)
   }
 
   // ══════════════════════════════════════════
