@@ -1832,15 +1832,40 @@
     }
     var L = document.getElementById('mn-pc-att-l'), R = document.getElementById('mn-pc-att-r');
     if(v3 && v3.parentNode !== L) L.appendChild(v3);
-    if(cal.parentNode !== R) R.appendChild(cal);
 
-    // ★ 미니 달력 숨김 전 선행 조치 — 상태 색점 범례(mnAttLegendHtml)는 근태 화면에서
-    //   v3 미니 달력에만 있다(#cal-area에는 없음). 우측 달력 위로 먼저 옮긴 뒤 숨긴다.
-    if(!document.getElementById('mn-pc-att-legend') && typeof mnAttLegendHtml === 'function'){
-      var lg = document.createElement('div');
+    // ★ 2026-07-30 C-2d (소유자 요청) — v3 직군은 PC도 모바일과 같은 위계로:
+    //   상단 주간 스트립 + 오늘 근무 카드가 주역, 전체 달력은 그 아래
+    //   "📅 전체 달력 보기" 접힌 줄(제자리 펼침 — R10: 조회성 팝업 금지).
+    //   v3가 없는 직군은 달력이 본체이므로 기존대로 전폭 표시(solo).
+    var calFold = document.getElementById('mn-pc-att-calfold');
+    if(v3){
+      if(!calFold){
+        var cvx = _pcMakeFold('📅 전체 달력 보기');
+        calFold = cvx.fold;
+        calFold.id = 'mn-pc-att-calfold';
+      }
+      // 접힌 줄은 v3 "바깥"(L 직속)에 둔다 — v3 innerHTML 재렌더에 휩쓸리면
+      // 정적 #cal-area가 파괴된다
+      if(calFold.parentNode !== L) L.appendChild(calFold);
+      var calBody = calFold.querySelector('.mn-pc-fold-body');
+      if(cal.parentNode !== calBody) calBody.appendChild(cal);
+    } else {
+      if(calFold && calFold.parentNode) calFold.parentNode.removeChild(calFold);
+      if(cal.parentNode !== R) R.appendChild(cal);
+    }
+    wrap.classList.toggle('mn-pc-att--onecol', !!v3);
+
+    // ★ 상태 색점 범례(mnAttLegendHtml) — 달력이 있는 쪽(접힌 줄 안 / solo 우측) 맨 위로
+    var lg = document.getElementById('mn-pc-att-legend');
+    if(!lg && typeof mnAttLegendHtml === 'function'){
+      lg = document.createElement('div');
       lg.id = 'mn-pc-att-legend';
       try{ lg.innerHTML = mnAttLegendHtml(); }catch(e){}
-      if(lg.innerHTML) R.insertBefore(lg, R.firstChild);
+      if(!lg.innerHTML) lg = null;
+    }
+    if(lg){
+      var lgHost = v3 ? calFold.querySelector('.mn-pc-fold-body') : R;
+      if(lg.parentNode !== lgHost || lg !== lgHost.firstChild) lgHost.insertBefore(lg, lgHost.firstChild);
     }
 
     // ★ 2026-07-30 근태 PC 정리 (C-2b) — 달력(주역)이 스크롤 없이 보이도록 등급을 나눈다.
