@@ -1195,7 +1195,6 @@ function renderBudgetPage(){
     <div class="budget-container">
 
       ${_bdgSurvivalHero(zb, income.total, hasIncomeData, totalExpense, remain)}
-      <div style="font-size:13px;color:var(--text3);padding:0 2px 10px;text-align:right;">${typeof helpBtn==='function'?helpBtn('budget'):''}</div>
 
       <!-- 경고 배너(4단계) — 항상 전체 폭 -->
       <div style="background:${riskBg};border:1px solid ${riskBorder};border-radius:12px;padding:14px;margin-bottom:14px;">
@@ -1261,7 +1260,8 @@ function renderBudgetPage(){
         <!-- 3단계: 변동지출 — id는 지출 입력 CTA(경고 배너·PC 상단바·빈상태 힌트·근태
              "1분 만에 지출 입력하기")가 공통으로 찾아오는 앵커. 바꾸면 전부 확인할 것 -->
         <div class="budget-card" id="var-expense-section">
-          <div style="font-size:14px;font-weight:700;margin-bottom:10px;">🧾 변동지출 <span style="font-size:12px;color:var(--text3);">(이번달 ${varTotal.toLocaleString()}원)</span></div>
+          <!-- ★ 2026-07-30: 화면 맨 아래 고아로 떠 있던 도움말 ?를 매일 쓰는 변동지출 제목 옆으로 -->
+          <div style="font-size:14px;font-weight:700;margin-bottom:10px;">🧾 변동지출 <span style="font-size:12px;color:var(--text3);">(이번달 ${varTotal.toLocaleString()}원)</span>${typeof helpBtn==='function'?helpBtn('budget'):''}</div>
           ${catBarHtml}
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;">
             <select id="bdg-var-cat" class="budget-input" title="지출 카테고리" aria-label="지출 카테고리">

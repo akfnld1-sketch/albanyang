@@ -2323,12 +2323,10 @@
       if(heroRe.test(t)) L.appendChild(c);
     });
 
-    // 도움말 "?" 한 줄이 내역 열 맨 위에 고아로 떠 있던 것 — 열 맨 아래로 등급 하강
-    [].slice.call(R.children).forEach(function(c){
-      if((c.textContent||'').trim() === '?' && c !== R.lastElementChild) R.appendChild(c);
-    });
-
-    // 설정성 카드(잔고·저축/고정지출)는 결론 스택 맨 아래 접힌 줄로
+    // 설정성 카드(잔고·저축/고정지출)를 접힌 줄로.
+    // ★ 2026-07-30 R11 문법을 PC에도 적용 (소유자 피드백 — 고정지출 입력란 활성화):
+    //   고정지출 미설정(합계 0원)이면 결론 스택 "맨 위"에 펼친 채 주황 강조,
+    //   설정됐으면 맨 아래 접힘. 잔고·저축은 항상 맨 아래 접힘.
     [].slice.call(R.querySelectorAll('.budget-card')).forEach(function(card){
       if(card.closest('.mn-pc-fold')) return;
       var t = card.firstElementChild;
@@ -2336,7 +2334,14 @@
       if(!/고정지출|잔고|저축/.test(txt)) return;
       if(t) t.style.display = 'none';
       var f = _pcMakeFold(txt.replace(/^[^가-힣A-Za-z0-9]+/, ''));
-      L.appendChild(f.fold);
+      var fixedUnset = /고정지출/.test(txt) && /합계\s*0원/.test(txt);
+      if(fixedUnset){
+        f.fold.classList.add('open', 'mn-pc-fold--todo');
+        f.fold.querySelector('.mn-pc-fold-hd i').textContent = '접기';
+        L.insertBefore(f.fold, L.firstChild);   // 아직 안 정했으면 먼저 요구한다
+      } else {
+        L.appendChild(f.fold);
+      }
       f.body.appendChild(card);
     });
   }
@@ -2393,11 +2398,20 @@
     hint.querySelector('.mn-pc-emptyhint-msg').textContent = msg;
     var cta = hint.querySelector('.mn-pc-emptyhint-cta');
     if(pageId === 'budget-page'){
-      cta.textContent = '지출 기록하기';
+      // ★ 2026-07-30 수리 — 기존엔 스크롤 없이 div에 focus만 시도해 눌러도 아무
+      //   변화가 없었다("클릭조차 안 됨"). 미설정 고정지출(주황 펼침)이 있으면
+      //   그리로, 아니면 변동지출 입력란으로 스크롤+포커스까지 데려간다.
+      var todo = document.querySelector('#budget-page .mn-pc-fold--todo');
+      cta.textContent = todo ? '고정지출 입력하기' : '지출 기록하기';
       cta.addEventListener('click', function(){
-        var el = document.getElementById('var-expense-section') || document.getElementById('bdg-var-cat');
-        if(el){ el.focus && el.focus(); el.style.outline = '2px solid var(--accent)';
-          setTimeout(function(){ el.style.outline = ''; }, 1500); }
+        var td = document.querySelector('#budget-page .mn-pc-fold--todo');
+        if(td){
+          if(!td.classList.contains('open')) td.querySelector('.mn-pc-fold-hd').click();
+          td.scrollIntoView({behavior:'smooth', block:'center'});
+          setTimeout(function(){ try{ td.querySelector('input').focus(); }catch(e){} }, 350);
+          return;
+        }
+        if(typeof mnGotoExpenseInput === 'function') mnGotoExpenseInput();
       });
     } else {
       cta.textContent = '근태 기록하기';
