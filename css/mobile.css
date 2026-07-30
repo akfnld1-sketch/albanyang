@@ -1468,11 +1468,10 @@ html { -webkit-overflow-scrolling: touch; }
     background: var(--mn-missed-border, #F97316);
   }
 
-  /* ② C-2d~e (2026-07-30 소유자 요청): v3 직군 PC —
-        좌 = 모바일식 스택(주간 스트립 + 오늘 근무 주역, 420px),
-        우 = 전체 달력 접힌 줄(기본 펼침, 접기 가능) → 화면이 꽉 차게.
-        1열 중앙 정렬안은 허전하다는 피드백으로 폐기. */
-  body.mn-pc #mn-pc-att.mn-pc-att--v3 { grid-template-columns: 420px 1fr; }
+  /* ② C-2d~f (2026-07-30 소유자 요청): v3 직군 PC —
+        좌 = 전체 달력 접힌 줄(기본 펼침, 접기 가능),
+        우 = 모바일식 스택(주간 스트립 + 오늘 근무 주역, 420px). */
+  body.mn-pc #mn-pc-att.mn-pc-att--v3 { grid-template-columns: 1fr 420px; }
   body.mn-pc #mn-pc-att.mn-pc-att--v3 > .mn-pc-col-l { min-width: 0; }
   body.mn-pc #mn-pc-att.mn-pc-att--v3 > .mn-pc-col-r { display: block; min-width: 0; }
   body.mn-pc #mn-pc-att-calfold .mn-pc-fold-body { padding-top: 12px; }
