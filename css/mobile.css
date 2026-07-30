@@ -1457,6 +1457,18 @@ html { -webkit-overflow-scrolling: touch; }
 /* 설정 다이어트 ② (2026-07-30) — 미설정 카드 강조 (R11 문법: 안 한 것만 눈에 띈다) */
 .mn-set-need { border: 1.5px solid #F97316 !important; }
 
+/* 포인트 색상 칩 (2026-07-30, A안) — 큐레이션 5색 원형 스와치 */
+#mn-accent-chips { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.mn-accent-chip {
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 2px solid transparent; padding: 0; cursor: pointer;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.55);
+}
+.mn-accent-chip.on {
+  border-color: var(--text, #0F172A);
+  transform: scale(1.08);
+}
+
 /* 헤더 브랜드 자리에 회사명 표시 (2026-07-30) — 긴 이름은 말줄임 */
 .mn-brand-name {
   display: inline-block; max-width: 150px;
