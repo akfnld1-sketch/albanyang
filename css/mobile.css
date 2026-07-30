@@ -1473,7 +1473,11 @@ html { -webkit-overflow-scrolling: touch; }
         1열 폭을 제한해 주간 스트립·카드가 과하게 늘어나지 않게 한다. */
   body.mn-pc #mn-pc-att.mn-pc-att--onecol { grid-template-columns: 1fr; }
   body.mn-pc #mn-pc-att.mn-pc-att--onecol > .mn-pc-col-r { display: none; }
-  body.mn-pc #mn-pc-att.mn-pc-att--onecol > .mn-pc-col-l { max-width: 680px; }
+  /* 포커스 열 — 좌측 쏠림이 아니라 중앙 정렬로 (소유자 결정 2026-07-30).
+     상단 요약 스트립은 전폭 유지, 작업 열만 가운데. */
+  body.mn-pc #mn-pc-att.mn-pc-att--onecol > .mn-pc-col-l {
+    max-width: 720px; width: 100%; margin: 0 auto;
+  }
   body.mn-pc #mn-pc-att-calfold { margin-top: 4px; }
   body.mn-pc #mn-pc-att-calfold .mn-pc-fold-body { padding-top: 12px; }
   body.mn-pc #mn-pc-att-calfold #mn-pc-att-legend { margin-bottom: 10px; }
