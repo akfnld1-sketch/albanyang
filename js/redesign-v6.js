@@ -1434,6 +1434,52 @@
     page.insertBefore(card, page.firstChild);
   }
 
+  // ★ 2026-07-30 설정 다이어트 ② — R11 문법을 설정 카드에 적용:
+  //   설정을 마친 카드는 "제목 · 요약값 ✓" 접힌 줄로, 아직 안 한 카드는 펼친 채
+  //   주황 테두리로 강조. 표현만 바꾼다 — 카드 내용·저장 로직·검증 무변경.
+  //   (접힌 카드도 DOM에 그대로 있어 저장 함수들의 getElementById가 전부 동작)
+  function _settingsTidy(){
+    var page = document.getElementById('settings-page');
+    if(!page) return;
+    var wrap = [].slice.call(page.children).filter(function(c){ return !c.classList.contains('mn-card'); })[0];
+    if(!wrap) return;
+    function ls(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+    function won(n){ return (parseInt(n,10)||0).toLocaleString() + '원'; }
+    var RULES = [
+      { re:/^📋 기본 정보/, label:'📋 기본 정보',
+        done:function(){ return (parseInt(ls('atm2_baseWage'),10)||0) > 0; },
+        sum:function(){ return '시급 ' + won(ls('atm2_baseWage')); } },
+      { re:/^🕐 근무 형태/, label:'🕐 근무 형태',
+        done:function(){ return !!ls('atm2_workType'); },
+        sum:function(){ var m={day:'주간',night:'야간',shift2:'2교대',shift3:'3교대'}; return m[ls('atm2_workType')]||'설정됨'; } },
+      { re:/^💼 연봉/, label:'💼 연봉 설정',
+        done:function(){ try{ return (getSalaryInfo().annual||0) > 0; }catch(e){ return false; } },
+        sum:function(){ try{ return '연 ' + won(getSalaryInfo().annual); }catch(e){ return '설정됨'; } } },
+      { re:/^💼 N잡 기본 단가/, label:'💼 N잡 기본 단가',
+        done:function(){ try{ var w = JSON.parse(ls('atm2_jobWages')||'{}');
+          return Object.keys(w).some(function(k){ return (parseInt(w[k],10)||0) > 0; }); }catch(e){ return false; } },
+        sum:function(){ return '설정됨'; } },
+      { re:/^💰 급여일 설정/, label:'💰 급여일 설정',
+        done:function(){ return !!(ls('atm2_payday') || ls('atm2_payday_settings')); },
+        sum:function(){ var d = parseInt(ls('atm2_payday'),10); return d ? '매월 '+d+'일' : '설정됨'; } }
+    ];
+    [].slice.call(wrap.children).forEach(function(card){
+      if(card.tagName !== 'DIV' || card.classList.contains('mn-pc-fold')) return;
+      var t = (card.textContent||'').replace(/\s+/g,' ').trim();
+      for(var i=0;i<RULES.length;i++){
+        if(!RULES[i].re.test(t)) continue;
+        if(RULES[i].done()){
+          var f = _pcMakeFold(RULES[i].label + ' · ' + RULES[i].sum() + ' ✓');
+          wrap.insertBefore(f.fold, card);
+          f.body.appendChild(card);
+        } else {
+          card.classList.add('mn-set-need');           // 미설정 — 펼친 채 주황 강조
+        }
+        break;
+      }
+    });
+  }
+
   window.mnSetupWizard = (function(){
     // 단계 정의 — re는 카드/버튼 textContent 시작부와 대조 (렌더된 것만 단계가 된다)
     var DEFS = [
@@ -1561,6 +1607,7 @@
       orig.apply(this, arguments);
       try{ ensureDisplayCard(); }catch(e){}
       try{ ensureSetupWizardCard(); }catch(e){}   // 마법사 진입 카드 — 항상 최상단
+      try{ _settingsTidy(); }catch(e){}           // 완료 카드 접힘 + 미설정 강조 (R11 문법)
     };
     window.renderSettingsPage.__mnDisp = true;
   }
