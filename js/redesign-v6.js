@@ -1455,7 +1455,9 @@
       { re:/^💼 연봉/, label:'💼 연봉 설정',
         done:function(){ try{ return (getSalaryInfo().annual||0) > 0; }catch(e){ return false; } },
         sum:function(){ try{ return '연 ' + won(getSalaryInfo().annual); }catch(e){ return '설정됨'; } } },
-      { re:/^💼 N잡 기본 단가/, label:'💼 N잡 기본 단가',
+      // N잡 단가는 기본값으로도 동작하는 보조 설정 — 미설정이어도 강조하지 않고
+      // 항상 접는다(always). 저장한 적 있으면 ✓, 아니면 "기본값 사용 중"으로 표기.
+      { re:/^💼 N잡 기본 단가/, label:'💼 N잡 기본 단가', always:true,
         done:function(){ try{ var w = JSON.parse(ls('atm2_jobWages')||'{}');
           return Object.keys(w).some(function(k){ return (parseInt(w[k],10)||0) > 0; }); }catch(e){ return false; } },
         sum:function(){ return '설정됨'; } },
@@ -1468,12 +1470,13 @@
       var t = (card.textContent||'').replace(/\s+/g,' ').trim();
       for(var i=0;i<RULES.length;i++){
         if(!RULES[i].re.test(t)) continue;
-        if(RULES[i].done()){
-          var f = _pcMakeFold(RULES[i].label + ' · ' + RULES[i].sum() + ' ✓');
+        if(RULES[i].done() || RULES[i].always){
+          var sum = RULES[i].done() ? RULES[i].sum() + ' ✓' : '기본값 사용 중';
+          var f = _pcMakeFold(RULES[i].label + ' · ' + sum);
           wrap.insertBefore(f.fold, card);
           f.body.appendChild(card);
         } else {
-          card.classList.add('mn-set-need');           // 미설정 — 펼친 채 주황 강조
+          card.classList.add('mn-set-need');           // 미설정 필수 — 펼친 채 주황 강조
         }
         break;
       }
