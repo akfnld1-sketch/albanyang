@@ -1831,12 +1831,11 @@
       page.insertBefore(wrap, page.firstChild);
     }
     var L = document.getElementById('mn-pc-att-l'), R = document.getElementById('mn-pc-att-r');
-    if(v3 && v3.parentNode !== L) L.appendChild(v3);
-
-    // ★ 2026-07-30 C-2d~e (소유자 요청) — v3 직군: 좌측은 모바일식 스택
-    //   (주간 스트립 + 오늘 근무 주역), 우측은 전체 달력 접힌 줄을 "기본 펼침"으로.
-    //   빈 화면이 허전하다는 피드백 — 접기 버튼은 유지해 원하면 접을 수 있다.
+    // ★ 2026-07-30 C-2d~f (소유자 요청) — v3 직군: 좌측은 전체 달력 접힌 줄
+    //   "기본 펼침", 우측(420px)은 모바일식 스택(주간 스트립 + 오늘 근무 주역).
+    //   접기 버튼은 유지해 원하면 접을 수 있다.
     //   v3가 없는 직군은 달력이 본체이므로 기존대로 전폭 표시(solo).
+    if(v3 && v3.parentNode !== R) R.appendChild(v3);
     var calFold = document.getElementById('mn-pc-att-calfold');
     if(v3){
       if(!calFold){
@@ -1846,9 +1845,9 @@
         calFold.classList.add('open');                       // PC는 기본 펼침
         calFold.querySelector('.mn-pc-fold-hd i').textContent = '접기';
       }
-      // 접힌 줄은 v3 "바깥"(R 직속)에 둔다 — v3 innerHTML 재렌더에 휩쓸리면
+      // 접힌 줄은 v3 "바깥"(L 직속)에 둔다 — v3 innerHTML 재렌더에 휩쓸리면
       // 정적 #cal-area가 파괴된다
-      if(calFold.parentNode !== R) R.appendChild(calFold);
+      if(calFold.parentNode !== L) L.appendChild(calFold);
       var calBody = calFold.querySelector('.mn-pc-fold-body');
       if(cal.parentNode !== calBody) calBody.appendChild(cal);
     } else {
