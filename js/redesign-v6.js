@@ -1842,12 +1842,66 @@
   //   피드백. 회사명이 설정돼 있으면 그 이름을, 없으면 "머니냥" 폴백. 로고는 유지.
   //   saveObInfo(회사명 단일 저장 진입점)가 저장 직후 이 함수를 호출한다.
   window.mnSyncBrandName = function(){
-    var name = '';
+    var name = '', logo = null;
     try{ name = (localStorage.getItem('atm2_companyName')||'').trim(); }catch(e){}
+    try{ logo = localStorage.getItem('atm2_companyLogo'); }catch(e){}
     document.querySelectorAll('.mn-brand-name').forEach(function(el){
       el.textContent = name || '머니냥';
       el.title = name ? name + ' — 머니냥' : '머니냥';
+      // ★ 로고: 브랜드 텍스트 왼쪽의 냥이 이미지 — 회사 로고를 올리면 교체된다.
+      //   탭하면 이미지 선택(소유자 요청 2026-07-30). 기본 냥이는 dataset에 보존.
+      var img = el.previousElementSibling;
+      if(img && img.tagName === 'IMG'){
+        if(!img.dataset.mnDefault) img.dataset.mnDefault = img.src;
+        img.src = logo || img.dataset.mnDefault;
+        img.style.cursor = 'pointer';
+        img.title = '탭하면 회사 로고 이미지로 바꿀 수 있어요';
+        img.setAttribute('aria-label', '회사 로고 이미지 변경');
+        if(!img.__mnLogoBound){
+          img.addEventListener('click', function(){ mnPickCompanyLogo(); });
+          img.__mnLogoBound = true;
+        }
+      }
     });
+  };
+
+  // 회사 로고 업로드 — 직원 아바타(handleEmpAvatar)와 같은 96px 캔버스 리사이즈.
+  // 투명 배경 로고가 많아 PNG로 저장. 실패(용량)는 토스트로 알리고 기존 유지.
+  window.mnPickCompanyLogo = function(){
+    var inp = document.getElementById('mn-logo-file');
+    if(!inp){
+      inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = 'image/*'; inp.id = 'mn-logo-file';
+      inp.style.display = 'none';
+      document.body.appendChild(inp);
+      inp.addEventListener('change', function(e){
+        var f = e.target.files && e.target.files[0];
+        inp.value = '';
+        if(!f) return;
+        var reader = new FileReader();
+        reader.onload = function(ev){
+          var im = new Image();
+          im.onload = function(){
+            var c = document.createElement('canvas'); c.width = 96; c.height = 96;
+            var ctx = c.getContext('2d');
+            var s = Math.max(96/im.width, 96/im.height);
+            ctx.drawImage(im, (96-im.width*s)/2, (96-im.height*s)/2, im.width*s, im.height*s);
+            try{ localStorage.setItem('atm2_companyLogo', c.toDataURL('image/png')); }
+            catch(err){ if(typeof showToast==='function') showToast('⚠️ 저장 공간이 부족해 로고를 저장하지 못했어요'); return; }
+            mnSyncBrandName();
+            if(typeof showToast==='function') showToast('✅ 회사 로고로 바뀌었어요');
+          };
+          im.src = ev.target.result;
+        };
+        reader.readAsDataURL(f);
+      });
+    }
+    inp.click();
+  };
+  window.mnResetCompanyLogo = function(){
+    try{ localStorage.removeItem('atm2_companyLogo'); }catch(e){}
+    mnSyncBrandName();
+    if(typeof showToast==='function') showToast('✅ 기본 냥이 로고로 되돌렸어요');
   };
 
   // 어느 화면에서든 생존 화면의 변동지출 입력란으로 (홈 "오늘 남은 일" 등에서 사용)
