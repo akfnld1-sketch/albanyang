@@ -413,7 +413,10 @@ function renderSettingsPage(){
     : '기본 시급 (원)';
 
   const savedName    = localStorage.getItem('atm2_companyName') || '';
-  const savedEmpName = localStorage.getItem('atm2_ob_empName')  || '';
+  // ★ 2026-07-30: 온보딩 닉네임이 atm2_ob_empName에 저장되지 않던 시기의 사용자 구제 —
+  //   키가 비어 있으면 비서 이름(memName)으로 폴백해 표시 (저장 시 키에 정상 기록됨)
+  const savedEmpName = localStorage.getItem('atm2_ob_empName')
+    || ((typeof memName !== 'undefined' && memName) ? memName : '');
   const savedWage    = localStorage.getItem('atm2_baseWage') || '10320';
   // ★ Fix #2: 전역 변수명은 'wt' (leave.js:4), 'workType'은 미정의
   const currentWT = typeof wt !== 'undefined' ? wt : localStorage.getItem('atm2_workType') || 'day';
