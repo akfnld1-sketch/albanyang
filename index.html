@@ -35,7 +35,7 @@
 -->
 
 <!-- ══ 앱 버전 (전역 상수 — 버전 변경 시 여기만 수정) ══ -->
-<script>var APP_VERSION = 'v4.2.2-beta.74';</script>
+<script>var APP_VERSION = 'v4.2.2-beta.75';</script>
 
 <!-- ══ Service Worker + 온라인 감지 ══ -->
 <script src="js/sw-init.js"></script>
@@ -199,11 +199,14 @@
   <!-- ★ 직원 카드 (최상단 고정) -->
   <div id="sb-emp-card">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-      <div class="sb-emp-avatar" id="sb-emp-avatar" onclick="document.getElementById('emp-avatar-inp').click()" title="프로필 사진 변경">나</div>
+      <!-- ★ 2026-07-30 (소유자 요청): 카드 위계를 회사 우선으로 —
+           큰 글씨 = 회사명, 부제 = 닉네임 · 근무형태(탭하면 이름 변경),
+           아바타 = 설정에서 올린 회사 로고(탭하면 로고 변경). 표시는 updateEmpSwitcher가 채운다 -->
+      <div class="sb-emp-avatar" id="sb-emp-avatar" onclick="if(typeof mnPickCompanyLogo==='function')mnPickCompanyLogo()" title="회사 로고 변경">나</div>
       <input type="file" id="emp-avatar-inp" accept="image/*" style="display:none" onchange="handleEmpAvatar(event)">
       <div style="flex:1;min-width:0;">
-        <div class="sb-emp-name" id="sb-emp-name" onclick="editEmpName()" title="이름 변경">직원</div>
-        <div class="sb-emp-sub" id="sb-emp-sub">주간</div>
+        <div class="sb-emp-name" id="sb-emp-name" title="회사·사업장 이름">직원</div>
+        <div class="sb-emp-sub" id="sb-emp-sub" onclick="editEmpName()" title="이름 변경" style="cursor:pointer;">주간</div>
       </div>
     </div>
     <button class="sb-emp-switch" onclick="openEmpManageModal()" style="display:none;">
@@ -1335,11 +1338,11 @@ const _origShowPage = typeof showPage === 'function' ? showPage : null;
 <!-- ══ JavaScript (의존성 순서 중요) ══ -->
 
 <!-- 1. 가계부 (budget.js) -->
-<script src="js/storage.js?v=20260710c"></script>      <!-- [1] 상수 + 다중사업장 + STATE + localStorage -->
+<script src="js/storage.js?v=20260730u"></script>      <!-- [1] 상수 + 다중사업장 + STATE + localStorage -->
 <script src="js/company-engine.js?v=20260710b"></script> <!-- [1.1] v3.0 사업장 기반 시급제 다중 처리 -->
 <script src="js/leave.js?v=20260725a"></script>        <!-- [2] 전역변수(curY/curM/dayData) + 연차 + lsSave/lsLoad -->
 <script src="js/help.js?v=20260704c"></script>       <!-- [2.5] ? 도움말 시스템 -->
-<script src="js/ui.js?v=20260704c"></script>          <!-- [3] pad2/dk/showToast/calcNetHours/countWD -->
+<script src="js/ui.js?v=20260730u"></script>          <!-- [3] pad2/dk/showToast/calcNetHours/countWD -->
 <script src="js/salary.js?v=20260726a"></script>       <!-- [4] fmt/getPayData + 급여계산 + 4대보험 -->
 <script src="js/budget.js?v=20260730p"></script>       <!-- [5] 생존관리 (pad2/fmt/lsSave 의존) -->
 <script src="js/attendance-v3.js?v=20260730k"></script>  <!-- [5.5] 근태 v3: 오늘 브리핑 (budget.js renderCalendar 위임) -->
@@ -1528,7 +1531,7 @@ const _origShowPage = typeof showPage === 'function' ? showPage : null;
     </div>
   </div>
 </div>
-<script src="js/redesign-v6.js?v=20260730t"></script>  <!-- [99] 리디자인 셸 v7: 모바일 헤더+6탭+스와이프 트랙+하단 액션 바 (데스크톱은 기존 유지) -->
+<script src="js/redesign-v6.js?v=20260730u"></script>  <!-- [99] 리디자인 셸 v7: 모바일 헤더+6탭+스와이프 트랙+하단 액션 바 (데스크톱은 기존 유지) -->
 </body>
 </html>
 

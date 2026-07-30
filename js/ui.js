@@ -303,14 +303,15 @@ function updateSidebarWTSub(t){
     '3shift':'3교대'
   };
   const wtLabel = labels[t] || '주간근무';
-  // 회사명이 있으면 "회사명 · 근무형태", 없으면 "○ 근무형태"
-  let companyName = '';
-  try{ companyName = localStorage.getItem('atm2_companyName') || ''; }catch(e){}
-  if(companyName){
-    subEl.textContent = companyName + ' · ' + wtLabel;
-  } else {
-    subEl.textContent = '○ ' + wtLabel;
-  }
+  // ★ 2026-07-30: 카드 위계가 회사 우선으로 바뀌어(큰 글씨=회사명, storage.js
+  //   updateEmpSwitcher 참조) 부제는 "닉네임 · 근무형태"로 통일
+  let nick = '';
+  try{
+    if(typeof empGet === 'function' && typeof activeWpId !== 'undefined' && activeWpId && activeEmpId){
+      nick = (empGet(activeWpId, activeEmpId)||{}).name || '';
+    }
+  }catch(e){}
+  subEl.textContent = nick ? nick + ' · ' + wtLabel : wtLabel;
 }
 
 function setMyShift3(k){

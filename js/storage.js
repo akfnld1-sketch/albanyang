@@ -325,16 +325,26 @@ function updateEmpSwitcher(){
   const nameEl = document.getElementById('sb-emp-name');
   const subEl  = document.getElementById('sb-emp-sub');
   const avatarEl = document.getElementById('sb-emp-avatar');
-  if(nameEl) nameEl.textContent = curEmp.name || '직원';
+  // ★ 2026-07-30 (소유자 요청) — 카드 위계를 회사 우선으로:
+  //   큰 글씨 = 회사명, 부제 = 닉네임 · 근무형태, 아바타 = 회사 로고(설정) 우선
+  let coName = '';
+  try{ coName = (localStorage.getItem('atm2_companyName')||'').trim(); }catch(e){}
+  if(!coName) coName = curWp.name || '';
+  if(nameEl) nameEl.textContent = coName || curEmp.name || '직원';
   if(subEl){
-    const wtMap = {day:'주간',night:'야간','2shift':'2교대','3shift':'3교대',alba:'알바'};
-    subEl.textContent = (curWp.name||'') + (curWp.name&&curEmp.wt?' · ':'') + (wtMap[curEmp.wt]||'');
+    const wtMap = {day:'주간근무',night:'야간근무','2shift':'2교대','3shift':'3교대',alba:'알바'};
+    const nick = curEmp.name || '';
+    subEl.textContent = nick + (nick && wtMap[curEmp.wt] ? ' · ' : '') + (wtMap[curEmp.wt]||'');
   }
   if(avatarEl){
-    if(curEmp.avatar){
+    let coLogo = null;
+    try{ coLogo = localStorage.getItem('atm2_companyLogo'); }catch(e){}
+    if(coLogo){
+      avatarEl.innerHTML = `<img src="${coLogo}" alt="회사 로고">`;
+    } else if(curEmp.avatar){
       avatarEl.innerHTML = `<img src="${curEmp.avatar}" alt="">`;
     } else {
-      avatarEl.textContent = (curEmp.name||'나').charAt(0);
+      avatarEl.textContent = (coName || curEmp.name || '나').charAt(0);
     }
   }
   // 사이드바 요약 업데이트
