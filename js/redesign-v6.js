@@ -1863,6 +1863,8 @@
         }
       }
     });
+    // 드로어 직원 카드(회사명·로고 아바타)도 같은 값으로 갱신
+    try{ if(typeof updateEmpSwitcher === 'function') updateEmpSwitcher(); }catch(e){}
   };
 
   // 회사 로고 업로드 — 직원 아바타(handleEmpAvatar)와 같은 96px 캔버스 리사이즈.
