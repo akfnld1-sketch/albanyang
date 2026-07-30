@@ -1978,6 +1978,25 @@
       try{ has = _attV3HasAny(d); }catch(e){ has = true; }
       if(!has) c.classList.add('mn-pc-missed');
     });
+    // ★ 2026-07-30 폴리싱 — 이번 달 기록이 하나도 없는(신규·미사용) 상태에서는
+    //   지난 평일 전부에 "미기록" 점이 찍혀 채근이 된다. 기록이 1건이라도 생긴
+    //   뒤부터 미기록 표시를 시작한다 (상단 칩도 이 표시 개수를 세므로 함께 사라진다).
+    var marked = cal.querySelectorAll('.cal-day.mn-pc-missed');
+    var pastWorkdays = marked.length;
+    var hasAnyRecord = false;
+    cal.querySelectorAll('.cal-day:not(.empty)').forEach(function(c){
+      if(hasAnyRecord) return;
+      var dn = c.querySelector('.dn');
+      if(!dn) return;
+      var day = parseInt(dn.textContent, 10);
+      if(!day) return;
+      var d = new Date(curY, curM, day);
+      if(d >= today) return;
+      try{ if(_attV3HasAny(d)) hasAnyRecord = true; }catch(e){}
+    });
+    if(pastWorkdays && !hasAnyRecord){
+      marked.forEach(function(c){ c.classList.remove('mn-pc-missed'); });
+    }
   }
 
   // v3 위임을 잠시 통과시켜 레거시 달력을 #calendar에 렌더 (attV3OpenMonthPopup과 같은 방식)
@@ -2043,15 +2062,21 @@
     // inner: 블록이 한 겹 안쪽 컨테이너에 들어 있는 화면 (생존 = .budget-container)
     'salary-page': { cls:'mn-pc-sal',  head:[0], left:[1],       right:'rest' },
     'budget-page': { cls:'mn-pc-bdg',  head:[], leftMatch:/버틸|소진|생존/, right:'rest', inner:'.budget-container' },
-    'dash-page':   { cls:'mn-pc-dash', head:[0], headMatch:/총수입|월평균|월 평균/, leftMatch:/월별 수입 추이/, right:[], fold:true }
+    // wideMatch: 접지 않고 전폭 맨 위에 두는 주역 블록 (연간의 12개월 추이 차트).
+    //   직장인은 "월별 실수령액 추이", 알바 등은 "월별 수입 추이" — 둘 다 잡는다.
+    //   (기존 leftMatch는 직장인 차트를 못 잡아 접힘 속에 숨고 좌우가 비던 결함)
+    //   headMatch의 "연봉 현황|수입 흐름" = 타이틀 블록(연도 ◀▶ 포함) — 빈 상태 배너가
+    //   kids[0]을 차지해 타이틀이 아래로 밀리던 문제 방지 (직장인/알바 타이틀 문구)
+    'dash-page':   { cls:'mn-pc-dash', head:[0], headMatch:/총수입|월평균|월 평균|연봉 현황|수입 흐름/, wideMatch:/월별 수입 추이|월별 실수령액 추이/, right:[], fold:true }
   };
 
   // C-4 헬퍼 — 컨테이너의 각 블록을 "제목 한 줄 + 펼치기" 아코디언으로 감싼다.
   //  블록 자체는 그대로 옮겨 담기만 하므로 렌더 함수·계산과 무관하다.
-  function _pcFoldify(box){
+  function _pcFoldify(box, skip){
     if(!box) return;
     [].slice.call(box.children).forEach(function(blk){
       if(blk.classList.contains('mn-pc-fold')) return;
+      if(skip && skip.test((blk.textContent||'').replace(/\s+/g,' '))) return;   // 주역은 접지 않는다
       // 내용이 사실상 없는 래퍼(자식 하나만 감싼 익명 div)는 한 겹 들어가 실제 블록을 찾는다
       if(!blk.querySelector('.mn-h, h3, h4') && blk.children.length === 1
          && blk.children[0].querySelector && blk.children[0].querySelector('.mn-h, h3, h4')) {
@@ -2118,6 +2143,11 @@
       if(c.classList.contains('budget-grid')) return;      // 내역 그리드는 제외
       var t = (c.textContent||'').replace(/\s+/g,' ');
       if(heroRe.test(t)) L.appendChild(c);
+    });
+
+    // 도움말 "?" 한 줄이 내역 열 맨 위에 고아로 떠 있던 것 — 열 맨 아래로 등급 하강
+    [].slice.call(R.children).forEach(function(c){
+      if((c.textContent||'').trim() === '?' && c !== R.lastElementChild) R.appendChild(c);
     });
 
     // 설정성 카드(잔고·저축/고정지출)는 결론 스택 맨 아래 접힌 줄로
@@ -2257,13 +2287,19 @@
     left.forEach(function(c){ L.appendChild(c); });
     right.forEach(function(c){ R.appendChild(c); });
     rest.forEach(function(c){ bl.appendChild(c); });
+    // C-4b: 주역 차트(월별 추이)는 접지 않고 전폭 맨 위로 — 연간의 결론이다
+    if(cfg.wideMatch){
+      [].slice.call(bl.children).filter(function(c){
+        return cfg.wideMatch.test((c.textContent||'').replace(/\s+/g,' '));
+      }).reverse().forEach(function(c){ bl.insertBefore(c, bl.firstChild); });
+    }
     // C-4: 전폭 아래 블록(연간의 분기별·사업장별·근태분석·배지·총평)은 접힌 한 줄로 내린다.
     //   블록을 지우지 않고 표현 등급만 낮춘다 — 클릭하면 제자리에서 펼쳐진다(팝업 아님).
-    if(cfg.fold) _pcFoldify(bl);
+    if(cfg.fold) _pcFoldify(bl, cfg.wideMatch);
 
     gr.appendChild(L); gr.appendChild(R);
     if(hd.children.length) wrap.appendChild(hd);
-    wrap.appendChild(gr);
+    if(L.children.length || R.children.length) wrap.appendChild(gr);   // 빈 2열 껍데기 방지
     if(bl.children.length) wrap.appendChild(bl);
     root.appendChild(wrap);
   }
