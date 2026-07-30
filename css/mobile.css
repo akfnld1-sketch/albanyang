@@ -1448,7 +1448,7 @@ html { -webkit-overflow-scrolling: touch; }
     height: auto !important; min-height: 78px !important; max-height: none !important;
     padding: 8px 9px !important;
   }
-  body.mn-pc #cal-area .dn { font-size: 15px !important; margin-bottom: 3px !important; }
+  /* 날짜 숫자 크기는 기본(20px, main.css)을 유지 — 축소 시 "글씨가 작아졌다" 피드백 */
   body.mn-pc #cal-area .month-nav { margin-bottom: 10px; }
 
   /* 달력 아래로 내린 부수 블록 간격 */
@@ -1468,12 +1468,15 @@ html { -webkit-overflow-scrolling: touch; }
     background: var(--mn-missed-border, #F97316);
   }
 
-  /* ② 좌측 v3의 주간 라벨·주간 스트립: 우측 전체 달력과 같은 정보의 부분집합이라
-        PC에서는 중복 — 숨긴다. 날짜 선택은 우측 달력 클릭(좌우 연동 ②)이 대체.
-        모바일은 이 선택자가 닿지 않는다(#mn-pc-att-l은 PC 셸에서만 생성). */
-  /* 두 줄 다 인라인 display:flex가 걸려 있어 !important 필요 */
-  body.mn-pc #mn-pc-att-l .attv3-wrap > div:first-child,
-  body.mn-pc #mn-pc-att-l .attv3-wrap > div:has(> #attv3-strip) { display: none !important; }
+  /* ② C-2d (2026-07-30 소유자 요청): v3 직군은 PC도 모바일과 같은 위계 —
+        상단 주간 스트립(일주일) + 오늘 근무 카드 주역, 전체 달력은 접힌 줄로.
+        1열 폭을 제한해 주간 스트립·카드가 과하게 늘어나지 않게 한다. */
+  body.mn-pc #mn-pc-att.mn-pc-att--onecol { grid-template-columns: 1fr; }
+  body.mn-pc #mn-pc-att.mn-pc-att--onecol > .mn-pc-col-r { display: none; }
+  body.mn-pc #mn-pc-att.mn-pc-att--onecol > .mn-pc-col-l { max-width: 680px; }
+  body.mn-pc #mn-pc-att-calfold { margin-top: 4px; }
+  body.mn-pc #mn-pc-att-calfold .mn-pc-fold-body { padding-top: 12px; }
+  body.mn-pc #mn-pc-att-calfold #mn-pc-att-legend { margin-bottom: 10px; }
 
   /* ③ 수다성 카드 접힌 줄(왼쪽 열 맨 아래) — 접힘 상태에서는 줄 하나만 보인다 */
   body.mn-pc #mn-pc-att-chatfold { margin-top: 4px; }
