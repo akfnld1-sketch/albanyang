@@ -576,6 +576,15 @@ function renderSettingsPage(){
       <input id="set-emp-name" type="text" value="${savedEmpName}" placeholder="예: 홍길동"
         readonly style="${_roStyle}">
     </div>
+    <!-- ★ 2026-07-30 (소유자 요청): 회사 로고 — 헤더의 냥이 자리에 표시. 즉시 저장이라 수정 모드 무관 -->
+    <div style="margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:150px;">
+        <div style="font-size:16px;color:var(--text3);margin-bottom:2px;">🖼 회사 로고</div>
+        <div style="font-size:13px;color:var(--text3);">화면 위 냥이 자리에 표시돼요 (냥이를 탭해도 변경 가능)</div>
+      </div>
+      <button onclick="mnPickCompanyLogo()" style="flex:none;padding:9px 14px;border-radius:9px;border:1px solid var(--accent);background:rgba(79,124,255,.08);color:var(--accent);font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR';min-height:40px;">이미지 변경</button>
+      <button onclick="mnResetCompanyLogo()" style="flex:none;padding:9px 12px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--text3);font-size:14px;cursor:pointer;font-family:'Noto Sans KR';min-height:40px;">기본 냥이</button>
+    </div>
     <div style="margin-bottom:12px;">
       <div style="font-size:16px;color:var(--text3);margin-bottom:5px;">${_setWageLabel}
         ${(savedWage === '10320' || !savedWage) ? '<span style="font-size:11px;background:rgba(255,159,67,.15);color:#ff9f43;border-radius:10px;padding:2px 7px;margin-left:4px;font-weight:700;">입력 필요</span>' : ''}

@@ -367,7 +367,9 @@ function showIncomeWizard(){
           + '<input id="iw-wage-input" type="number" min="0" step="10" placeholder="10320" inputmode="numeric"'
           + ' style="flex:1;background:var(--surface,#1e2235);border:1px solid var(--border,rgba(255,255,255,.15));color:var(--text,#fff);border-radius:10px;padding:11px 12px;font-size:17px;font-weight:700;font-family:\'JetBrains Mono\',monospace;text-align:right;outline:none;">'
           + '<span style="font-size:15px;color:var(--text3,#aaa);flex-shrink:0;">원</span></div>'
-          + '<div style="font-size:12px;color:var(--text3,#888);margin-top:6px;">2026년 최저시급 10,320원</div>';
+          + '<div style="font-size:12px;color:var(--text3,#888);margin-top:6px;">2026년 최저시급 10,320원</div>'
+          + '<div style="font-size:12px;color:var(--text3,#999);line-height:1.55;margin-top:10px;padding-top:9px;border-top:1px solid var(--border,rgba(255,255,255,.1));">'
+          + '💡 회사명을 입력하면 화면 위 <b style="color:var(--text,#ddd);">머니냥 자리가 회사 이름</b>으로 바뀌고,<br>냥이 캐릭터를 탭해 <b style="color:var(--text,#ddd);">회사 로고 이미지</b>로도 바꿀 수 있어요.</div>';
         scroll.appendChild(wageBox);
         var ci = wageBox.querySelector('#iw-company-input');
         ci.value = state.company || (localStorage.getItem('atm2_companyName') || '');
