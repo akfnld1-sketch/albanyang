@@ -1871,17 +1871,46 @@
     // 직군에 따라 jobtype.js가 토글 자체를 숨기면 접힌 줄 껍데기도 같이 숨긴다
     if(wt && wtFold) wtFold.style.display = (wt.style.display === 'none') ? 'none' : '';
 
-    // 달력 아래로 내릴 부수 블록 — 순서: 달력 → 시급 유도 → 도움말 줄 → 특근 접힘
+    // ★ 2026-07-30 C-2c — 안내 줄 통합: 시급 유도 배너 + 첫 기록 안내를 달력 아래
+    //   한 줄(#mn-pc-att-hints)에 나란히. 내용·버튼은 그대로, 배치만 바꾼다.
     var lp = document.getElementById('leave-panel');
     var anchor = (lp && lp.parentNode === cal) ? lp : null;
     function _toBottom(el){ if(el && el.parentNode === cal && el !== anchor) cal.insertBefore(el, anchor); }
+    var hints = document.getElementById('mn-pc-att-hints');
+    if(!hints){
+      hints = document.createElement('div');
+      hints.id = 'mn-pc-att-hints';
+      cal.appendChild(hints);
+    }
     var nudge = document.getElementById('wage-nudge-banner');
-    if(nudge && nudge.parentNode !== cal) nudge = null;      // 다른 화면의 배너는 건드리지 않는다
+    if(nudge && nudge.parentNode !== hints && nudge.closest('#cal-area')) hints.appendChild(nudge);
     var guideTxt = document.getElementById('cal-guide-text');
-    var guideRow = guideTxt && guideTxt.parentNode && guideTxt.parentNode.parentNode === cal ? guideTxt.parentNode : null;
-    _toBottom(nudge);
-    _toBottom(guideRow);
+    var guideRow = guideTxt ? guideTxt.parentNode : null;
+    if(guideRow && guideRow.parentNode !== hints && guideRow.closest('#cal-area')) hints.appendChild(guideRow);
+    _toBottom(hints);
     _toBottom(wtFold);
+
+    // ★ 2026-07-30 C-2c — 좌측 v3 열의 수다성 카드(오늘의 한마디 · 브리핑 말풍선 ·
+    //   생존 미리보기)는 접힌 줄 하나로 내린다. 출근 CTA·기록 카드가 주역이 되게.
+    //   v3는 렌더마다 innerHTML을 다시 만들므로 접힌 줄도 매번 새로 만든다(기본 접힘).
+    //   주간 라벨·스트립은 우측 전체 달력과 중복이라 CSS로 숨긴다 (모바일 무접촉).
+    if(v3){
+      var chat = ['.sao-initiative', '#attv3-brief', '#attv3-survival']
+        .map(function(s){ return v3.querySelector(s); })
+        .filter(function(el){ return el && !el.closest('.mn-pc-fold'); });
+      if(chat.length){
+        var cf = document.getElementById('mn-pc-att-chatfold');
+        if(!cf || !v3.contains(cf)){
+          var cfx = _pcMakeFold('머니냥 한마디 · 생존 미리보기');
+          cf = cfx.fold;
+          cf.id = 'mn-pc-att-chatfold';
+          var swipe = document.getElementById('attv3-swipe');
+          (swipe || v3).appendChild(cf);
+        }
+        var cfBody = cf.querySelector('.mn-pc-fold-body');
+        chat.forEach(function(el){ cfBody.appendChild(el); });
+      }
+    }
 
     // v3가 숨겨 둔 달력을 PC에서는 다시 보이게 하고, 레거시 달력을 그려 넣는다
     cal.style.display = 'block';
