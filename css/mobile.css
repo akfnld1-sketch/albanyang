@@ -1457,6 +1457,13 @@ html { -webkit-overflow-scrolling: touch; }
 /* 설정 다이어트 ② (2026-07-30) — 미설정 카드 강조 (R11 문법: 안 한 것만 눈에 띈다) */
 .mn-set-need { border: 1.5px solid #F97316 !important; }
 
+/* 헤더 브랜드 자리에 회사명 표시 (2026-07-30) — 긴 이름은 말줄임 */
+.mn-brand-name {
+  display: inline-block; max-width: 150px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  vertical-align: middle;
+}
+
 /* ══ 설정 마법사 (2026-07-30) — PC·모바일 공용, 신규 클래스만 ══════════════ */
 .mn-wiz-hl {
   outline: 2.5px solid var(--accent, #4f7cff) !important;

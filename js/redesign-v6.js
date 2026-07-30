@@ -973,7 +973,7 @@
       +'<button id="mn-hd-menu" aria-label="근무·급여 상세 설정" title="근무·급여 상세 설정" onclick="toggleDrawer()">'
       +'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>'
       +'</button>'
-      +_avatarImg(31)+'<span>머니냥</span></div>'
+      +_avatarImg(31)+'<span class="mn-brand-name">머니냥</span></div>'
       +'<div id="mn-hd-right">'
       +'<span id="mn-today-chip" onclick="showPage(\'home\')">오늘 0원</span>'
       +'<button id="mn-hd-gear" aria-label="설정" onclick="showPage(\'settings\')">'
@@ -1731,7 +1731,7 @@
       +'<button id="mn-pc-menu-btn" aria-label="근무·급여 상세 설정" title="근무·급여 상세 설정" onclick="toggleDrawer()">'
       +'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>'
       +'</button>'
-      +_avatarImg(32)+'<span>머니냥</span></div>'
+      +_avatarImg(32)+'<span class="mn-brand-name">머니냥</span></div>'
       +'<div class="mn-pc-menu">'
       + TABS.map(function(t){
           return '<button class="mn-pc-item" data-p="'+t.p+'" onclick="showPage(\''+t.p+'\')">'
@@ -1835,6 +1835,19 @@
     el.scrollIntoView({behavior:'smooth', block:'center'});
     el.style.outline = '2px solid var(--mn-primary)';
     setTimeout(function(){ el.style.outline = ''; }, 1500);
+  };
+
+  // ★ 2026-07-30 (소유자 요청) — 헤더 브랜드 자리에 사용자의 사업장/회사명 표시.
+  //   "머니냥"이라고만 쓰여 있으면 내 회사 출퇴근을 기록하는 앱이라는 느낌이 없다는
+  //   피드백. 회사명이 설정돼 있으면 그 이름을, 없으면 "머니냥" 폴백. 로고는 유지.
+  //   saveObInfo(회사명 단일 저장 진입점)가 저장 직후 이 함수를 호출한다.
+  window.mnSyncBrandName = function(){
+    var name = '';
+    try{ name = (localStorage.getItem('atm2_companyName')||'').trim(); }catch(e){}
+    document.querySelectorAll('.mn-brand-name').forEach(function(el){
+      el.textContent = name || '머니냥';
+      el.title = name ? name + ' — 머니냥' : '머니냥';
+    });
   };
 
   // 어느 화면에서든 생존 화면의 변동지출 입력란으로 (홈 "오늘 남은 일" 등에서 사용)
@@ -2715,6 +2728,7 @@
       }catch(e){}
     }
     _syncInfoDot();
+    try{ mnSyncBrandName(); }catch(e){}   // 헤더 브랜드 ← 사업장/회사명 (셸 구축 후 1회)
 
     // 브레이크포인트 교차 대응 (debounce 250ms)
     //  - 데스크톱→모바일: 셸 동적 구축 (리로드 불필요)

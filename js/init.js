@@ -1266,6 +1266,8 @@ function saveNjobWages(){
 window.saveObInfo = function(co, name){
   try{ if(co)   localStorage.setItem('atm2_companyName', co);   }catch(e){}
   try{ if(name) localStorage.setItem('atm2_ob_empName',  name); }catch(e){}
+  // 헤더 브랜드 자리(머니냥 ↔ 회사명) 즉시 동기화 (2026-07-30)
+  try{ if(typeof mnSyncBrandName === 'function') mnSyncBrandName(); }catch(e){}
 };
 
 // 급여일 저장 (payDay_setting + atm2_payday 의 단일 저장 진입점)
