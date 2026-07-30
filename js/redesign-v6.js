@@ -2106,7 +2106,21 @@
   //  월 1회만 건드리는 입력이므로, 매일 쓰는 변동지출 입력이 위로 올라온다. 기능·계산 무변경.
   function _pcBudgetTidy(){
     var R = document.querySelector('.mn-pc-bdg .mn-pc-col-r');
-    if(!R) return;
+    var L = document.querySelector('.mn-pc-bdg .mn-pc-col-l');
+    if(!R || !L) return;
+
+    // ★ 2026-07-30 C-3b — 생존 결론과 짝인 히어로 후속 블록(게이지·현황·버틸 날짜·
+    //   조언·경고)이 내역 더미에 섞여 있던 문제. 결론 스택(L)으로 모은다.
+    //   내역 블록(수입·지출 그리드, 자산 등)은 해당 문구가 없어 매칭되지 않는다.
+    var heroRe = /생존지수|예상수입|버틸 수 있는 날짜|줄이면|부족할 수 있/;
+    [].slice.call(R.children).forEach(function(c){
+      if(c.classList.contains('mn-pc-fold') || c.classList.contains('mn-caption')) return;
+      if(c.classList.contains('budget-grid')) return;      // 내역 그리드는 제외
+      var t = (c.textContent||'').replace(/\s+/g,' ');
+      if(heroRe.test(t)) L.appendChild(c);
+    });
+
+    // 설정성 카드(잔고·저축/고정지출)는 결론 스택 맨 아래 접힌 줄로
     [].slice.call(R.querySelectorAll('.budget-card')).forEach(function(card){
       if(card.closest('.mn-pc-fold')) return;
       var t = card.firstElementChild;
@@ -2114,7 +2128,7 @@
       if(!/고정지출|잔고|저축/.test(txt)) return;
       if(t) t.style.display = 'none';
       var f = _pcMakeFold(txt.replace(/^[^가-힣A-Za-z0-9]+/, ''));
-      R.appendChild(f.fold);
+      L.appendChild(f.fold);
       f.body.appendChild(card);
     });
   }
