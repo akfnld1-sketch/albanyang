@@ -1321,6 +1321,16 @@ html { -webkit-overflow-scrolling: touch; }
   .mn-pc-bdg  .mn-pc-col-r { grid-column: 1; grid-row: 1; }
   /* 브랜드 캡션(내역 열 첫 줄)은 PC에서 등급 하강 — 숨김. 카드 안 캡션은 유지 */
   body.mn-pc .mn-pc-bdg .mn-pc-col-r > .mn-caption { display: none; }
+
+  /* C-1b·C-5b (2026-07-30): 정보·수입도 같은 문법으로 통일 —
+     좌 = 내역·근거(넓은 열), 우 420px = 결론(브리핑 / 실수령 카드).
+     split은 L=결론/R=내역으로 배정하므로 열 위치만 교차한다. */
+  body.mn-pc .mn-pc-info { grid-template-columns: 1fr 420px !important; }
+  body.mn-pc .mn-pc-info > .mn-pc-col-l { grid-column: 2; grid-row: 1; }
+  body.mn-pc .mn-pc-info > .mn-pc-col-r { grid-column: 1; grid-row: 1; }
+  body.mn-pc .mn-pc-sal .mn-pc-grid { grid-template-columns: 1fr 420px; }
+  body.mn-pc .mn-pc-sal .mn-pc-col-l { grid-column: 2; grid-row: 1; }
+  body.mn-pc .mn-pc-sal .mn-pc-col-r { grid-column: 1; grid-row: 1; }
   .mn-pc-dash .mn-pc-grid { grid-template-columns: 1fr 1.6fr; }
 }
 
