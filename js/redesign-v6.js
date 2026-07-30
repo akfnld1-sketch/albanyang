@@ -1843,6 +1843,46 @@
       if(lg.innerHTML) R.insertBefore(lg, R.firstChild);
     }
 
+    // ★ 2026-07-30 근태 PC 정리 (C-2b) — 달력(주역)이 스크롤 없이 보이도록 등급을 나눈다.
+    //   요약 숫자는 전폭 머리글로, 특근 토글(설정성)은 접힌 줄로, 안내·유도 배너는 달력
+    //   아래로. 전부 DOM 이동만 — 렌더·계산 함수 무접촉, 모바일 무접촉(#mn-pc-nav 가드).
+    var head = document.getElementById('mn-pc-att-head');
+    if(!head){
+      head = document.createElement('div');
+      head.id = 'mn-pc-att-head';
+      page.insertBefore(head, wrap);
+    }
+    var stats = document.getElementById('stats-row');
+    if(stats && stats.parentNode !== head) head.appendChild(stats);
+
+    // v3가 없는 직군(알바·배달·프리랜서 등)은 좌측 열이 비므로 달력 1열 전폭으로
+    wrap.classList.toggle('mn-pc-att--solo', !v3);
+
+    // 특근 토글 — 월 몇 번 안 만지는 설정성 입력이라 접힌 줄로 (기능·저장 무변경)
+    var wt = cal.querySelector('.week-toggle-wrap');
+    var wtFold = document.getElementById('mn-pc-att-wtfold');
+    if(wt && !wtFold){
+      var wf = _pcMakeFold('주별 토/일 특근 · 공휴일 설정');
+      wtFold = wf.fold;
+      wtFold.id = 'mn-pc-att-wtfold';
+      cal.appendChild(wtFold);
+      wf.body.appendChild(wt);
+    }
+    // 직군에 따라 jobtype.js가 토글 자체를 숨기면 접힌 줄 껍데기도 같이 숨긴다
+    if(wt && wtFold) wtFold.style.display = (wt.style.display === 'none') ? 'none' : '';
+
+    // 달력 아래로 내릴 부수 블록 — 순서: 달력 → 시급 유도 → 도움말 줄 → 특근 접힘
+    var lp = document.getElementById('leave-panel');
+    var anchor = (lp && lp.parentNode === cal) ? lp : null;
+    function _toBottom(el){ if(el && el.parentNode === cal && el !== anchor) cal.insertBefore(el, anchor); }
+    var nudge = document.getElementById('wage-nudge-banner');
+    if(nudge && nudge.parentNode !== cal) nudge = null;      // 다른 화면의 배너는 건드리지 않는다
+    var guideTxt = document.getElementById('cal-guide-text');
+    var guideRow = guideTxt && guideTxt.parentNode && guideTxt.parentNode.parentNode === cal ? guideTxt.parentNode : null;
+    _toBottom(nudge);
+    _toBottom(guideRow);
+    _toBottom(wtFold);
+
     // v3가 숨겨 둔 달력을 PC에서는 다시 보이게 하고, 레거시 달력을 그려 넣는다
     cal.style.display = 'block';
     _pcRenderCalendar();
