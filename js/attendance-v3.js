@@ -1222,6 +1222,8 @@ function renderAttV3(){
   if(gotoBudget) gotoBudget.addEventListener('click', function(e){
     e.stopPropagation();
     if(typeof showPage==='function'){ showPage('budget'); if(typeof setMobActive==='function') setMobActive('budget'); }
+    // "1분 만에 지출 입력하기" — 화면 이동에서 끝나지 않고 입력란까지 데려간다
+    setTimeout(function(){ try{ if(typeof mnGotoExpenseInput==='function') mnGotoExpenseInput(); }catch(e){} }, 250);
   });
   var svEl = document.getElementById('attv3-survival');
   if(svEl && sv.ready) svEl.addEventListener('click', function(){

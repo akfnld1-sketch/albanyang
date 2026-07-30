@@ -653,9 +653,11 @@
         var tISO = _todayISO();
         var cnt = (budgetState.variableExpenses||[]).filter(function(e){ return e.date === tISO; }).length;
         if(cnt === 0){
+          // ★ 2026-07-30 — 음성 지출 입력은 미구현(조회 전용)이라 마이크 안내는 허위.
+          //   탭하면 생존 화면 지출 입력란으로 직접 데려간다.
           out.push({ title:'오늘 지출 기록 안 했어요',
-                     sub:'마이크로 "점심 9천원" 이라고 말해도 돼요',
-                     tap:'mnOpenVoice()', noChev:true });
+                     sub:'탭하면 지출 입력란으로 바로 이동해요',
+                     tap:'mnGotoBudgetExpense()', noChev:true });
         }
       }
     }catch(e){}
@@ -782,7 +784,7 @@
     // 레벨을 못 읽으면 파형을 아예 표시하지 않아 "듣고 있다"는 거짓 신호를 주지 않는다.
     bar.innerHTML =
       '<div id="mn-voice-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>'
-      +'<input id="mn-voice-input" placeholder="말하듯이 입력… (예: 점심 9,500원)" autocomplete="off">'
+      +'<input id="mn-voice-input" placeholder="말하듯이 물어보세요… (예: 이번 달 지출 얼마야?)" autocomplete="off">'
       +'<button id="mn-voice-mic" title="음성 입력">🎙️</button>';
     document.body.appendChild(bar);
     var st = document.createElement('style');
@@ -931,7 +933,9 @@
     try{ r.start(); }catch(e){ mic.classList.remove('rec'); _rec = null; _stopMeter(); _restorePh(inp); }
   }
   function _restorePh(inp){
-    if(inp) inp.placeholder = '말하듯이 입력… (예: 점심 9,500원)';
+    // ★ 2026-07-30 — 음성 지출 "입력"은 미구현(조회 전용, §G 백로그).
+    //   "점심 9,500원" 같은 입력 예시는 되는 것처럼 오해를 만들어 조회 예시로 교체.
+    if(inp) inp.placeholder = '말하듯이 물어보세요… (예: 이번 달 지출 얼마야?)';
   }
 
   // ══════════════════════════════════════════
@@ -1406,6 +1410,123 @@
   }
 
   // ══════════════════════════════════════════
+  // 설정 마법사 (2026-07-30 소유자 요청) — 새 저장 로직·새 입력 폼 없음.
+  //  실제 설정 화면의 카드를 단계별로 스크롤·하이라이트하는 "안내자" 방식이라
+  //  검증·저장은 전부 기존 카드의 버튼(saveBasicSettings 등)을 그대로 쓴다.
+  //  단계는 화면에 실제로 렌더된 카드에서만 만든다(직군에 따라 카드 구성이 다름).
+  // ══════════════════════════════════════════
+  function ensureSetupWizardCard(){
+    var page = document.getElementById('settings-page');
+    if(!page || document.getElementById('mn-setup-wiz-card')) return;
+    var card = document.createElement('div');
+    card.id = 'mn-setup-wiz-card';
+    card.className = 'mn-card';
+    card.innerHTML =
+      '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">'
+      +'<div style="flex:1;min-width:180px;">'
+      +'<div class="mn-h" style="margin-bottom:4px;">🧭 설정 마법사</div>'
+      +'<div class="mn-set-help" style="margin:0;">처음이라면 필요한 설정을 하나씩 차례대로 안내해드려요</div>'
+      +'</div>'
+      +'<button onclick="mnSetupWizard.start()" title="설정을 단계별로 안내" style="flex:none;padding:11px 18px;'
+      +'border-radius:11px;border:none;background:var(--accent,#4f7cff);color:#fff;font-size:14px;'
+      +'font-weight:700;cursor:pointer;font-family:\'Noto Sans KR\',sans-serif;min-height:44px;">시작하기</button>'
+      +'</div>';
+    page.insertBefore(card, page.firstChild);
+  }
+
+  window.mnSetupWizard = (function(){
+    // 단계 정의 — re는 카드/버튼 textContent 시작부와 대조 (렌더된 것만 단계가 된다)
+    var DEFS = [
+      { t:'직업 설정',  re:/^🛠️ 직업 설정 변경/, d:'어떤 일로 돈을 버는지부터 정해요. 버튼을 눌러 고르고, 이미 맞게 되어 있으면 [다음]으로 넘어가세요.' },
+      { t:'기본 정보',  re:/^📋 기본 정보/,      d:'사업장명·이름·시급·입사일을 입력하고 카드 안의 저장 버튼을 눌러주세요. 시급은 예상 급여 계산의 기준이에요.' },
+      { t:'근무 형태',  re:/^🕐 근무 형태/,      d:'주간·야간·교대 중 실제 근무 형태를 고르세요. 휴게시간도 여기서 맞출 수 있어요.' },
+      { t:'연봉 설정',  re:/^💼 연봉/,           d:'연봉(또는 월급)과 비과세 항목을 입력하면 실수령액이 정확해져요.' },
+      { t:'N잡 단가',   re:/^💼 N잡 기본 단가/,  d:'하는 일의 기본 단가를 미리 넣어두면 달력 기록이 훨씬 빨라져요.' },
+      { t:'급여일',     re:/^💰 급여일 설정/,    d:'직종별 급여일을 설정하면 월급날 D-Day와 생존 계산이 정확해져요.' },
+      { t:'알림',       re:/^🔔 스마트 알림/,    d:'출근·급여일 알림을 켤지 정하세요. 마지막 단계예요!' }
+    ];
+    var steps = [], idx = 0, hlEl = null, watch = null;
+
+    function _cands(){
+      var page = document.getElementById('settings-page');
+      if(!page) return [];
+      var out = [];
+      [].slice.call(page.children).forEach(function(c){
+        if(c.id === 'mn-setup-wiz-card' || c.id === 'mn-display-card') return;
+        out.push(c);
+        [].slice.call(c.children).forEach(function(k){ out.push(k); });   // 래퍼 안 카드들
+      });
+      return out;
+    }
+    function _clearHl(){ if(hlEl){ hlEl.classList.remove('mn-wiz-hl'); hlEl = null; } }
+    function _panel(){
+      var p = document.getElementById('mn-setup-wiz');
+      if(!p){
+        p = document.createElement('div');
+        p.id = 'mn-setup-wiz';
+        document.body.appendChild(p);
+      }
+      return p;
+    }
+    function _findEl(re){
+      var cands = _cands();
+      for(var i=0;i<cands.length;i++){
+        var t = (cands[i].textContent||'').replace(/\s+/g,' ').trim();
+        if(re.test(t)) return cands[i];
+      }
+      return null;
+    }
+    function show(){
+      var st = steps[idx];
+      var el = _findEl(st.re);                 // 재렌더에 대비해 매번 다시 찾는다
+      _clearHl();
+      if(el){
+        el.classList.add('mn-wiz-hl');
+        hlEl = el;
+        try{ el.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){ el.scrollIntoView(); }
+      }
+      var p = _panel();
+      p.innerHTML =
+        '<div class="mn-wiz-top"><b>'+(idx+1)+'/'+steps.length+' · '+st.t+'</b>'
+        +'<button class="mn-wiz-x" onclick="mnSetupWizard.end()" title="마법사 닫기" aria-label="마법사 닫기">✕</button></div>'
+        +'<div class="mn-wiz-desc">'+st.d+'</div>'
+        +'<div class="mn-wiz-btns">'
+        +(idx > 0 ? '<button class="mn-wiz-btn" onclick="mnSetupWizard.prev()">이전</button>' : '')
+        +'<button class="mn-wiz-btn mn-wiz-btn--pri" onclick="mnSetupWizard.next()">'
+        +(idx === steps.length-1 ? '완료' : '다음')+'</button>'
+        +'</div>';
+    }
+    function start(){
+      steps = DEFS.filter(function(s){ return !!_findEl(s.re); });
+      if(!steps.length){ if(typeof showToast==='function') showToast('안내할 설정 항목을 찾지 못했어요'); return; }
+      idx = 0;
+      show();
+      // 설정 화면을 떠나면 자동 종료 (하이라이트·패널이 다른 화면에 남지 않게)
+      if(watch) clearInterval(watch);
+      watch = setInterval(function(){
+        var sp = document.getElementById('settings-page');
+        if(!sp || getComputedStyle(sp).display === 'none') end();
+      }, 800);
+    }
+    function next(){
+      if(idx >= steps.length-1){
+        end();
+        if(typeof showToast==='function') showToast('🎉 설정 마법사 완료! 이제 기록만 하면 돼요');
+        return;
+      }
+      idx++; show();
+    }
+    function prev(){ if(idx > 0){ idx--; show(); } }
+    function end(){
+      _clearHl();
+      var p = document.getElementById('mn-setup-wiz');
+      if(p) p.remove();
+      if(watch){ clearInterval(watch); watch = null; }
+    }
+    return { start:start, next:next, prev:prev, end:end };
+  })();
+
+  // ══════════════════════════════════════════
   // 선행 작업 — 홈에서 뺄 기능의 대체 경로 확보 (HOME v2 명세 §1: "제거가 아니라 이동")
   //  점검 결과(2026-07-26):
   //   · 출근/퇴근 → 근태 화면 + 새 히어로 CTA        … 경로 있음
@@ -1439,6 +1560,7 @@
     window.renderSettingsPage = function(){
       orig.apply(this, arguments);
       try{ ensureDisplayCard(); }catch(e){}
+      try{ ensureSetupWizardCard(); }catch(e){}   // 마법사 진입 카드 — 항상 최상단
     };
     window.renderSettingsPage.__mnDisp = true;
   }
@@ -1663,6 +1785,12 @@
     el.scrollIntoView({behavior:'smooth', block:'center'});
     el.style.outline = '2px solid var(--mn-primary)';
     setTimeout(function(){ el.style.outline = ''; }, 1500);
+  };
+
+  // 어느 화면에서든 생존 화면의 변동지출 입력란으로 (홈 "오늘 남은 일" 등에서 사용)
+  window.mnGotoBudgetExpense = function(){
+    try{ if(typeof showPage==='function') showPage('budget'); }catch(e){}
+    setTimeout(function(){ try{ if(typeof mnGotoExpenseInput==='function') mnGotoExpenseInput(); }catch(e){} }, 250);
   };
 
   function _pcSyncCtx(p){
