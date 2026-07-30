@@ -127,6 +127,7 @@ function showIncomeWizard(){
     extra: null,      // 추가수익 관리 여부 (null=미응답)
     extraTypes: [],   // 선택한 추가수익 항목들
     baseWage: '',     // ★ 2026-07-30 A안: 시급제 주업이면 완료 단계에서 시급을 받는다 (선택)
+    company: '',      // ★ 사업장/회사명도 함께 (선택) — 저장은 saveObInfo 단일 진입점
   };
 
   // 시급제(employee 엔진) 수익원이 하나라도 있으면 완료 단계에서 시급을 물어본다.
@@ -356,14 +357,21 @@ function showIncomeWizard(){
         var wageBox = document.createElement('div');
         wageBox.style.cssText = 'margin-top:18px;text-align:left;background:var(--surface2,#2a2a3a);border:1px solid var(--border,rgba(255,255,255,.12));border-radius:12px;padding:14px;';
         wageBox.innerHTML =
-          '<div style="font-size:15px;font-weight:800;color:var(--text,#fff);margin-bottom:4px;">⏱ 시급을 알려주시면 바로 계산해드려요</div>'
-          + '<div style="font-size:13px;color:var(--text3,#aaa);line-height:1.5;margin-bottom:10px;">예상 급여 계산의 기준이에요. 비워두면 나중에 설정에서 입력할 수 있어요.</div>'
+          '<div style="font-size:15px;font-weight:800;color:var(--text,#fff);margin-bottom:4px;">⏱ 일하는 곳과 시급을 알려주시면 바로 계산해드려요</div>'
+          + '<div style="font-size:13px;color:var(--text3,#aaa);line-height:1.5;margin-bottom:10px;">비워두면 나중에 설정에서 입력할 수 있어요.</div>'
+          + '<div style="font-size:12px;color:var(--text3,#999);margin-bottom:3px;">🏢 사업장/회사명 (선택)</div>'
+          + '<input id="iw-company-input" type="text" placeholder="예) 스타벅스 강남점"'
+          + ' style="width:100%;box-sizing:border-box;background:var(--surface,#1e2235);border:1px solid var(--border,rgba(255,255,255,.15));color:var(--text,#fff);border-radius:10px;padding:11px 12px;font-size:15px;outline:none;font-family:\'Noto Sans KR\',sans-serif;margin-bottom:10px;">'
+          + '<div style="font-size:12px;color:var(--text3,#999);margin-bottom:3px;">⏱ 시급</div>'
           + '<div style="display:flex;align-items:center;gap:8px;">'
           + '<input id="iw-wage-input" type="number" min="0" step="10" placeholder="10320" inputmode="numeric"'
           + ' style="flex:1;background:var(--surface,#1e2235);border:1px solid var(--border,rgba(255,255,255,.15));color:var(--text,#fff);border-radius:10px;padding:11px 12px;font-size:17px;font-weight:700;font-family:\'JetBrains Mono\',monospace;text-align:right;outline:none;">'
           + '<span style="font-size:15px;color:var(--text3,#aaa);flex-shrink:0;">원</span></div>'
           + '<div style="font-size:12px;color:var(--text3,#888);margin-top:6px;">2026년 최저시급 10,320원</div>';
         scroll.appendChild(wageBox);
+        var ci = wageBox.querySelector('#iw-company-input');
+        ci.value = state.company || (localStorage.getItem('atm2_companyName') || '');
+        ci.addEventListener('input', function(){ state.company = ci.value; });
         var wi = wageBox.querySelector('#iw-wage-input');
         wi.value = state.baseWage || (parseInt(localStorage.getItem('atm2_baseWage'),10) || '');
         wi.addEventListener('input', function(){ state.baseWage = wi.value; });
@@ -598,6 +606,9 @@ function showIncomeWizard(){
           return;
         }
         if(w >= 10320 && typeof mnSaveBaseWage === 'function') mnSaveBaseWage(w);
+        // 회사명 (선택) — 설정 기본 정보와 같은 단일 진입점(saveObInfo, 빈 값은 무시)
+        var co = (state.company||'').trim();
+        if(co && typeof saveObInfo === 'function') saveObInfo(co, '');
         _iwSaveNick((state.nick||'').trim());
         finishWizard(state);
         ov.remove();
