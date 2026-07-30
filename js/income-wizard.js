@@ -608,10 +608,13 @@ function showIncomeWizard(){
           return;
         }
         if(w >= 10320 && typeof mnSaveBaseWage === 'function') mnSaveBaseWage(w);
-        // 회사명 (선택) — 설정 기본 정보와 같은 단일 진입점(saveObInfo, 빈 값은 무시)
+        // 회사명·닉네임 (선택) — 설정 기본 정보와 같은 단일 진입점(saveObInfo, 빈 값은 무시).
+        // ★ 닉네임도 함께 넘긴다: 설정 "이름" 필드는 atm2_ob_empName을 읽는데
+        //   _iwSaveNick은 memName·직원 프로필에만 저장해 설정창 이름이 비어 보이던 버그.
         var co = (state.company||'').trim();
-        if(co && typeof saveObInfo === 'function') saveObInfo(co, '');
-        _iwSaveNick((state.nick||'').trim());
+        var nk = (state.nick||'').trim();
+        if((co || nk) && typeof saveObInfo === 'function') saveObInfo(co, nk);
+        _iwSaveNick(nk);
         finishWizard(state);
         ov.remove();
       }));
