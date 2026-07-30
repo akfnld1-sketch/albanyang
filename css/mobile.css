@@ -1468,17 +1468,13 @@ html { -webkit-overflow-scrolling: touch; }
     background: var(--mn-missed-border, #F97316);
   }
 
-  /* ② C-2d (2026-07-30 소유자 요청): v3 직군은 PC도 모바일과 같은 위계 —
-        상단 주간 스트립(일주일) + 오늘 근무 카드 주역, 전체 달력은 접힌 줄로.
-        1열 폭을 제한해 주간 스트립·카드가 과하게 늘어나지 않게 한다. */
-  body.mn-pc #mn-pc-att.mn-pc-att--onecol { grid-template-columns: 1fr; }
-  body.mn-pc #mn-pc-att.mn-pc-att--onecol > .mn-pc-col-r { display: none; }
-  /* 포커스 열 — 좌측 쏠림이 아니라 중앙 정렬로 (소유자 결정 2026-07-30).
-     상단 요약 스트립은 전폭 유지, 작업 열만 가운데. */
-  body.mn-pc #mn-pc-att.mn-pc-att--onecol > .mn-pc-col-l {
-    max-width: 720px; width: 100%; margin: 0 auto;
-  }
-  body.mn-pc #mn-pc-att-calfold { margin-top: 4px; }
+  /* ② C-2d~e (2026-07-30 소유자 요청): v3 직군 PC —
+        좌 = 모바일식 스택(주간 스트립 + 오늘 근무 주역, 420px),
+        우 = 전체 달력 접힌 줄(기본 펼침, 접기 가능) → 화면이 꽉 차게.
+        1열 중앙 정렬안은 허전하다는 피드백으로 폐기. */
+  body.mn-pc #mn-pc-att.mn-pc-att--v3 { grid-template-columns: 420px 1fr; }
+  body.mn-pc #mn-pc-att.mn-pc-att--v3 > .mn-pc-col-l { min-width: 0; }
+  body.mn-pc #mn-pc-att.mn-pc-att--v3 > .mn-pc-col-r { display: block; min-width: 0; }
   body.mn-pc #mn-pc-att-calfold .mn-pc-fold-body { padding-top: 12px; }
   body.mn-pc #mn-pc-att-calfold #mn-pc-att-legend { margin-bottom: 10px; }
 
