@@ -1323,6 +1323,24 @@ function toggleSettingsEdit(checked){
   });
 }
 
+// ── 시급 단일 저장 진입점 (설정 기본 정보 + 온보딩 위저드 공용, 2026-07-30) ──
+//  최저시급 미달이면 저장하지 않고 false 반환 — 안내는 호출한 쪽이 담당.
+window.mnSaveBaseWage = function(wage){
+  wage = parseFloat(wage);
+  if(!(wage >= 10320)) return false;
+  localStorage.setItem('atm2_baseWage', String(wage));
+  try{
+    if(typeof activeWpId !== 'undefined' && activeWpId && activeEmpId){
+      hourlyRate  = wage;
+      companyRate = wage;
+      empUpdate(activeWpId, activeEmpId, { hourlyRate: wage, companyRate: wage });
+      if(typeof renderSalaryIfVisible === 'function') renderSalaryIfVisible();
+    }
+    if(typeof lsSave === 'function') lsSave();
+  }catch(e){}
+  return true;
+};
+
 // ── 기본 설정 저장 (회사명 + 이름 + 시급 + 입사일) ──
 function saveBasicSettings(){
   const name    = (document.getElementById('set-company-name')?.value||'').trim();
@@ -1337,17 +1355,8 @@ function saveBasicSettings(){
     if(compEl) compEl.textContent = name;
   }
 
-  // 시급 저장
-  if(wage >= 10320){
-    localStorage.setItem('atm2_baseWage', String(wage));
-    // 활성 직원에도 반영
-    if(typeof activeWpId !== 'undefined' && activeWpId && activeEmpId){
-      hourlyRate   = wage;
-      companyRate  = wage;
-      empUpdate(activeWpId, activeEmpId, { hourlyRate: wage, companyRate: wage });
-      if(typeof renderSalaryIfVisible === 'function') renderSalaryIfVisible();
-    }
-  } else {
+  // 시급 저장 (단일 진입점: mnSaveBaseWage — 온보딩 위저드와 공유)
+  if(!mnSaveBaseWage(wage)){
     showToast('⚠️ 시급은 최저시급(10,320원) 이상이어야 합니다'); return;
   }
 
