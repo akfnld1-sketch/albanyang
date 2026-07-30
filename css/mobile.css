@@ -1331,6 +1331,18 @@ html { -webkit-overflow-scrolling: touch; }
   body.mn-pc .mn-pc-sal .mn-pc-grid { grid-template-columns: 1fr 420px; }
   body.mn-pc .mn-pc-sal .mn-pc-col-l { grid-column: 2; grid-row: 1; }
   body.mn-pc .mn-pc-sal .mn-pc-col-r { grid-column: 1; grid-row: 1; }
+
+  /* ══ C-6b (2026-07-30 소유자 요청): 설정 PC — 세로 4,400px 1열을 2열 다단으로.
+        카드 DOM 순서·기능 무변경, CSS 다단 배치만. 모바일은 이 블록 밖이라 무접촉. */
+  body.mn-pc #settings-page > div:not(.mn-card) {
+    column-count: 2; column-gap: 20px; max-width: 1180px;
+  }
+  body.mn-pc #settings-page > div:not(.mn-card) > * {
+    break-inside: avoid; -webkit-column-break-inside: avoid;
+  }
+  body.mn-pc #settings-page > div:not(.mn-card) > h2 { column-span: all; }
+  body.mn-pc #mn-display-card,
+  body.mn-pc #mn-setup-wiz-card { max-width: 1180px; margin-left: auto; margin-right: auto; }
   .mn-pc-dash .mn-pc-grid { grid-template-columns: 1fr 1.6fr; }
 }
 
@@ -1441,6 +1453,37 @@ html { -webkit-overflow-scrolling: touch; }
   border-radius: 11px; padding: 8px 14px; font-family: 'Noto Sans KR', sans-serif;
   font-size: 13.5px; font-weight: 700; color: #92400E; cursor: pointer;
 }
+
+/* ══ 설정 마법사 (2026-07-30) — PC·모바일 공용, 신규 클래스만 ══════════════ */
+.mn-wiz-hl {
+  outline: 2.5px solid var(--accent, #4f7cff) !important;
+  outline-offset: 3px; border-radius: 12px;
+}
+#mn-setup-wiz {
+  position: fixed; right: 16px; bottom: calc(84px + var(--safe-bottom, 0px));
+  z-index: 9999; width: min(320px, calc(100vw - 32px));
+  background: var(--card, #fff); border: 1px solid var(--border, #E2E8F0);
+  border-radius: 14px; padding: 14px 16px;
+  box-shadow: 0 8px 28px rgba(15, 23, 42, .18);
+  font-family: 'Noto Sans KR', sans-serif;
+}
+body.mn-pc #mn-setup-wiz { right: 24px; bottom: 24px; }
+#mn-setup-wiz .mn-wiz-top {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;
+}
+#mn-setup-wiz .mn-wiz-top b { font-size: 13.5px; font-weight: 800; color: var(--accent, #4f7cff); }
+#mn-setup-wiz .mn-wiz-x {
+  background: none; border: none; cursor: pointer; color: var(--text3, #94A3B8);
+  font-size: 14px; padding: 4px 6px; min-height: 0;
+}
+#mn-setup-wiz .mn-wiz-desc { font-size: 13.5px; color: var(--text, #0F172A); line-height: 1.6; margin-bottom: 10px; }
+#mn-setup-wiz .mn-wiz-btns { display: flex; gap: 8px; justify-content: flex-end; }
+#mn-setup-wiz .mn-wiz-btn {
+  padding: 9px 16px; border-radius: 11px; border: 1px solid var(--border, #E2E8F0);
+  background: var(--card, #fff); color: var(--text, #0F172A);
+  font-size: 13.5px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans KR', sans-serif;
+}
+#mn-setup-wiz .mn-wiz-btn--pri { background: var(--accent, #4f7cff); border-color: var(--accent, #4f7cff); color: #fff; }
 
 /* 미설정 상태 — 먼저 해야 할 일이므로 최상단에서 주황으로 요구한다 (R11) */
 .mn-pc-fold--todo { border: 1.5px solid #F97316; background: #FFF7ED; }

@@ -7,7 +7,7 @@
 
 // ★ Fix #70: 근태관리 히어로카드에 생존관리로 이어지는 질문형 문구 추가
 //   ("이 돈으로 다음 월급날까지 버틸 수 있을까요?") — 기능 변경 없음 (2026-06-22)
-const CACHE_NAME = 'moneynyang-v1-cache-v299';
+const CACHE_NAME = 'moneynyang-v1-cache-v300';
 
 // ── 로컬 파일 (분리된 CSS/JS 전체) ──
 // ★ index.html의 <script>/<link> 태그와 쿼리스트링이 항상 일치해야 함 (불일치 시 사전 캐시 무의미)
@@ -17,10 +17,10 @@ const LOCAL_RESOURCES = [
   './manifest.json',
   './css/main.css?v=20260728a',
   './css/design-system.css?v=20260727a',
-  './css/mobile.css?v=20260730j',
+  './css/mobile.css?v=20260730k',
   './css/theme-pastel.css?v=20260718a',
   './css/theme-daybreak.css?v=20260724b',
-  './js/redesign-v6.js?v=20260730j',
+  './js/redesign-v6.js?v=20260730k',
   './css/theme-sky.css?v=20260718a',
   './css/theme-mint.css?v=20260718a',
   './css/theme-lavender.css?v=20260718a',
@@ -33,8 +33,8 @@ const LOCAL_RESOURCES = [
   './js/help.js?v=20260704c',
   './js/ui.js?v=20260704c',
   './js/salary.js?v=20260726a',
-  './js/budget.js?v=20260717a',
-  './js/attendance-v3.js?v=20260718c',
+  './js/budget.js?v=20260730k',
+  './js/attendance-v3.js?v=20260730k',
   './js/data-utils.js?v=20260728a',
   './js/nyang-emoji.js',
   './js/assistant.js?v=20260717a',

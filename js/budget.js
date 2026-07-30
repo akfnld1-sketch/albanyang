@@ -1002,6 +1002,19 @@ function saveBudgetFixedExpenses(){
   renderBudgetPage();
 }
 
+// ── 지출 입력란으로 이동 (공통 CTA 핸들러) ──
+//  경고 배너 "+ 지출 입력하기" 등이 사용. 기존에는 존재하지 않는
+//  #var-expense-section을 찾다 실패해 무동작 버튼이었음 (2026-07-30 수리).
+function mnGotoExpenseInput(){
+  const el = document.getElementById('var-expense-section');
+  if(!el) return;
+  el.scrollIntoView({ behavior:'smooth', block:'center' });
+  el.style.outline = '2px solid var(--accent)';
+  el.style.outlineOffset = '2px';
+  setTimeout(()=>{ el.style.outline=''; el.style.outlineOffset=''; }, 1600);
+  setTimeout(()=>{ try{ document.getElementById('bdg-var-amount').focus(); }catch(e){} }, 350);
+}
+
 // ── 3단계: 변동지출 추가/삭제 ──
 function addBudgetVariableExpense(){
   if(!budgetState._loaded) budgetLoad();
@@ -1187,7 +1200,7 @@ function renderBudgetPage(){
       <!-- 경고 배너(4단계) — 항상 전체 폭 -->
       <div style="background:${riskBg};border:1px solid ${riskBorder};border-radius:12px;padding:14px;margin-bottom:14px;">
         <div style="font-size:15px;font-weight:800;margin-bottom:8px;">${zb.riskLevel==='nodata' ? '📭 ' + zb.riskLabel : zb.riskLabel + (hasIncomeData ? ` (이번달 가용예산의 ${zb.spentPct}% 사용)` : '')}</div>
-        ${zb.riskLevel==='nodata' ? '<button onclick="(function(){var el=document.getElementById(\'var-expense-section\');if(el){el.scrollIntoView({behavior:\'smooth\',block:\'start\'});el.style.outline=\'2px solid var(--accent)\';setTimeout(function(){el.style.outline=\'\';},1500);}else{var page=document.getElementById(\'budget-page\');if(page)page.scrollTo({top:page.scrollHeight,behavior:\'smooth\'});}})();" style="margin-top:10px;width:100%;padding:12px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:\'Noto Sans KR\';">+ 지출 입력하기</button>' : ''}
+        ${zb.riskLevel==='nodata' ? '<button title="변동지출 입력란으로 이동" onclick="mnGotoExpenseInput()" style="margin-top:10px;width:100%;padding:12px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:\'Noto Sans KR\';">+ 지출 입력하기</button>' : ''}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;color:var(--text2);">
           <div>💰 현재잔고<br><b style="font-size:15px;color:var(--text);">${zb.currentBalance.toLocaleString()}원</b></div>
           <div>📉 일평균지출<br><b style="font-size:15px;color:var(--text);">${zb.avgDailySpend.toLocaleString()}원</b></div>
@@ -1217,15 +1230,15 @@ function renderBudgetPage(){
           <div style="font-size:14px;font-weight:700;margin-bottom:10px;">🎯 잔고·저축 설정</div>
           <div style="margin-bottom:8px;">
             <div style="font-size:11px;color:var(--text3);margin-bottom:3px;">💰 현재 잔고</div>
-            <input id="bdg-current-balance" class="budget-input" type="number" min="0" value="${budgetState.emergencyFund||0}">
+            <input id="bdg-current-balance" class="budget-input" type="number" min="0" value="${budgetState.emergencyFund||0}" title="지금 갖고 있는 돈 — 버틸 수 있는 날짜 계산의 기준" aria-label="현재 잔고(원)">
           </div>
           <div style="margin-bottom:8px;">
             <div style="font-size:11px;color:var(--text3);margin-bottom:3px;">🎯 월 저축 목표</div>
-            <input id="bdg-savings-goal" class="budget-input" type="number" min="0" value="${budgetState.savingsGoal||0}">
+            <input id="bdg-savings-goal" class="budget-input" type="number" min="0" value="${budgetState.savingsGoal||0}" title="이번 달 모으고 싶은 금액 — 가용예산에서 미리 빼둡니다" aria-label="월 저축 목표(원)">
           </div>
           <div style="margin-bottom:10px;">
             <div style="font-size:11px;color:var(--text3);margin-bottom:3px;">➕ 기타수입 직접입력</div>
-            <input id="bdg-custom-income" class="budget-input" type="number" min="0" value="${budgetState.customIncome||0}">
+            <input id="bdg-custom-income" class="budget-input" type="number" min="0" value="${budgetState.customIncome||0}" title="앱이 계산하지 못하는 수입(용돈·이자 등)을 직접 더합니다" aria-label="기타수입 직접입력(원)">
           </div>
           <button onclick="saveBudgetSettings()" style="width:100%;padding:11px;border-radius:10px;border:none;
             background:var(--accent);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR';">💾 저장</button>
@@ -1238,24 +1251,25 @@ function renderBudgetPage(){
             ${Object.keys(BDG_FIXED_LABELS).map(id=>`
               <div>
                 <div style="font-size:11px;color:var(--text3);margin-bottom:3px;">${BDG_FIXED_LABELS[id]}</div>
-                <input id="bdg-fixed-${id}" class="budget-input" type="number" min="0" step="1000" value="${budgetState.fixedExpenses[id]||0}">
+                <input id="bdg-fixed-${id}" class="budget-input" type="number" min="0" step="1000" value="${budgetState.fixedExpenses[id]||0}" title="매달 고정으로 나가는 ${BDG_FIXED_LABELS[id]} 금액(원)" aria-label="${BDG_FIXED_LABELS[id]} 고정지출(원)">
               </div>`).join('')}
           </div>
           <button onclick="saveBudgetFixedExpenses()" style="width:100%;padding:11px;border-radius:10px;border:none;
             background:var(--accent);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR';">💾 고정지출 저장</button>
         </div>
 
-        <!-- 3단계: 변동지출 -->
-        <div class="budget-card">
+        <!-- 3단계: 변동지출 — id는 지출 입력 CTA(경고 배너·PC 상단바·빈상태 힌트·근태
+             "1분 만에 지출 입력하기")가 공통으로 찾아오는 앵커. 바꾸면 전부 확인할 것 -->
+        <div class="budget-card" id="var-expense-section">
           <div style="font-size:14px;font-weight:700;margin-bottom:10px;">🧾 변동지출 <span style="font-size:12px;color:var(--text3);">(이번달 ${varTotal.toLocaleString()}원)</span></div>
           ${catBarHtml}
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;">
-            <select id="bdg-var-cat" class="budget-input">
+            <select id="bdg-var-cat" class="budget-input" title="지출 카테고리" aria-label="지출 카테고리">
               ${Object.keys(BDG_VAR_CATS).map(c=>`<option value="${c}">${BDG_VAR_CATS[c]}</option>`).join('')}
             </select>
-            <input id="bdg-var-amount" class="budget-input" type="number" min="0" placeholder="금액">
-            <input id="bdg-var-date" class="budget-input" type="date" value="${today.toISOString().slice(0,10)}">
-            <input id="bdg-var-memo" class="budget-input" type="text" placeholder="메모(선택)">
+            <input id="bdg-var-amount" class="budget-input" type="number" min="0" placeholder="금액" title="지출 금액(원)" aria-label="지출 금액(원)">
+            <input id="bdg-var-date" class="budget-input" type="date" value="${today.toISOString().slice(0,10)}" title="지출 날짜" aria-label="지출 날짜">
+            <input id="bdg-var-memo" class="budget-input" type="text" placeholder="메모(선택)" title="메모 (선택사항)" aria-label="메모 (선택사항)">
           </div>
           <button onclick="addBudgetVariableExpense()" style="width:100%;padding:11px;border-radius:10px;border:none;
             background:var(--green);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR';margin-bottom:8px;">+ 지출 입력</button>
