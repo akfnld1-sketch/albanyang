@@ -27,7 +27,7 @@
 <!-- ══ CSS ══ -->
 <link rel="stylesheet" href="css/main.css?v=20260728a">
 <link rel="stylesheet" href="css/design-system.css?v=20260727a">  <!-- 머니냥 디자인 시스템 v2.0 (리디자인 확정 토큰 — 색은 이 파일에서만) -->
-<link rel="stylesheet" href="css/mobile.css?v=20260730k">
+<link rel="stylesheet" href="css/mobile.css?v=20260730m">
 <!-- 리디자인 v2.0: 구 컬러 테마(파스텔/스카이/민트/라벤더/피치)는 새 토큰을 덮어쓰므로 비활성.
      복원하려면 아래 두 줄 주석 해제.
 <link id="theme-css" rel="stylesheet" href="css/theme-sky.css?v=20260724c">
@@ -35,7 +35,7 @@
 -->
 
 <!-- ══ 앱 버전 (전역 상수 — 버전 변경 시 여기만 수정) ══ -->
-<script>var APP_VERSION = 'v4.2.2-beta.67';</script>
+<script>var APP_VERSION = 'v4.2.2-beta.68';</script>
 
 <!-- ══ Service Worker + 온라인 감지 ══ -->
 <script src="js/sw-init.js"></script>
@@ -382,69 +382,15 @@
     <div id="bg-cur-name" style="font-size:11px;color:var(--text3);text-align:center;"></div>
   </div>
 
-  <!-- ═══ 급여일 설정 ═══ -->
-  <div class="sec-label" style="margin-top:14px;">💰 급여일 설정</div>
+  <!-- ═══ 급여일·스마트 알림 → ⚙ 설정 탭으로 통합 (2026-07-30 중복 제거) ═══
+       같은 설정이 드로어와 설정 탭 두 곳에 있어 값이 따로 노는 것처럼 보이던 문제.
+       설정 탭 쪽이 6직종 급여일을 지원해 상위호환 — 드로어에는 안내만 남긴다.
+       renderSmartNotifPanel/initPaydayInput/assistant는 전부 null 가드 확인됨. -->
+  <div class="sec-label" style="margin-top:14px;">🔔 알림 · 💰 급여일</div>
   <div style="padding:4px 8px 10px;">
-    <div style="font-size:11px;color:var(--text3);margin-bottom:8px;line-height:1.6;">매월 급여 받는 날짜를 입력하면<br>D-3·D-1·당일 알림을 받을 수 있어요.</div>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <div style="flex:1;position:relative;">
-        <input type="number" id="payday-input"
-          min="1" max="31" placeholder="예) 25"
-          oninput="this.value=this.value.replace(/[^0-9]/g,'')"
-          onkeydown="if(event.key==='Enter')savePayday()"
-          style="width:100%;box-sizing:border-box;padding:10px 32px 10px 12px;
-            border-radius:10px;border:1px solid var(--border);
-            background:var(--surface2);color:var(--text);
-            font-size:16px;font-weight:700;font-family:'Noto Sans KR';
-            text-align:center;outline:none;transition:border-color .2s;"
-          onfocus="this.style.borderColor='var(--accent)'"
-          onblur="this.style.borderColor='var(--border)'"
-        />
-        <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);
-          font-size:12px;color:var(--text3);pointer-events:none;font-weight:700;">일</span>
-      </div>
-      <button onclick="savePayday()"
-        style="padding:10px 16px;border-radius:10px;border:none;
-          background:var(--accent);color:#fff;font-size:13px;font-weight:700;
-          cursor:pointer;font-family:'Noto Sans KR';white-space:nowrap;flex-shrink:0;
-          transition:opacity .2s;min-height:44px;"
-        onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">저장</button>
-    </div>
-    <div id="payday-status" style="margin-top:6px;font-size:12px;color:var(--text3);text-align:center;min-height:16px;"></div>
-  </div>
-
-  <!-- ═══ 스마트 알림 설정 ═══ -->
-  <div class="sec-label" style="margin-top:14px;">🔔 스마트 알림</div>
-  <div style="padding:6px 10px 10px;">
-    <div id="smart-notif-permission-banner" style="display:none;
-      background:rgba(255,80,80,.12);border:1px solid rgba(255,80,80,.3);
-      border-radius:10px;padding:8px 10px;margin-bottom:10px;font-size:12px;
-      color:var(--red);text-align:center;cursor:pointer;"
-      onclick="requestNotifPermission();renderSmartNotifPanel();">
-      ⚠️ 알림 권한이 없어요. 탭해서 허용하기
-    </div>
-    <div id="smart-notif-toggles"></div>
-    <!-- 소리 ON/OFF -->
-    <label style="display:flex;align-items:center;justify-content:space-between;
-      padding:9px 4px;border-bottom:1px solid var(--border);cursor:pointer;min-height:44px;">
-      <div>
-        <div style="font-size:13px;font-weight:600;color:var(--text);">🔊 알림 소리</div>
-        <div style="font-size:11px;color:var(--text3);">비프음 (Web Audio)</div>
-      </div>
-      <div id="sound-toggle-btn"
-           onclick="toggleSoundNotif(this)"
-           style="width:40px;height:22px;border-radius:11px;
-             background:var(--accent,#4f7cff);
-             position:relative;transition:background .25s;cursor:pointer;flex-shrink:0;">
-        <span id="sound-toggle-knob" style="position:absolute;top:3px;left:20px;
-          width:16px;height:16px;border-radius:50%;background:#fff;
-          box-shadow:0 1px 4px rgba(0,0,0,.2);transition:left .25s;display:block;"></span>
-      </div>
-    </label>
-    <button onclick="resetSmartNotifState()" style="margin-top:10px;width:100%;
-      padding:11px 7px;border-radius:10px;border:1px solid var(--border);
-      background:transparent;color:var(--text3);font-size:12px;cursor:pointer;
-      font-family:'Noto Sans KR';min-height:44px;">🗑 오늘 알림 기록 초기화</button>
+    <div style="font-size:11px;color:var(--text3);line-height:1.6;margin-bottom:8px;">두 곳에 나뉘어 있던 알림·급여일 설정을<br><b style="color:var(--text2);">⚙ 설정 탭</b> 한 곳으로 모았어요.</div>
+    <button onclick="closeDrawer();showPage('settings')"
+      style="width:100%;padding:11px 7px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR';min-height:44px;">⚙ 설정 탭에서 열기</button>
   </div>
 
   </div><!-- /sb-section 설정 -->
@@ -1415,7 +1361,7 @@ const _origShowPage = typeof showPage === 'function' ? showPage : null;
 <script src="js/jobtype.js?v=20260705a"></script>      <!-- [10] 직업유형 선택 + 모드전환 -->
 <script src="js/calendar-modes.js?v=20260725a"></script><!-- [11] 달력 렌더링 (프리랜서/알바 모드) -->
 <script src="js/notifications.js?v=20260628a"></script><!-- [12] 알람 + 스마트 알림 (최종 초기화 포함) -->
-<script src="js/init.js?v=20260728a"></script>        <!-- [13] 배경색 + 출퇴근 + 온보딩 (마지막) -->
+<script src="js/init.js?v=20260730m"></script>        <!-- [13] 배경색 + 출퇴근 + 온보딩 (마지막) -->
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="js/inquiry.js?v=20260709e"></script>     <!-- [13.2] 자체 문의 시스템 (구글폼 대체) -->
 <script src="js/quotes-data.js?v=20260701l"></script> <!-- [14a] 오늘의 한 줄 콘텐츠 데이터 -->
@@ -1582,7 +1528,7 @@ const _origShowPage = typeof showPage === 'function' ? showPage : null;
     </div>
   </div>
 </div>
-<script src="js/redesign-v6.js?v=20260730k"></script>  <!-- [99] 리디자인 셸 v7: 모바일 헤더+6탭+스와이프 트랙+하단 액션 바 (데스크톱은 기존 유지) -->
+<script src="js/redesign-v6.js?v=20260730m"></script>  <!-- [99] 리디자인 셸 v7: 모바일 헤더+6탭+스와이프 트랙+하단 액션 바 (데스크톱은 기존 유지) -->
 </body>
 </html>
 

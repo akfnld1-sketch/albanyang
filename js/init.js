@@ -732,7 +732,7 @@ function renderSettingsPage(){
       { id:'freelancer',  icon:'💻', label:'프리랜서',     unit:'건당 단가' },
     ];
 
-    const rows = njobTypes.map(t => `
+    const njobRow = t => `
       <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">
         <span style="font-size:21px;flex-shrink:0;">${t.icon}</span>
         <div style="flex:1;">
@@ -745,7 +745,17 @@ function renderSettingsPage(){
                  border-radius:7px;padding:6px 8px;font-size:17px;font-family:'JetBrains Mono';
                  font-weight:700;text-align:right;outline:none;">
         <span style="font-size:15px;color:var(--text3);flex-shrink:0;">원</span>
-      </div>`).join('');
+      </div>`;
+
+    // ★ 2026-07-30 설정 다이어트 — 선택한 직군 것만 펼치고, 나머지는 접힘.
+    //   saveNjobWages()가 5칸을 전부 읽으므로 제거가 아니라 <details> 접힘(DOM 유지).
+    const _selN = (typeof loadSelectedJobs==='function') ? loadSelectedJobs() : [];
+    const mineN   = njobTypes.filter(t => _selN.indexOf(t.id) >= 0);
+    const othersN = njobTypes.filter(t => _selN.indexOf(t.id) < 0);
+    const rows = (mineN.length && othersN.length)
+      ? mineN.map(njobRow).join('')
+        + `<details style="margin-top:6px;"><summary style="cursor:pointer;padding:9px 2px;font-size:14px;font-weight:600;color:var(--text3);list-style-position:inside;">다른 직종 단가 보기 (${othersN.length})</summary>${othersN.map(njobRow).join('')}</details>`
+      : njobTypes.map(njobRow).join('');
 
     html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:12px;">
       <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px;">💼 N잡 기본 단가 설정${typeof helpBtn==='function'?helpBtn('setNjob'):''}</div>
@@ -832,13 +842,26 @@ function renderSettingsPage(){
       </div>`;
     }
 
-    const rows =
-      paydayRow('employee',    '🏢', '직장 급여',    {type:'monthly', day: savedPayday||25}) +
-      paydayRow('convenience', '🏪', '편의점 알바',  {type:'monthly', day:25}) +
-      paydayRow('shortAlba',   '📋', '단기 알바',    {type:'weekly',  cutDow:6, offset:4}) +
-      paydayRow('delivery',    '🛵', '배달',          {type:'weekly',  cutDow:0, offset:3}) +
-      paydayRow('driver',      '🚗', '대리기사',      {type:'instant', offset:0}) +
-      paydayRow('freelancer',  '💻', '프리랜서',      {type:'monthly', day:15});
+    // ★ 2026-07-30 설정 다이어트 — 선택한 직군의 급여일만 펼치고, 나머지는 접힘.
+    //   saveAllPaydaySettings()가 6직종 input을 전부 읽으므로 제거가 아니라
+    //   <details> 접힘(DOM 유지). 연봉제(salary)는 직장 급여 행을 함께 쓴다.
+    const PD_DEFS = [
+      ['employee',    '🏢', '직장 급여',   {type:'monthly', day: savedPayday||25}],
+      ['convenience', '🏪', '편의점 알바', {type:'monthly', day:25}],
+      ['shortAlba',   '📋', '단기 알바',   {type:'weekly',  cutDow:6, offset:4}],
+      ['delivery',    '🛵', '배달',         {type:'weekly',  cutDow:0, offset:3}],
+      ['driver',      '🚗', '대리기사',     {type:'instant', offset:0}],
+      ['freelancer',  '💻', '프리랜서',     {type:'monthly', day:15}]
+    ];
+    const _selP = (typeof loadSelectedJobs==='function') ? loadSelectedJobs() : [];
+    const _pdMine = d => _selP.indexOf(d[0]) >= 0 || (d[0]==='employee' && _selP.indexOf('salary') >= 0);
+    const mineP   = PD_DEFS.filter(_pdMine);
+    const othersP = PD_DEFS.filter(d => !_pdMine(d));
+    const _pdRow  = d => paydayRow(d[0], d[1], d[2], d[3]);
+    const rows = (mineP.length && othersP.length)
+      ? mineP.map(_pdRow).join('')
+        + `<details style="margin-top:6px;"><summary style="cursor:pointer;padding:9px 2px;font-size:14px;font-weight:600;color:var(--text3);list-style-position:inside;">다른 직종 급여일 보기 (${othersP.length})</summary>${othersP.map(_pdRow).join('')}</details>`
+      : PD_DEFS.map(_pdRow).join('');
 
     html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:12px;">
       <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px;">💰 급여일 설정${typeof helpBtn==='function'?helpBtn('setPayday'):''}</div>
@@ -890,6 +913,11 @@ function renderSettingsPage(){
         ${soundBtns}
       </div>
     </div>
+    <!-- ★ 2026-07-30: 드로어(사이드바)에서 이관 — 알림 설정을 설정 탭 한 곳으로 통합 -->
+    <button onclick="resetSmartNotifState()" style="margin-top:10px;width:100%;
+      padding:11px 7px;border-radius:10px;border:1px solid var(--border);
+      background:transparent;color:var(--text3);font-size:13px;cursor:pointer;
+      font-family:'Noto Sans KR';min-height:44px;">🗑 오늘 알림 기록 초기화</button>
   </div>`;
 
   // ★ Fix #49: 시니어모드 토글은 발견성 문제로 설정 페이지 최상단으로 이동(2026-06-20)
