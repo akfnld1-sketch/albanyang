@@ -126,7 +126,17 @@ function showIncomeWizard(){
     sideAsked: false, // 보조수익원 질문에 답했는지
     extra: null,      // 추가수익 관리 여부 (null=미응답)
     extraTypes: [],   // 선택한 추가수익 항목들
+    baseWage: '',     // ★ 2026-07-30 A안: 시급제 주업이면 완료 단계에서 시급을 받는다 (선택)
   };
+
+  // 시급제(employee 엔진) 수익원이 하나라도 있으면 완료 단계에서 시급을 물어본다.
+  // 기존에는 온보딩이 시급을 안 받아 알바 사용자가 설정 탭을 찾기 전까지
+  // 예상 급여가 전부 "기록 없음"으로 비어 보이던 구멍.
+  function _iwNeedsWage(){
+    return [state.main].concat(state.sides).some(function(s){
+      return s && s.form && s.form.engine === 'employee';
+    });
+  }
 
   // 추가수익 항목 프리셋
   var EXTRA_TYPES = ['보험지급액','환급금 (세금·보험)','정부지원금','상여금·보너스','이자·배당','중고거래 수입'];
@@ -339,6 +349,25 @@ function showIncomeWizard(){
         + '<div style="font-size:15px;color:var(--text,#ddd);line-height:1.7;">이제부터는<br>이번 달도 무사히 버틸 수 있도록<br>제가 함께 관리해드릴게요.</div>'
         + '<div style="font-size:14px;color:var(--text3,#aaa);line-height:1.6;margin-top:14px;">수입과 지출이 바뀔 때마다<br>예상 잔액과 생존 가능성을<br>계속 계산해드리겠습니다.<br><br>궁금한 점은 언제든 저를 눌러 물어봐 주세요.</div>';
       scroll.appendChild(s4);
+
+      // ★ 2026-07-30 A안 — 시급제 주업이면 여기서 시급까지 받는다 (선택 입력).
+      //   저장은 완료 버튼에서 mnSaveBaseWage(설정 기본 정보와 같은 단일 진입점) 사용.
+      if(_iwNeedsWage()){
+        var wageBox = document.createElement('div');
+        wageBox.style.cssText = 'margin-top:18px;text-align:left;background:var(--surface2,#2a2a3a);border:1px solid var(--border,rgba(255,255,255,.12));border-radius:12px;padding:14px;';
+        wageBox.innerHTML =
+          '<div style="font-size:15px;font-weight:800;color:var(--text,#fff);margin-bottom:4px;">⏱ 시급을 알려주시면 바로 계산해드려요</div>'
+          + '<div style="font-size:13px;color:var(--text3,#aaa);line-height:1.5;margin-bottom:10px;">예상 급여 계산의 기준이에요. 비워두면 나중에 설정에서 입력할 수 있어요.</div>'
+          + '<div style="display:flex;align-items:center;gap:8px;">'
+          + '<input id="iw-wage-input" type="number" min="0" step="10" placeholder="10320" inputmode="numeric"'
+          + ' style="flex:1;background:var(--surface,#1e2235);border:1px solid var(--border,rgba(255,255,255,.15));color:var(--text,#fff);border-radius:10px;padding:11px 12px;font-size:17px;font-weight:700;font-family:\'JetBrains Mono\',monospace;text-align:right;outline:none;">'
+          + '<span style="font-size:15px;color:var(--text3,#aaa);flex-shrink:0;">원</span></div>'
+          + '<div style="font-size:12px;color:var(--text3,#888);margin-top:6px;">2026년 최저시급 10,320원</div>';
+        scroll.appendChild(wageBox);
+        var wi = wageBox.querySelector('#iw-wage-input');
+        wi.value = state.baseWage || (parseInt(localStorage.getItem('atm2_baseWage'),10) || '');
+        wi.addEventListener('input', function(){ state.baseWage = wi.value; });
+      }
     }
 
     // ═══ STEP 3 헤더 (수익원 등록) ═══
@@ -562,6 +591,13 @@ function showIncomeWizard(){
     } else { // step 4
       btnRow.appendChild(mkBtn('이전', false, true, function(){ state.step = 3; render(); }));
       btnRow.appendChild(mkBtn('✅ 완료', true, true, function(){
+        // 시급을 입력했다면 최저시급 검증 후 저장 (비워두면 건너뜀 — 선택 입력)
+        var w = parseFloat(state.baseWage);
+        if((state.baseWage||'').toString().trim() !== '' && !(w >= 10320)){
+          if(typeof showToast==='function') showToast('⚠️ 시급은 최저시급(10,320원) 이상이어야 해요');
+          return;
+        }
+        if(w >= 10320 && typeof mnSaveBaseWage === 'function') mnSaveBaseWage(w);
         _iwSaveNick((state.nick||'').trim());
         finishWizard(state);
         ov.remove();
