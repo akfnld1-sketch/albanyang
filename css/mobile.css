@@ -1430,6 +1430,32 @@ html { -webkit-overflow-scrolling: touch; }
 .mn-pc-fold--todo .mn-pc-fold-hd b { color: #9A3412; }
 .mn-pc-fold--todo .mn-pc-fold-hd i { color: #EA580C; }
 
+/* ══ C-2b. 근태 PC 정리 (2026-07-30) — 요약은 전폭 머리글, 달력이 주역 ══════
+   멘토 지적 후속: 달력 앞에 배너·요약·토글이 ~490px 쌓여 주역이 스크롤 밖으로
+   밀리던 문제. DOM 이동은 redesign-v6.js _pcLayoutAtt(PC 전용), 모바일 무접촉. */
+@media (min-width: 769px) {
+  body.mn-pc #mn-pc-att-head { margin-bottom: 16px; }
+  body.mn-pc #mn-pc-att-head .stats-row { margin-bottom: 0; }
+
+  /* v3 없는 직군(알바·배달·프리랜서 등): 빈 좌측 열을 없애고 달력 1열 전폭 */
+  body.mn-pc #mn-pc-att.mn-pc-att--solo { grid-template-columns: 1fr; }
+  body.mn-pc #mn-pc-att.mn-pc-att--solo > .mn-pc-col-l { display: none; }
+  body.mn-pc #mn-pc-att.mn-pc-att--solo #cal-area { max-width: 940px; }
+
+  /* 달력 셀 — 구 PC 스타일(main.css)의 130px 고정이 과대 (지시서 C-2: 78px).
+     main.css가 height/max-height에 !important를 걸어 두어 여기서도 !important 필요 */
+  body.mn-pc #cal-area .cal-day {
+    height: auto !important; min-height: 78px !important; max-height: none !important;
+    padding: 8px 9px !important;
+  }
+  body.mn-pc #cal-area .dn { font-size: 15px !important; margin-bottom: 3px !important; }
+  body.mn-pc #cal-area .month-nav { margin-bottom: 10px; }
+
+  /* 달력 아래로 내린 부수 블록 간격 */
+  body.mn-pc #cal-area #wage-nudge-banner,
+  body.mn-pc #cal-area #mn-pc-att-wtfold { margin-top: 12px; }
+}
+
 /* ── 반응형 경계 (PC_SHELL_V2_SPEC §7) ── */
 @media (min-width: 1024px) and (max-width: 1199px) {
   /* 2열 유지하되 카드 여백 축소 */
