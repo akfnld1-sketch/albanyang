@@ -1513,12 +1513,14 @@
         done:function(){ try{ return (getSalaryInfo().annual||0) > 0; }catch(e){ return false; } },
         sum:function(){ try{ return '연 ' + won(getSalaryInfo().annual); }catch(e){ return '설정됨'; } } },
       // N잡 단가는 기본값으로도 동작하는 보조 설정 — 미설정이어도 강조하지 않고
-      // 항상 접는다(always). 저장한 적 있으면 ✓, 아니면 "기본값 사용 중"으로 표기.
-      { re:/^💼 N잡 기본 단가/, label:'💼 N잡 기본 단가', always:true,
+      // 항상 접는다(always). 저장한 적 있으면 ✓, 아니면 naSum 표기.
+      { re:/^💼 N잡 기본 단가/, label:'💼 N잡 기본 단가', always:true, naSum:'기본값 사용 중',
         done:function(){ try{ var w = JSON.parse(ls('atm2_jobWages')||'{}');
           return Object.keys(w).some(function(k){ return (parseInt(w[k],10)||0) > 0; }); }catch(e){ return false; } },
         sum:function(){ return '설정됨'; } },
-      { re:/^💰 급여일 설정/, label:'💰 급여일 설정',
+      // ★ 2026-07-30 소유자 요청 — 급여일도 항상 접힘. 미설정이면 접힌 채
+      //   주황(todo) 강조 + "미설정" 표기로 눈에만 띄게 한다.
+      { re:/^💰 급여일 설정/, label:'💰 급여일 설정', always:true, naSum:'미설정', naTodo:true,
         done:function(){ return !!(ls('atm2_payday') || ls('atm2_payday_settings')); },
         sum:function(){ var d = parseInt(ls('atm2_payday'),10); return d ? '매월 '+d+'일' : '설정됨'; } }
     ];
@@ -1528,8 +1530,10 @@
       for(var i=0;i<RULES.length;i++){
         if(!RULES[i].re.test(t)) continue;
         if(RULES[i].done() || RULES[i].always){
-          var sum = RULES[i].done() ? RULES[i].sum() + ' ✓' : '기본값 사용 중';
+          var isDone = RULES[i].done();
+          var sum = isDone ? RULES[i].sum() + ' ✓' : (RULES[i].naSum || '기본값 사용 중');
           var f = _pcMakeFold(RULES[i].label + ' · ' + sum);
+          if(!isDone && RULES[i].naTodo) f.fold.classList.add('mn-pc-fold--todo');
           wrap.insertBefore(f.fold, card);
           f.body.appendChild(card);
         } else {
@@ -2463,8 +2467,9 @@
       var f = _pcMakeFold(txt.replace(/^[^가-힣A-Za-z0-9]+/, ''));
       var fixedUnset = /고정지출/.test(txt) && /합계\s*0원/.test(txt);
       if(fixedUnset){
-        f.fold.classList.add('open', 'mn-pc-fold--todo');
-        f.fold.querySelector('.mn-pc-fold-hd i').textContent = '접기';
+        // ★ 2026-07-30 소유자 요청 — 미설정이어도 평상시엔 접어두고(클릭 시 펼침),
+        //   최상단 위치 + 주황 강조로만 눈에 띄게 한다
+        f.fold.classList.add('mn-pc-fold--todo');
         L.insertBefore(f.fold, L.firstChild);   // 아직 안 정했으면 먼저 요구한다
       } else {
         L.appendChild(f.fold);
@@ -2492,8 +2497,9 @@
     t.style.display = 'none';
     var f = _pcMakeFold(title.replace(/^[^가-힣A-Za-z0-9]+/, ''));
     if(unset){
-      f.fold.classList.add('open', 'mn-pc-fold--todo');
-      f.fold.querySelector('.mn-pc-fold-hd i').textContent = '접기';
+      // ★ 2026-07-30 소유자 요청 — 미설정도 평상시엔 접힘(클릭 시 펼침).
+      //   최상단 + 주황 강조는 유지 (모바일 R11 동일 규칙)
+      f.fold.classList.add('mn-pc-fold--todo');
       root.insertBefore(f.fold, root.firstChild);      // 아직 안 정했으면 먼저 요구한다
     } else {
       root.appendChild(f.fold);                        // 정해졌으면 맨 아래로

@@ -1245,6 +1245,9 @@ function saveAllPaydaySettings(){
     if(el){ el.value = settings.employee.day; if(typeof savePayday==='function') savePayday(); }
   }
   showToast('✅ 급여일 설정 저장됨');
+  // ★ 2026-07-30: 접힘 요약("미설정" ↔ "매월 N일 ✓")이 갱신되도록 재렌더
+  //   (기본 정보 저장과 동일 패턴 — 접힘 여부는 _settingsTidy가 다시 판정)
+  if(typeof renderSettingsPage === 'function') renderSettingsPage();
 }
 
 // 급여일 저장 (구버전 호환)
@@ -1271,6 +1274,8 @@ function saveNjobWages(){
   });
   saveJobWages(wages);
   showToast('✅ N잡 단가 설정 저장됨');
+  // ★ 2026-07-30: 접힘 요약("기본값 사용 중" ↔ "설정됨 ✓") 갱신용 재렌더
+  if(typeof renderSettingsPage === 'function') renderSettingsPage();
 }
 
 // ── Single Writer helpers ──
