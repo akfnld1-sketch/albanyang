@@ -1,19 +1,17 @@
 // ══════════════════════════════════════════
 // 숫자 천단위 쉼표 — 전역 ko-KR 기본값 설정
-// 11651.71 → 11,651.71 (소수점 포함 모든 숫자)
+// ★ 2026-07-31 (소유자 요청): 소수점 시급 설정 시 합계가 11,651.71처럼
+//   소수점째 노출되던 문제 — 인자 없는 toLocaleString()은 금액 표시이므로
+//   반올림 후 콤마만 찍는다. 계산·저장값의 정밀도는 그대로 유지되고
+//   화면 표시만 정수가 된다. 소수점을 의도하는 곳은 명시적으로
+//   toLocaleString(locale, {minimumFractionDigits...})를 쓰면 기존대로 동작.
 // ══════════════════════════════════════════
 (function(){
   const _orig = Number.prototype.toLocaleString;
   Number.prototype.toLocaleString = function(locale, opts){
     if(locale === undefined){
       const n = Number(this);
-      if(!Number.isInteger(n)){
-        const dec = (n.toString().split('.')[1]||'').length;
-        return _orig.call(this, 'ko-KR', {
-          minimumFractionDigits: dec,
-          maximumFractionDigits: dec
-        });
-      }
+      if(Number.isFinite(n)) return _orig.call(Math.round(n), 'ko-KR');
       return _orig.call(this, 'ko-KR');
     }
     return _orig.call(this, locale, opts);
